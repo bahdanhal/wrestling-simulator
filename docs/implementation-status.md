@@ -32,6 +32,7 @@ What is built, against [game-design.md](game-design.md). Updated with every chan
 | Bout clock at 60 ticks per second, periods, break, scoreboard time | `Wrestling.Core.Match.BoutClock` | 5.1 |
 | Body state (stance, level, posture, balance, ground, danger position, feet) | `BodyState` | 5.3 |
 | Grip model with hand use and Greco-Roman legality | `GripSet` | 5.4 |
+| Technique content model, catalogue cross-checks and loader | `Wrestling.Core.Techniques`, `Wrestling.Data.Techniques` | 6.2, 13.4 |
 
 ## Known rule gaps
 
@@ -44,8 +45,8 @@ Rules from the rulebook that the competition code does not handle yet:
 
 In dependency order:
 
-1. Technique content model and loader (phases, counter windows, end states)
-2. Bout state and tick loop (intents, hand-fight, movement, techniques, fatigue, events)
-3. Scoring evaluator and officials
+1. Bout state and tick loop (intents, hand-fight, movement, techniques, fatigue, events)
+2. Scoring evaluator and officials
+3. Technique catalogue content (section 6.3), tuned with the headless runner
 4. Event scheduling (sessions, mats, 20-minute rest, two-day categories)
 5. Wrestler creation (backgrounds, point-buy), ageing and training

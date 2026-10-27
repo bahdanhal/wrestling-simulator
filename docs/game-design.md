@@ -1013,61 +1013,52 @@ Rule **values** live in the ruleset; deciding **which** rule applies to a situat
 
 Loading is strict: every property is required (nullable values must be written as `null`), unknown properties and enum values are errors, numbers are read as exact decimals, and all validation errors are reported together.
 
-### 13.4 Technique (excerpt)
+### 13.4 Technique
+
+One file per technique under `data/techniques/`, named after its id (`technique.all.hip_toss_overhook.json`), loaded by `Wrestling.Data.Techniques.TechniqueLoader` into `Wrestling.Core.Techniques.TechniqueCatalog`. Excerpt:
 
 ```json
 {
   "schemaVersion": 1,
   "id": "technique.all.hip_toss_overhook",
   "nameKey": "tech.hip_toss_overhook.name",
-  "family": "upper-body-throw",
-  "styles": ["greco-roman", "freestyle", "womens"],
+  "role": "attack",
+  "family": "upperBodyThrows",
+  "styles": ["grecoRoman", "freestyle", "womens"],
+  "forbiddenForAges": [],
   "start": {
-    "position": "neutral-tied",
+    "positions": ["neutralTied"],
     "requiredGrips": [{ "type": "overhook", "side": "same" }],
-    "optionalGrips": [{ "type": "head-and-arm", "bonus": 0.10 }],
-    "relativePosition": "front",
-    "maxOwnLevel": 1.0
+    "optionalGrips": [{ "type": "headAndArm", "bonus": 0.1 }],
+    "relativePositions": ["front"],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
   },
   "phases": [
     {
       "id": "entry",
-      "ticks": [12, 20],
-      "attributes": { "explosiveness": 0.4, "family:upper-body-throw": 0.4, "balance": 0.2 },
+      "minimumTicks": 12,
+      "maximumTicks": 20,
+      "attributes": [
+        { "attribute": "explosiveness", "percent": 40 },
+        { "attribute": "upperBodyThrows", "percent": 40 },
+        { "attribute": "balance", "percent": 20 }
+      ],
+      "steepness": 1,
       "staminaCost": 0.6,
-      "burstCost": 3.0,
+      "burstCost": 3,
       "outcomes": ["clean", "stalled", "blocked"],
-      "counterWindows": [
-        { "technique": "technique.all.hip_block", "ticks": [0, 10] },
-        { "technique": "technique.all.step_around", "ticks": [4, 14] }
-      ]
-    },
-    {
-      "id": "flight",
-      "ticks": [18, 30],
-      "attributes": { "upper-body-strength": 0.5, "family:upper-body-throw": 0.5 },
-      "staminaCost": 1.2,
-      "burstCost": 5.0,
-      "outcomes": ["clean", "partial", "countered"],
-      "counterWindows": [
-        { "technique": "technique.all.counter_throw_landing", "ticks": [10, 28] }
-      ]
-    },
-    {
-      "id": "landing",
-      "ticks": [8, 14],
-      "endStates": ["danger-direct", "danger-delayed", "flank", "stomach", "scramble"]
+      "counterWindows": [{ "technique": "technique.all.hip_block", "fromTick": 0, "toTick": 10 }],
+      "endStates": [],
+      "animation": "anim.hip_toss.entry"
     }
   ],
-  "gesture": { "family": "arc", "direction": "toward-overhook-side" },
-  "animation": {
-    "entry": "anim.hip_toss.entry",
-    "flight": "anim.hip_toss.flight",
-    "landing": "anim.hip_toss.landing"
-  },
+  "gesture": { "family": "arc" },
   "fouls": []
 }
 ```
+
+Catalogue validation: ids are unique and match file names; attacks have a family legal in every listed style; required grips are legal in every style; attribute percentages sum to exactly 100 per phase; only the final phase has end states; every counter window points at an existing counter or defence available in the same styles.
 
 ### 13.5 Wrestler (excerpt, as stored in a save)
 
