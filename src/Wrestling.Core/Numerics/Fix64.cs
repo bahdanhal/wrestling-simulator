@@ -124,6 +124,43 @@ namespace Wrestling.Core.Numerics
             return value < min ? min : value > max ? max : value;
         }
 
+        /// <summary>Square root, rounded to the nearest representable value. Throws for negative input.</summary>
+        public static Fix64 Sqrt(Fix64 value)
+        {
+            if (value.Raw < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "Square root of a negative number.");
+            }
+
+            // sqrt(raw / 2^32) * 2^32 = sqrt(raw * 2^32): integer square root of a 96-bit number,
+            // two bits at a time (digit-by-digit method).
+            ulong raw = (ulong)value.Raw;
+            ulong high = raw >> FractionalBits;
+            ulong low = raw << FractionalBits;
+            ulong remainder = 0;
+            ulong root = 0;
+            for (int pair = 63; pair >= 0; pair--)
+            {
+                ulong bits = pair >= 32 ? (high >> ((pair - 32) * 2)) & 3UL : (low >> (pair * 2)) & 3UL;
+                remainder = (remainder << 2) | bits;
+                root <<= 1;
+                ulong test = (root << 1) | 1UL;
+                if (remainder >= test)
+                {
+                    remainder -= test;
+                    root |= 1UL;
+                }
+            }
+
+            // remainder = n - root^2; round up when n is past (root + 0.5)^2.
+            if (remainder > root)
+            {
+                root++;
+            }
+
+            return new Fix64((long)root);
+        }
+
         /// <summary>Largest whole number less than or equal to the value.</summary>
         public static Fix64 Floor(Fix64 value) => new Fix64(value.Raw & ~FractionMask);
 

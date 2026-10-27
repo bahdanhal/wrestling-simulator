@@ -27,6 +27,11 @@ What is built, against [game-design.md](game-design.md). Updated with every chan
 | Wrestler model: identity, body, 34 attributes, hidden traits, repertoire, condition, validation | `Wrestling.Core.Wrestlers` | 4.1–4.4 |
 | Derived archetype label | `ArchetypeClassifier` | 4.6 |
 | Roster packs: strict JSON import/export | `Wrestling.Data.Rosters` | 13.7 |
+| Fixed-point square root and 2D vectors (in the determinism probe) | `Fix64.Sqrt`, `FixVector2` | 5.1, 5.2 |
+| Mat zones from the ruleset geometry | `MatGeometry.ZoneAt` | 3.4, 5.2 |
+| Bout clock at 60 ticks per second, periods, break, scoreboard time | `Wrestling.Core.Match.BoutClock` | 5.1 |
+| Body state (stance, level, posture, balance, ground, danger position, feet) | `BodyState` | 5.3 |
+| Grip model with hand use and Greco-Roman legality | `GripSet` | 5.4 |
 
 ## Known rule gaps
 
@@ -39,8 +44,8 @@ Rules from the rulebook that the competition code does not handle yet:
 
 In dependency order:
 
-1. Match engine foundations: mat geometry, body state, grips, bout clock
-2. Technique content model and loader (phases, counter windows, end states)
+1. Technique content model and loader (phases, counter windows, end states)
+2. Bout state and tick loop (intents, hand-fight, movement, techniques, fatigue, events)
 3. Scoring evaluator and officials
 4. Event scheduling (sessions, mats, 20-minute rest, two-day categories)
 5. Wrestler creation (backgrounds, point-buy), ageing and training

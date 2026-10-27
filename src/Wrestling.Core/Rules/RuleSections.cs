@@ -4,6 +4,22 @@ using Wrestling.Core.Numerics;
 
 namespace Wrestling.Core.Rules
 {
+    /// <summary>Areas of the mat (Art. 4).</summary>
+    public enum MatZone
+    {
+        /// <summary>Inside the 7 m circle.</summary>
+        CentralSurface,
+
+        /// <summary>The 1 m orange band; part of the wrestling area.</summary>
+        PassivityZone,
+
+        /// <summary>The 1.5 m border outside the wrestling area; entering it with a foot is stepping out.</summary>
+        ProtectionArea,
+
+        /// <summary>Beyond the protection area.</summary>
+        OffMat,
+    }
+
     /// <summary>Mat dimensions in metres (Art. 4).</summary>
     public sealed class MatGeometry
     {
@@ -25,6 +41,29 @@ namespace Wrestling.Core.Rules
 
         /// <summary>Outer radius of the protection area.</summary>
         public Fix64 OuterRadius => WrestlingAreaRadius + ProtectionAreaWidth;
+
+        /// <summary>Radius of the central circle where the bout starts.</summary>
+        public Fix64 CentralCircleRadius => CentralCircleDiameter / Fix64.FromInt(2);
+
+        /// <summary>
+        /// Zone of a point on the mat, measured from the centre (Art. 4, 45). Boundaries belong to
+        /// the inner zone: a point exactly on the 9 m line is still in the passivity zone.
+        /// </summary>
+        public MatZone ZoneAt(FixVector2 position)
+        {
+            Fix64 distanceSquared = position.LengthSquared;
+            if (distanceSquared <= CentralSurfaceRadius * CentralSurfaceRadius)
+            {
+                return MatZone.CentralSurface;
+            }
+
+            if (distanceSquared <= WrestlingAreaRadius * WrestlingAreaRadius)
+            {
+                return MatZone.PassivityZone;
+            }
+
+            return distanceSquared <= OuterRadius * OuterRadius ? MatZone.ProtectionArea : MatZone.OffMat;
+        }
 
         internal void Validate(ValidationContext context)
         {

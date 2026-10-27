@@ -15,7 +15,7 @@ public class DeterminismProbeTests
     [Fact]
     public void ProducesReferenceHashForShortRun()
     {
-        Assert.Equal(0x9E6E33915945D915UL, DeterminismProbe.Run(1_000));
+        Assert.Equal(0xCCE3C11F050D6F85UL, DeterminismProbe.Run(1_000));
     }
 
     [Fact]

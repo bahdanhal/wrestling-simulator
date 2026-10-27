@@ -16,7 +16,7 @@ namespace Wrestling.Core.Diagnostics
         /// The hash every platform must produce for <see cref="DefaultIterations"/>. Changing
         /// Fix64 or Pcg32 behaviour changes it and breaks saved replays, so update it only on purpose.
         /// </summary>
-        public const ulong ReferenceHash = 0x79A75970E2EE5FB9UL;
+        public const ulong ReferenceHash = 0xC89E4DCE5377F168UL;
 
         /// <summary>True when this platform reproduces <see cref="ReferenceHash"/>.</summary>
         public static bool MatchesReference() => Run(DefaultIterations) == ReferenceHash;
@@ -58,6 +58,8 @@ namespace Wrestling.Core.Diagnostics
                 hash = Mix(hash, quotient.Raw);
                 hash = Mix(hash, sum.Raw);
                 hash = Mix(hash, accumulator.Raw);
+                hash = Mix(hash, Fix64.Sqrt(Fix64.Abs(product)).Raw);
+                hash = Mix(hash, new FixVector2(a, b).Normalized().X.Raw);
             }
 
             return hash;
