@@ -33,6 +33,7 @@ What is built, against [game-design.md](game-design.md). Updated with every chan
 | Body state (stance, level, posture, balance, ground, danger position, feet) | `BodyState` | 5.3 |
 | Grip model with hand use and Greco-Roman legality | `GripSet` | 5.4 |
 | Technique content model, catalogue cross-checks and loader | `Wrestling.Core.Techniques`, `Wrestling.Data.Techniques` | 6.2, 13.4 |
+| Scoring evaluator: Art. 34/37/38/45 values from action facts, step-outs, risk rule | `Wrestling.Core.Match.ScoringEvaluator` | 3.5, 3.6, 5.10 |
 
 ## Known rule gaps
 
@@ -46,7 +47,7 @@ Rules from the rulebook that the competition code does not handle yet:
 In dependency order:
 
 1. Bout state and tick loop (intents, hand-fight, movement, techniques, fatigue, events)
-2. Scoring evaluator and officials
+2. Officials model (observation noise, passivity, cautions, challenges)
 3. Technique catalogue content (section 6.3), tuned with the headless runner
 4. Event scheduling (sessions, mats, 20-minute rest, two-day categories)
 5. Wrestler creation (backgrounds, point-buy), ageing and training
