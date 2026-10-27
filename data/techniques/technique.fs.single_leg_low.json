@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.fs.single_leg_low",
+  "nameKey": "tech.single_leg_low.name",
+  "role": "attack",
+  "family": "legAttacks",
+  "styles": [
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralApart",
+      "neutralTied"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 0.7
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "penetration",
+      "minimumTicks": 10,
+      "maximumTicks": 16,
+      "attributes": [
+        {
+          "attribute": "legAttacks",
+          "percent": 50
+        },
+        {
+          "attribute": "speed",
+          "percent": 30
+        },
+        {
+          "attribute": "explosiveness",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 0.8,
+      "burstCost": 10,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.fs.sprawl",
+          "fromTick": 0,
+          "toTick": 12
+        }
+      ],
+      "endStates": [],
+      "animation": "anim.single_leg_low.penetration"
+    },
+    {
+      "id": "finish",
+      "minimumTicks": 18,
+      "maximumTicks": 32,
+      "attributes": [
+        {
+          "attribute": "legAttacks",
+          "percent": 50
+        },
+        {
+          "attribute": "agility",
+          "percent": 30
+        },
+        {
+          "attribute": "workRate",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.2,
+      "burstCost": 10,
+      "outcomes": [
+        "clean",
+        "partial",
+        "failedIntoScramble",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.fs.front_headlock_spin",
+          "fromTick": 0,
+          "toTick": 14
+        }
+      ],
+      "endStates": [
+        "controlBehind",
+        "scramble"
+      ],
+      "animation": "anim.single_leg_low.finish"
+    }
+  ],
+  "gesture": {
+    "family": "straightSwipeDown"
+  },
+  "fouls": []
+}

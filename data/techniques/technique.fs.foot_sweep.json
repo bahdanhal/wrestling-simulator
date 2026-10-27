@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.fs.foot_sweep",
+  "nameKey": "tech.foot_sweep.name",
+  "role": "attack",
+  "family": "tripsAndSweeps",
+  "styles": [
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralTied"
+    ],
+    "requiredGrips": [
+      {
+        "type": "collarTie",
+        "side": "any"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "sweep",
+      "minimumTicks": 10,
+      "maximumTicks": 16,
+      "attributes": [
+        {
+          "attribute": "tripsAndSweeps",
+          "percent": 50
+        },
+        {
+          "attribute": "speed",
+          "percent": 30
+        },
+        {
+          "attribute": "balance",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 0.6,
+      "burstCost": 6,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "stomach",
+        "flank",
+        "neutral"
+      ],
+      "animation": "anim.foot_sweep.sweep"
+    }
+  ],
+  "gesture": {
+    "family": "sidewaysFlick"
+  },
+  "fouls": []
+}

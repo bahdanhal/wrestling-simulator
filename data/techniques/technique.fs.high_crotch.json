@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.fs.high_crotch",
+  "nameKey": "tech.high_crotch.name",
+  "role": "attack",
+  "family": "legAttacks",
+  "styles": [
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralApart",
+      "neutralTied"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 0.85
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "penetration",
+      "minimumTicks": 10,
+      "maximumTicks": 16,
+      "attributes": [
+        {
+          "attribute": "legAttacks",
+          "percent": 50
+        },
+        {
+          "attribute": "explosiveness",
+          "percent": 30
+        },
+        {
+          "attribute": "speed",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 0.9,
+      "burstCost": 11,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.fs.sprawl",
+          "fromTick": 0,
+          "toTick": 12
+        },
+        {
+          "technique": "technique.fs.whizzer",
+          "fromTick": 4,
+          "toTick": 16
+        }
+      ],
+      "endStates": [],
+      "animation": "anim.high_crotch.penetration"
+    },
+    {
+      "id": "finish",
+      "minimumTicks": 18,
+      "maximumTicks": 30,
+      "attributes": [
+        {
+          "attribute": "legAttacks",
+          "percent": 50
+        },
+        {
+          "attribute": "lowerBodyStrength",
+          "percent": 30
+        },
+        {
+          "attribute": "balance",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.2,
+      "burstCost": 10,
+      "outcomes": [
+        "clean",
+        "partial",
+        "failedIntoScramble",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.fs.whizzer",
+          "fromTick": 0,
+          "toTick": 14
+        }
+      ],
+      "endStates": [
+        "controlBehind",
+        "scramble"
+      ],
+      "animation": "anim.high_crotch.finish"
+    }
+  ],
+  "gesture": {
+    "family": "straightSwipeDown"
+  },
+  "fouls": []
+}

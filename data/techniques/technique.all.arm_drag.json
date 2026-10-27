@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.arm_drag",
+  "nameKey": "tech.arm_drag.name",
+  "role": "attack",
+  "family": "goBehindsAndDrags",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralTied"
+    ],
+    "requiredGrips": [
+      {
+        "type": "wristControl",
+        "side": "any"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "drag",
+      "minimumTicks": 10,
+      "maximumTicks": 18,
+      "attributes": [
+        {
+          "attribute": "goBehindsAndDrags",
+          "percent": 50
+        },
+        {
+          "attribute": "speed",
+          "percent": 30
+        },
+        {
+          "attribute": "handFighting",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 0.8,
+      "burstCost": 8,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.step_around",
+          "fromTick": 0,
+          "toTick": 10
+        }
+      ],
+      "endStates": [],
+      "animation": "anim.arm_drag.drag"
+    },
+    {
+      "id": "behind",
+      "minimumTicks": 14,
+      "maximumTicks": 24,
+      "attributes": [
+        {
+          "attribute": "goBehindsAndDrags",
+          "percent": 50
+        },
+        {
+          "attribute": "agility",
+          "percent": 30
+        },
+        {
+          "attribute": "balance",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 0.8,
+      "burstCost": 6,
+      "outcomes": [
+        "clean",
+        "partial",
+        "failedIntoScramble",
+        "countered"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "controlBehind",
+        "scramble",
+        "neutral"
+      ],
+      "animation": "anim.arm_drag.behind"
+    }
+  ],
+  "gesture": {
+    "family": "swipeAround"
+  },
+  "fouls": []
+}

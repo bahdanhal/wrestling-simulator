@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.fs.leg_turk",
+  "nameKey": "tech.leg_turk.name",
+  "role": "attack",
+  "family": "parTerreTurns",
+  "styles": [
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "parTerreTop"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [
+      "behind"
+    ],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "turn",
+      "minimumTicks": 24,
+      "maximumTicks": 40,
+      "attributes": [
+        {
+          "attribute": "parTerreTurns",
+          "percent": 50
+        },
+        {
+          "attribute": "lowerBodyStrength",
+          "percent": 30
+        },
+        {
+          "attribute": "flexibility",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.2,
+      "burstCost": 8,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.par_terre_reversal",
+          "fromTick": 0,
+          "toTick": 10
+        },
+        {
+          "technique": "technique.fs.granby_roll",
+          "fromTick": 0,
+          "toTick": 12
+        }
+      ],
+      "endStates": [
+        "dangerDelayed",
+        "neutral"
+      ],
+      "animation": "anim.leg_turk.turn"
+    }
+  ],
+  "gesture": {
+    "family": "circle"
+  },
+  "fouls": []
+}

@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.duck_under",
+  "nameKey": "tech.duck_under.name",
+  "role": "attack",
+  "family": "goBehindsAndDrags",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralTied"
+    ],
+    "requiredGrips": [
+      {
+        "type": "collarTie",
+        "side": "any"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 0.9
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "duck",
+      "minimumTicks": 10,
+      "maximumTicks": 18,
+      "attributes": [
+        {
+          "attribute": "goBehindsAndDrags",
+          "percent": 50
+        },
+        {
+          "attribute": "speed",
+          "percent": 30
+        },
+        {
+          "attribute": "agility",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 0.8,
+      "burstCost": 10,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.step_around",
+          "fromTick": 2,
+          "toTick": 10
+        }
+      ],
+      "endStates": [],
+      "animation": "anim.duck_under.duck"
+    },
+    {
+      "id": "behind",
+      "minimumTicks": 14,
+      "maximumTicks": 24,
+      "attributes": [
+        {
+          "attribute": "goBehindsAndDrags",
+          "percent": 50
+        },
+        {
+          "attribute": "agility",
+          "percent": 30
+        },
+        {
+          "attribute": "balance",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 0.8,
+      "burstCost": 6,
+      "outcomes": [
+        "clean",
+        "partial",
+        "failedIntoScramble",
+        "countered"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "controlBehind",
+        "scramble"
+      ],
+      "animation": "anim.duck_under.behind"
+    }
+  ],
+  "gesture": {
+    "family": "swipeAround"
+  },
+  "fouls": []
+}

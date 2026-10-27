@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.arm_bar_turn",
+  "nameKey": "tech.arm_bar_turn.name",
+  "role": "attack",
+  "family": "parTerreTurns",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "parTerreTop"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [
+      "behind"
+    ],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "bar",
+      "minimumTicks": 16,
+      "maximumTicks": 26,
+      "attributes": [
+        {
+          "attribute": "parTerreTurns",
+          "percent": 50
+        },
+        {
+          "attribute": "gripStrength",
+          "percent": 30
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.0,
+      "burstCost": 6,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [],
+      "endStates": [],
+      "animation": "anim.arm_bar_turn.bar"
+    },
+    {
+      "id": "turn",
+      "minimumTicks": 20,
+      "maximumTicks": 34,
+      "attributes": [
+        {
+          "attribute": "parTerreTurns",
+          "percent": 50
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 50
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.2,
+      "burstCost": 8,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.par_terre_reversal",
+          "fromTick": 0,
+          "toTick": 10
+        }
+      ],
+      "endStates": [
+        "dangerDelayed",
+        "neutral"
+      ],
+      "animation": "anim.arm_bar_turn.turn"
+    }
+  ],
+  "gesture": {
+    "family": "circle"
+  },
+  "fouls": []
+}

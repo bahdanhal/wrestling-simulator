@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.two_on_one_throw",
+  "nameKey": "tech.two_on_one_throw.name",
+  "role": "attack",
+  "family": "upperBodyThrows",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralTied"
+    ],
+    "requiredGrips": [
+      {
+        "type": "twoOnOne",
+        "side": "any"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "spin",
+      "minimumTicks": 16,
+      "maximumTicks": 28,
+      "attributes": [
+        {
+          "attribute": "upperBodyThrows",
+          "percent": 50
+        },
+        {
+          "attribute": "handFighting",
+          "percent": 20
+        },
+        {
+          "attribute": "agility",
+          "percent": 30
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.2,
+      "burstCost": 12,
+      "outcomes": [
+        "clean",
+        "partial",
+        "failedIntoScramble",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.step_around",
+          "fromTick": 2,
+          "toTick": 12
+        }
+      ],
+      "endStates": [
+        "flank",
+        "dangerDirect",
+        "scramble"
+      ],
+      "animation": "anim.two_on_one_throw.spin"
+    }
+  ],
+  "gesture": {
+    "family": "sidewaysFlick"
+  },
+  "fouls": []
+}

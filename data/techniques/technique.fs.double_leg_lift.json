@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.fs.double_leg_lift",
+  "nameKey": "tech.double_leg_lift.name",
+  "role": "attack",
+  "family": "legAttacks",
+  "styles": [
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralApart",
+      "neutralTied"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 0.8
+  },
+  "amplitude": "lift",
+  "phases": [
+    {
+      "id": "penetration",
+      "minimumTicks": 10,
+      "maximumTicks": 16,
+      "attributes": [
+        {
+          "attribute": "legAttacks",
+          "percent": 50
+        },
+        {
+          "attribute": "explosiveness",
+          "percent": 30
+        },
+        {
+          "attribute": "speed",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.0,
+      "burstCost": 12,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.fs.sprawl",
+          "fromTick": 0,
+          "toTick": 12
+        }
+      ],
+      "endStates": [],
+      "animation": "anim.double_leg_lift.penetration"
+    },
+    {
+      "id": "lift",
+      "minimumTicks": 18,
+      "maximumTicks": 30,
+      "attributes": [
+        {
+          "attribute": "legAttacks",
+          "percent": 40
+        },
+        {
+          "attribute": "lowerBodyStrength",
+          "percent": 40
+        },
+        {
+          "attribute": "explosiveness",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.1,
+      "staminaCost": 1.8,
+      "burstCost": 18,
+      "outcomes": [
+        "clean",
+        "partial",
+        "countered",
+        "failedIntoScramble"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.fs.front_headlock_spin",
+          "fromTick": 0,
+          "toTick": 10
+        }
+      ],
+      "endStates": [
+        "dangerDirect",
+        "chestOrArms",
+        "controlBehind",
+        "scramble"
+      ],
+      "animation": "anim.double_leg_lift.lift"
+    }
+  ],
+  "gesture": {
+    "family": "straightSwipeDown"
+  },
+  "fouls": []
+}

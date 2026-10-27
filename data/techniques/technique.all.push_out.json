@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.push_out",
+  "nameKey": "tech.push_out.name",
+  "role": "attack",
+  "family": "goBehindsAndDrags",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralTied"
+    ],
+    "requiredGrips": [
+      {
+        "type": "underhook",
+        "side": "any"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "drive",
+      "minimumTicks": 24,
+      "maximumTicks": 40,
+      "attributes": [
+        {
+          "attribute": "lowerBodyStrength",
+          "percent": 50
+        },
+        {
+          "attribute": "workRate",
+          "percent": 30
+        },
+        {
+          "attribute": "matAwareness",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.0,
+      "burstCost": 6,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "pushedOut",
+        "neutral"
+      ],
+      "animation": "anim.push_out.drive"
+    }
+  ],
+  "gesture": {
+    "family": "swipeAround"
+  },
+  "fouls": []
+}

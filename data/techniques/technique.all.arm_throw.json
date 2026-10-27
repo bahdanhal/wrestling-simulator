@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.arm_throw",
+  "nameKey": "tech.arm_throw.name",
+  "role": "attack",
+  "family": "upperBodyThrows",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralTied"
+    ],
+    "requiredGrips": [
+      {
+        "type": "wristControl",
+        "side": "same"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "grandAmplitude",
+  "phases": [
+    {
+      "id": "entry",
+      "minimumTicks": 12,
+      "maximumTicks": 20,
+      "attributes": [
+        {
+          "attribute": "upperBodyThrows",
+          "percent": 40
+        },
+        {
+          "attribute": "speed",
+          "percent": 40
+        },
+        {
+          "attribute": "balance",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.0,
+      "burstCost": 12,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.hip_block",
+          "fromTick": 0,
+          "toTick": 10
+        },
+        {
+          "technique": "technique.all.step_around",
+          "fromTick": 2,
+          "toTick": 14
+        }
+      ],
+      "endStates": [],
+      "animation": "anim.arm_throw.entry"
+    },
+    {
+      "id": "flight",
+      "minimumTicks": 16,
+      "maximumTicks": 26,
+      "attributes": [
+        {
+          "attribute": "upperBodyThrows",
+          "percent": 60
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 40
+        }
+      ],
+      "steepness": 1.1,
+      "staminaCost": 1.2,
+      "burstCost": 12,
+      "outcomes": [
+        "clean",
+        "partial",
+        "countered",
+        "failedIntoScramble"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.counter_throw_landing",
+          "fromTick": 6,
+          "toTick": 22
+        }
+      ],
+      "endStates": [
+        "dangerDirect",
+        "flank",
+        "stomach",
+        "scramble"
+      ],
+      "animation": "anim.arm_throw.flight"
+    }
+  ],
+  "gesture": {
+    "family": "arc"
+  },
+  "fouls": []
+}

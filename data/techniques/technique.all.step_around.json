@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.step_around",
+  "nameKey": "tech.step_around.name",
+  "role": "defence",
+  "family": null,
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "opponentTechnique"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "step",
+      "minimumTicks": 10,
+      "maximumTicks": 16,
+      "attributes": [
+        {
+          "attribute": "agility",
+          "percent": 50
+        },
+        {
+          "attribute": "upperBodyDefence",
+          "percent": 30
+        },
+        {
+          "attribute": "balance",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 0.6,
+      "burstCost": 6,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "neutral"
+      ],
+      "animation": "anim.step_around.step"
+    }
+  ],
+  "gesture": {
+    "family": "swipeAway"
+  },
+  "fouls": []
+}

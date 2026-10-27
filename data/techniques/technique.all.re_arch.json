@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.re_arch",
+  "nameKey": "tech.re_arch.name",
+  "role": "counter",
+  "family": null,
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "opponentTechnique"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "lift",
+  "phases": [
+    {
+      "id": "arch",
+      "minimumTicks": 14,
+      "maximumTicks": 24,
+      "attributes": [
+        {
+          "attribute": "counterWrestling",
+          "percent": 40
+        },
+        {
+          "attribute": "flexibility",
+          "percent": 30
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 30
+        }
+      ],
+      "steepness": 1.2,
+      "staminaCost": 1.6,
+      "burstCost": 18,
+      "outcomes": [
+        "clean",
+        "partial",
+        "blocked"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "dangerDirect",
+        "flank",
+        "scramble"
+      ],
+      "animation": "anim.re_arch.arch"
+    }
+  ],
+  "gesture": {
+    "family": "swipeAgainst"
+  },
+  "fouls": []
+}

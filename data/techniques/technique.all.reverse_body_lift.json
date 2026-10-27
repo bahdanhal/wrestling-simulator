@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.reverse_body_lift",
+  "nameKey": "tech.reverse_body_lift.name",
+  "role": "attack",
+  "family": "parTerreLifts",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "parTerreTop"
+    ],
+    "requiredGrips": [
+      {
+        "type": "waistFromBehind",
+        "side": "any"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [
+      "behind"
+    ],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "grandAmplitude",
+  "phases": [
+    {
+      "id": "lift",
+      "minimumTicks": 18,
+      "maximumTicks": 30,
+      "attributes": [
+        {
+          "attribute": "parTerreLifts",
+          "percent": 50
+        },
+        {
+          "attribute": "lowerBodyStrength",
+          "percent": 30
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 2.2,
+      "burstCost": 20,
+      "outcomes": [
+        "clean",
+        "partial",
+        "countered",
+        "failedIntoScramble"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.par_terre_reversal",
+          "fromTick": 0,
+          "toTick": 10
+        }
+      ],
+      "endStates": [],
+      "animation": "anim.reverse_body_lift.lift"
+    },
+    {
+      "id": "arch",
+      "minimumTicks": 20,
+      "maximumTicks": 32,
+      "attributes": [
+        {
+          "attribute": "parTerreLifts",
+          "percent": 50
+        },
+        {
+          "attribute": "flexibility",
+          "percent": 30
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.3,
+      "staminaCost": 2.2,
+      "burstCost": 20,
+      "outcomes": [
+        "clean",
+        "partial",
+        "countered",
+        "failedIntoScramble"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "dangerDirect",
+        "chestOrArms",
+        "stomach"
+      ],
+      "animation": "anim.reverse_body_lift.arch"
+    }
+  ],
+  "gesture": {
+    "family": "upwardPull"
+  },
+  "fouls": [
+    {
+      "kind": "illegalHold",
+      "baseProbability": 0.02
+    }
+  ]
+}

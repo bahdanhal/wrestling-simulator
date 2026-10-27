@@ -7,7 +7,6 @@ namespace Wrestling.Core.Match
 {
     public sealed partial class BoutEngine
     {
-        private static readonly Fix64 OneThird = Fix64.FromRatio(1, 3);
         private static readonly Fix64 EscapedTorsoRotation = Fix64.FromInt(30);
 
         /// <summary>
@@ -36,7 +35,10 @@ namespace Wrestling.Core.Match
                 return;
             }
 
-            bool shouldersDown = _random.Chance(Contest(power, bridge, Tuning.PinPressure));
+            // Shoulders stay down until the bottom wrestler lifts one off; a fall needs continuous contact.
+            bool shouldersDown = bottom.Body.BothShouldersOnMat
+                ? !_random.Chance(Contest(bridge, power, _rates.ShoulderBreakPerSecond))
+                : _random.Chance(Contest(power, bridge, _rates.PinPerSecond));
             bottom.Body.LeftShoulderOnMat = shouldersDown;
             bottom.Body.RightShoulderOnMat = shouldersDown;
             _shoulderTicks = shouldersDown ? _shoulderTicks + 1 : 0;
@@ -87,7 +89,7 @@ namespace Wrestling.Core.Match
             Corner origin = _scrambleOrigin;
             WrestlerRuntime attacker = Wrestler(origin);
             WrestlerRuntime defender = Wrestler(origin.Opponent());
-            if (_random.NextFix01() < OneThird)
+            if (_random.NextFix01() < Tuning.ScrambleNeutralShare)
             {
                 Position = BoutPosition.Neutral;
                 StandUp(attacker);

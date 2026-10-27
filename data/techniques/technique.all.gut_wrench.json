@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.gut_wrench",
+  "nameKey": "tech.gut_wrench.name",
+  "role": "attack",
+  "family": "parTerreTurns",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "parTerreTop"
+    ],
+    "requiredGrips": [
+      {
+        "type": "gutWrenchLock",
+        "side": "any"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [
+      "behind"
+    ],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "turn",
+      "minimumTicks": 24,
+      "maximumTicks": 40,
+      "attributes": [
+        {
+          "attribute": "parTerreTurns",
+          "percent": 50
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 30
+        },
+        {
+          "attribute": "gripStrength",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.4,
+      "burstCost": 10,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.par_terre_reversal",
+          "fromTick": 0,
+          "toTick": 10
+        }
+      ],
+      "endStates": [
+        "dangerDelayed",
+        "neutral"
+      ],
+      "animation": "anim.gut_wrench.turn"
+    }
+  ],
+  "gesture": {
+    "family": "circle"
+  },
+  "fouls": []
+}

@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.fs.sweep_single",
+  "nameKey": "tech.sweep_single.name",
+  "role": "attack",
+  "family": "legAttacks",
+  "styles": [
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralApart",
+      "neutralTied"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 0.8
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "sweep",
+      "minimumTicks": 12,
+      "maximumTicks": 20,
+      "attributes": [
+        {
+          "attribute": "legAttacks",
+          "percent": 40
+        },
+        {
+          "attribute": "agility",
+          "percent": 40
+        },
+        {
+          "attribute": "speed",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 0.9,
+      "burstCost": 10,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.fs.sprawl",
+          "fromTick": 0,
+          "toTick": 12
+        }
+      ],
+      "endStates": [],
+      "animation": "anim.sweep_single.sweep"
+    },
+    {
+      "id": "finish",
+      "minimumTicks": 18,
+      "maximumTicks": 30,
+      "attributes": [
+        {
+          "attribute": "legAttacks",
+          "percent": 50
+        },
+        {
+          "attribute": "agility",
+          "percent": 30
+        },
+        {
+          "attribute": "workRate",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.2,
+      "burstCost": 10,
+      "outcomes": [
+        "clean",
+        "partial",
+        "failedIntoScramble",
+        "countered"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "controlBehind",
+        "scramble"
+      ],
+      "animation": "anim.sweep_single.finish"
+    }
+  ],
+  "gesture": {
+    "family": "straightSwipeDown"
+  },
+  "fouls": []
+}

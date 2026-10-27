@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.hip_toss_overhook",
+  "nameKey": "tech.hip_toss_overhook.name",
+  "role": "attack",
+  "family": "upperBodyThrows",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralTied"
+    ],
+    "requiredGrips": [
+      {
+        "type": "overhook",
+        "side": "same"
+      }
+    ],
+    "optionalGrips": [
+      {
+        "type": "headAndArm",
+        "bonus": 0.1
+      }
+    ],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "grandAmplitude",
+  "phases": [
+    {
+      "id": "entry",
+      "minimumTicks": 12,
+      "maximumTicks": 20,
+      "attributes": [
+        {
+          "attribute": "upperBodyThrows",
+          "percent": 40
+        },
+        {
+          "attribute": "explosiveness",
+          "percent": 40
+        },
+        {
+          "attribute": "balance",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.0,
+      "burstCost": 12,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.hip_block",
+          "fromTick": 0,
+          "toTick": 10
+        },
+        {
+          "technique": "technique.all.step_around",
+          "fromTick": 4,
+          "toTick": 14
+        }
+      ],
+      "endStates": [],
+      "animation": "anim.hip_toss_overhook.entry"
+    },
+    {
+      "id": "flight",
+      "minimumTicks": 18,
+      "maximumTicks": 28,
+      "attributes": [
+        {
+          "attribute": "upperBodyThrows",
+          "percent": 50
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 50
+        }
+      ],
+      "steepness": 1.2,
+      "staminaCost": 1.4,
+      "burstCost": 14,
+      "outcomes": [
+        "clean",
+        "partial",
+        "countered",
+        "failedIntoScramble"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.counter_throw_landing",
+          "fromTick": 8,
+          "toTick": 24
+        }
+      ],
+      "endStates": [
+        "dangerDirect",
+        "flank",
+        "scramble"
+      ],
+      "animation": "anim.hip_toss_overhook.flight"
+    }
+  ],
+  "gesture": {
+    "family": "arc"
+  },
+  "fouls": []
+}

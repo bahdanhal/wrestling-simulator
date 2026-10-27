@@ -17,6 +17,8 @@ namespace Wrestling.Core.Match
             BalanceRecoveryPerSecond = tuning.BalanceRecoveryPerSecond * perTick;
             BurstRecoveryPerSecond = tuning.BurstRecoveryPerSecond * perTick;
             DangerEscapePerSecond = tuning.DangerEscapePerSecond * perTick;
+            PinPerSecond = tuning.PinPerSecond * perTick;
+            ShoulderBreakPerSecond = tuning.ShoulderBreakPerSecond * perTick;
             GripGainPerSecond = tuning.GripGainPerSecond * perTick;
             GripStrengthDecayPerSecond = tuning.GripStrengthDecayPerSecond * perTick;
             GripStripPerSecond = tuning.GripStripPerSecond * perTick;
@@ -46,6 +48,10 @@ namespace Wrestling.Core.Match
         public Fix64 BurstRecoveryPerSecond { get; }
 
         public Fix64 DangerEscapePerSecond { get; }
+
+        public Fix64 PinPerSecond { get; }
+
+        public Fix64 ShoulderBreakPerSecond { get; }
 
         public Fix64 GripGainPerSecond { get; }
 

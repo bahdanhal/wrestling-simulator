@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.fs.sit_out",
+  "nameKey": "tech.sit_out.name",
+  "role": "defence",
+  "family": null,
+  "styles": [
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "parTerreBottom",
+      "opponentTechnique"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "sit",
+      "minimumTicks": 14,
+      "maximumTicks": 24,
+      "attributes": [
+        {
+          "attribute": "parTerreBottomDefence",
+          "percent": 50
+        },
+        {
+          "attribute": "agility",
+          "percent": 30
+        },
+        {
+          "attribute": "explosiveness",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.0,
+      "burstCost": 10,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "neutral"
+      ],
+      "animation": "anim.sit_out.sit"
+    }
+  ],
+  "gesture": {
+    "family": "swipeAway"
+  },
+  "fouls": []
+}

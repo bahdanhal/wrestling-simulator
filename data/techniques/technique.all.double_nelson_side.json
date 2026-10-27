@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.double_nelson_side",
+  "nameKey": "tech.double_nelson_side.name",
+  "role": "attack",
+  "family": "parTerreTurns",
+  "styles": [
+    "grecoRoman",
+    "freestyle"
+  ],
+  "forbiddenForAges": [
+    "u15",
+    "u17"
+  ],
+  "start": {
+    "positions": [
+      "parTerreTop"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [
+      "behind"
+    ],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "turn",
+      "minimumTicks": 24,
+      "maximumTicks": 40,
+      "attributes": [
+        {
+          "attribute": "parTerreTurns",
+          "percent": 40
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 40
+        },
+        {
+          "attribute": "gripStrength",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.4,
+      "burstCost": 10,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "dangerDelayed",
+        "neutral"
+      ],
+      "animation": "anim.double_nelson_side.turn"
+    }
+  ],
+  "gesture": {
+    "family": "circle"
+  },
+  "fouls": [
+    {
+      "kind": "illegalHold",
+      "baseProbability": 0.03
+    }
+  ]
+}

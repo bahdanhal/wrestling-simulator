@@ -132,10 +132,15 @@ namespace Wrestling.Core.AI
 
         private Intent ParTerreBottom(IBoutView view, Corner self, WrestlerRuntime me)
         {
-            // Defend flat and look for the chance to escape or reverse.
-            var escapes = view.StartableTechniques(self);
-            (TechniqueDefinition Technique, GripSide Side) choice = escapes.FirstOrDefault();
-            bool tryEscape = choice.Technique != null && _random.Chance(Fix64.FromRatio(15, 100) * (me.Effective(WrestlerAttribute.Explosiveness) / Hundred) * Fix64.FromInt(2));
+            // Defend flat; now and then try to escape or reverse (more often with explosive wrestlers).
+            bool tryEscape = _random.Chance(Fix64.FromRatio(25, 1000) * (me.Effective(WrestlerAttribute.Explosiveness) / Hundred) * Fix64.FromInt(2));
+            (TechniqueDefinition Technique, GripSide Side) choice = default;
+            if (tryEscape)
+            {
+                IReadOnlyList<(TechniqueDefinition Technique, GripSide Side)> escapes = view.StartableTechniques(self);
+                choice = escapes.Count > 0 ? escapes[_random.NextInt(0, escapes.Count)] : default;
+                tryEscape = choice.Technique != null;
+            }
             return new Intent
             {
                 PushIntensity = Fix64.FromRatio(3, 10),
@@ -182,6 +187,14 @@ namespace Wrestling.Core.AI
         /// </summary>
         private (TechniqueDefinition, GripSide, Fix64)? ChooseAttack(IBoutView view, Corner self, WrestlerRuntime me, WrestlerRuntime opponent, bool parTerre = false)
         {
+            // Decide whether to go now before weighing every option: most decisions are not attacks.
+            // In par terre the top wrestler gets a couple of real attempts before the referee stands them up.
+            Fix64 rate = parTerre ? Fix64.FromRatio(3, 100) : AttackRate(view, self, me, opponent);
+            if (!_random.Chance(rate))
+            {
+                return null;
+            }
+
             IReadOnlyList<(TechniqueDefinition Technique, GripSide Side)> options = view.StartableTechniques(self);
             if (options.Count == 0)
             {
@@ -203,13 +216,7 @@ namespace Wrestling.Core.AI
                 }
             }
 
-            if (best == null || best.Value.Item3 <= Fix64.Zero)
-            {
-                return null;
-            }
-
-            Fix64 rate = parTerre ? Fix64.FromRatio(15, 100) : AttackRate(view, self, me, opponent);
-            return _random.Chance(rate) ? best : null;
+            return best == null || best.Value.Item3 <= Fix64.Zero ? null : best;
         }
 
         /// <summary>Estimated points for starting the technique: chance of every phase succeeding × points of the best end state, less counter risk.</summary>
@@ -221,7 +228,7 @@ namespace Wrestling.Core.AI
             foreach (PhaseDefinition phase in technique.Phases)
             {
                 Fix64 attack = ContestFormulas.AttackScore(me, phase, quality, Fix64.Zero, opponent.Body.Balance, view.Tuning);
-                Fix64 defence = ContestFormulas.DefenceScore(opponent, technique);
+                Fix64 defence = ContestFormulas.DefenceScore(opponent, technique, view.Tuning);
                 chance *= ContestFormulas.PhaseChance(phase, attack, defence, view.Tuning);
                 counterWindows += phase.CounterWindows.Count(w => opponent.Known(w.Technique) != null);
             }

@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.lateral_drop",
+  "nameKey": "tech.lateral_drop.name",
+  "role": "attack",
+  "family": "bodyLockAndLifts",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralTied"
+    ],
+    "requiredGrips": [
+      {
+        "type": "underhook",
+        "side": "same"
+      }
+    ],
+    "optionalGrips": [
+      {
+        "type": "overhook",
+        "bonus": 0.1
+      }
+    ],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "drop",
+      "minimumTicks": 16,
+      "maximumTicks": 28,
+      "attributes": [
+        {
+          "attribute": "bodyLockAndLifts",
+          "percent": 50
+        },
+        {
+          "attribute": "explosiveness",
+          "percent": 30
+        },
+        {
+          "attribute": "balance",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.2,
+      "staminaCost": 1.4,
+      "burstCost": 14,
+      "outcomes": [
+        "clean",
+        "partial",
+        "failedIntoScramble",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.counter_throw_landing",
+          "fromTick": 6,
+          "toTick": 24
+        },
+        {
+          "technique": "technique.all.hip_block",
+          "fromTick": 0,
+          "toTick": 8
+        }
+      ],
+      "endStates": [
+        "dangerDirect",
+        "flank",
+        "scramble"
+      ],
+      "animation": "anim.lateral_drop.drop"
+    }
+  ],
+  "gesture": {
+    "family": "sidewaysFlick"
+  },
+  "fouls": []
+}

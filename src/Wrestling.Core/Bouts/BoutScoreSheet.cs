@@ -107,7 +107,8 @@ namespace Wrestling.Core.Bouts
         /// </summary>
         public Corner? DecideOnPoints() => Leader ?? TieBreak.Decide(this);
 
-        internal IEnumerable<PointsEntry> ActivePoints()
+        /// <summary>Point awards that have not been revoked, in recording order.</summary>
+        public IEnumerable<PointsEntry> ActivePoints()
         {
             foreach (ScoreSheetEntry entry in _entries)
             {

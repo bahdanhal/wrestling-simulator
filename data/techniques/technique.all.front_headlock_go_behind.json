@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.front_headlock_go_behind",
+  "nameKey": "tech.front_headlock_go_behind.name",
+  "role": "attack",
+  "family": "snapDownsAndFrontHeadlock",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralTied"
+    ],
+    "requiredGrips": [
+      {
+        "type": "frontHeadlock",
+        "side": "any"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "spin",
+      "minimumTicks": 16,
+      "maximumTicks": 28,
+      "attributes": [
+        {
+          "attribute": "snapDownsAndFrontHeadlock",
+          "percent": 50
+        },
+        {
+          "attribute": "agility",
+          "percent": 30
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.0,
+      "burstCost": 8,
+      "outcomes": [
+        "clean",
+        "partial",
+        "failedIntoScramble",
+        "countered"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "controlBehind",
+        "scramble"
+      ],
+      "animation": "anim.front_headlock_go_behind.spin"
+    }
+  ],
+  "gesture": {
+    "family": "swipeAround"
+  },
+  "fouls": []
+}

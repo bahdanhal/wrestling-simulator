@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.front_lift",
+  "nameKey": "tech.front_lift.name",
+  "role": "attack",
+  "family": "parTerreLifts",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "parTerreTop"
+    ],
+    "requiredGrips": [
+      {
+        "type": "waistFromBehind",
+        "side": "any"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [
+      "behind"
+    ],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "grandAmplitude",
+  "phases": [
+    {
+      "id": "lift",
+      "minimumTicks": 18,
+      "maximumTicks": 30,
+      "attributes": [
+        {
+          "attribute": "parTerreLifts",
+          "percent": 50
+        },
+        {
+          "attribute": "lowerBodyStrength",
+          "percent": 30
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 2.0,
+      "burstCost": 18,
+      "outcomes": [
+        "clean",
+        "partial",
+        "countered",
+        "failedIntoScramble"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.par_terre_reversal",
+          "fromTick": 0,
+          "toTick": 10
+        }
+      ],
+      "endStates": [],
+      "animation": "anim.front_lift.lift"
+    },
+    {
+      "id": "throw",
+      "minimumTicks": 18,
+      "maximumTicks": 30,
+      "attributes": [
+        {
+          "attribute": "parTerreLifts",
+          "percent": 50
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 30
+        },
+        {
+          "attribute": "flexibility",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.2,
+      "staminaCost": 2.0,
+      "burstCost": 18,
+      "outcomes": [
+        "clean",
+        "partial",
+        "countered",
+        "failedIntoScramble"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "dangerDirect",
+        "chestOrArms",
+        "stomach"
+      ],
+      "animation": "anim.front_lift.throw"
+    }
+  ],
+  "gesture": {
+    "family": "upwardPull"
+  },
+  "fouls": []
+}

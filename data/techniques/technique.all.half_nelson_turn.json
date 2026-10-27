@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.half_nelson_turn",
+  "nameKey": "tech.half_nelson_turn.name",
+  "role": "attack",
+  "family": "parTerreTurns",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "parTerreTop"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [
+      "behind"
+    ],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "turn",
+      "minimumTicks": 24,
+      "maximumTicks": 40,
+      "attributes": [
+        {
+          "attribute": "parTerreTurns",
+          "percent": 50
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 30
+        },
+        {
+          "attribute": "workRate",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.2,
+      "burstCost": 8,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.par_terre_reversal",
+          "fromTick": 0,
+          "toTick": 10
+        }
+      ],
+      "endStates": [
+        "dangerDelayed",
+        "neutral"
+      ],
+      "animation": "anim.half_nelson_turn.turn"
+    }
+  ],
+  "gesture": {
+    "family": "circle"
+  },
+  "fouls": []
+}

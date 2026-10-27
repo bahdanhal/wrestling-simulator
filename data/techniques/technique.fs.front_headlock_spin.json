@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.fs.front_headlock_spin",
+  "nameKey": "tech.front_headlock_spin.name",
+  "role": "counter",
+  "family": null,
+  "styles": [
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "opponentTechnique"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "spin",
+      "minimumTicks": 14,
+      "maximumTicks": 24,
+      "attributes": [
+        {
+          "attribute": "counterWrestling",
+          "percent": 40
+        },
+        {
+          "attribute": "snapDownsAndFrontHeadlock",
+          "percent": 30
+        },
+        {
+          "attribute": "agility",
+          "percent": 30
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.0,
+      "burstCost": 10,
+      "outcomes": [
+        "clean",
+        "partial",
+        "blocked"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "controlBehind",
+        "scramble"
+      ],
+      "animation": "anim.front_headlock_spin.spin"
+    }
+  ],
+  "gesture": {
+    "family": "swipeAround"
+  },
+  "fouls": []
+}

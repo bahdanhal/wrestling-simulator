@@ -12,6 +12,9 @@ namespace Wrestling.Core.Match
     /// </summary>
     public static class ContestFormulas
     {
+        /// <summary>Attribute points the top wrestler gains from position when the bottom wrestler tries to escape.</summary>
+        private static readonly Fix64 TopPositionAdvantage = Fix64.FromInt(25);
+
         /// <summary>Attack score A: phase attributes × execution quality, plus grip bonus and the opening from the defender's lost balance.</summary>
         public static Fix64 AttackScore(WrestlerRuntime attacker, PhaseDefinition phase, Fix64 quality, Fix64 gripBonus, Fix64 defenderBalance, EngineTuning tuning)
         {
@@ -22,11 +25,20 @@ namespace Wrestling.Core.Match
         }
 
         /// <summary>Defence score D: the attributes that stop this kind of technique.</summary>
-        public static Fix64 DefenceScore(WrestlerRuntime defender, TechniqueDefinition technique)
+        public static Fix64 DefenceScore(WrestlerRuntime defender, TechniqueDefinition technique, EngineTuning tuning) =>
+            technique.Role == TechniqueRole.Attack ? FamilyDefence(defender, technique) + tuning.DefenceReadiness : FamilyDefence(defender, technique);
+
+        private static Fix64 FamilyDefence(WrestlerRuntime defender, TechniqueDefinition technique)
         {
+            if (technique.Role != TechniqueRole.Attack && technique.Start.Positions.Contains(StartPosition.ParTerreBottom))
+            {
+                // Against an escape or reversal from underneath: the top wrestler's control, plus the advantage of being on top.
+                return defender.Score((WrestlerAttribute.ParTerreTurns, 40), (WrestlerAttribute.UpperBodyStrength, 30), (WrestlerAttribute.Balance, 30)) + TopPositionAdvantage;
+            }
+
             if (technique.Role != TechniqueRole.Attack || technique.Family == null)
             {
-                // Against a counter or an escape: staying balanced and reading it.
+                // Against a counter: staying balanced and reading it.
                 return defender.Score((WrestlerAttribute.Balance, 50), (WrestlerAttribute.WrestlingIq, 50));
             }
 

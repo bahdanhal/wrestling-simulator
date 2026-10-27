@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.hip_block",
+  "nameKey": "tech.hip_block.name",
+  "role": "defence",
+  "family": null,
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "opponentTechnique"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "block",
+      "minimumTicks": 10,
+      "maximumTicks": 18,
+      "attributes": [
+        {
+          "attribute": "upperBodyDefence",
+          "percent": 60
+        },
+        {
+          "attribute": "lowerBodyStrength",
+          "percent": 40
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 0.8,
+      "burstCost": 8,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "neutral",
+        "scramble"
+      ],
+      "animation": "anim.hip_block.block"
+    }
+  ],
+  "gesture": {
+    "family": "swipeAway"
+  },
+  "fouls": []
+}

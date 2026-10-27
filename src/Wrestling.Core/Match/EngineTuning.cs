@@ -63,6 +63,9 @@ namespace Wrestling.Core.Match
         /// <summary>Attribute points that move the sigmoid by one unit when resolving a contest.</summary>
         public Fix64 ResolutionScale { get; init; }
 
+        /// <summary>Attribute points added to every defence against an attack: a set, alert defender's readiness.</summary>
+        public Fix64 DefenceReadiness { get; init; }
+
         /// <summary>Attack score bonus (attribute points) for a fully off-balance defender.</summary>
         public Fix64 OpeningWeight { get; init; }
 
@@ -86,8 +89,14 @@ namespace Wrestling.Core.Match
 
         public Fix64 DangerEscapePerSecond { get; init; }
 
-        /// <summary>Chance per tick, at even strength, that the top wrestler holds both shoulders down.</summary>
-        public Fix64 PinPressure { get; init; }
+        /// <summary>Rate, at even strength, at which the top wrestler forces both shoulders to the mat.</summary>
+        public Fix64 PinPerSecond { get; init; }
+
+        /// <summary>Rate, at even strength, at which the bottom wrestler lifts a pinned shoulder back off the mat.</summary>
+        public Fix64 ShoulderBreakPerSecond { get; init; }
+
+        /// <summary>Share of scrambles that end with both wrestlers back on their feet.</summary>
+        public Fix64 ScrambleNeutralShare { get; init; }
 
         public Fix64 DangerMaximumSeconds { get; init; }
 
@@ -139,6 +148,7 @@ namespace Wrestling.Core.Match
             Fraction(context, FatigueFloor, "fatigueFloor");
             Positive(context, ResolutionScale, "resolutionScale");
             Positive(context, OpeningWeight, "openingWeight");
+            Positive(context, DefenceReadiness, "defenceReadiness");
             Positive(context, GripBonusWeight, "gripBonusWeight");
             Fraction(context, FailedAttackBalanceLoss, "failedAttackBalanceLoss");
             Positive(context, AttackRecoverySeconds, "attackRecoverySeconds");
@@ -147,7 +157,9 @@ namespace Wrestling.Core.Match
             Positive(context, StoppageSeconds, "stoppageSeconds");
             Positive(context, ParTerreStalemateSeconds, "parTerreStalemateSeconds");
             Positive(context, DangerEscapePerSecond, "dangerEscapePerSecond");
-            Fraction(context, PinPressure, "pinPressure");
+            Positive(context, PinPerSecond, "pinPerSecond");
+            Positive(context, ShoulderBreakPerSecond, "shoulderBreakPerSecond");
+            Fraction(context, ScrambleNeutralShare, "scrambleNeutralShare");
             Positive(context, DangerMaximumSeconds, "dangerMaximumSeconds");
             Positive(context, ActivityHalfLifeSeconds, "activityHalfLifeSeconds");
             Positive(context, ActivityPerAttack, "activityPerAttack");

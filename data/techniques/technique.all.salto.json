@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.salto",
+  "nameKey": "tech.salto.name",
+  "role": "attack",
+  "family": "bodyLockAndLifts",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralTied"
+    ],
+    "requiredGrips": [
+      {
+        "type": "bodyLock",
+        "side": "any"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "grandAmplitude",
+  "phases": [
+    {
+      "id": "lift",
+      "minimumTicks": 14,
+      "maximumTicks": 22,
+      "attributes": [
+        {
+          "attribute": "bodyLockAndLifts",
+          "percent": 40
+        },
+        {
+          "attribute": "lowerBodyStrength",
+          "percent": 40
+        },
+        {
+          "attribute": "explosiveness",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.8,
+      "burstCost": 18,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.hip_block",
+          "fromTick": 0,
+          "toTick": 12
+        }
+      ],
+      "endStates": [],
+      "animation": "anim.salto.lift"
+    },
+    {
+      "id": "bridge",
+      "minimumTicks": 20,
+      "maximumTicks": 32,
+      "attributes": [
+        {
+          "attribute": "bodyLockAndLifts",
+          "percent": 50
+        },
+        {
+          "attribute": "flexibility",
+          "percent": 30
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.3,
+      "staminaCost": 2.4,
+      "burstCost": 24,
+      "outcomes": [
+        "clean",
+        "partial",
+        "countered",
+        "failedIntoScramble"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.re_arch",
+          "fromTick": 8,
+          "toTick": 28
+        }
+      ],
+      "endStates": [
+        "dangerDirect",
+        "flank",
+        "scramble"
+      ],
+      "animation": "anim.salto.bridge"
+    }
+  ],
+  "gesture": {
+    "family": "scoopOver"
+  },
+  "fouls": []
+}

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.fs.knee_pick",
+  "nameKey": "tech.knee_pick.name",
+  "role": "attack",
+  "family": "legAttacks",
+  "styles": [
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralTied"
+    ],
+    "requiredGrips": [
+      {
+        "type": "collarTie",
+        "side": "any"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "pick",
+      "minimumTicks": 12,
+      "maximumTicks": 20,
+      "attributes": [
+        {
+          "attribute": "legAttacks",
+          "percent": 50
+        },
+        {
+          "attribute": "speed",
+          "percent": 30
+        },
+        {
+          "attribute": "handFighting",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 0.8,
+      "burstCost": 8,
+      "outcomes": [
+        "clean",
+        "partial",
+        "failedIntoScramble",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.fs.sprawl",
+          "fromTick": 0,
+          "toTick": 12
+        }
+      ],
+      "endStates": [
+        "controlBehind",
+        "scramble"
+      ],
+      "animation": "anim.knee_pick.pick"
+    }
+  ],
+  "gesture": {
+    "family": "straightSwipeDown"
+  },
+  "fouls": []
+}

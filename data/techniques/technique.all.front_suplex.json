@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.front_suplex",
+  "nameKey": "tech.front_suplex.name",
+  "role": "attack",
+  "family": "bodyLockAndLifts",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralTied"
+    ],
+    "requiredGrips": [
+      {
+        "type": "bodyLock",
+        "side": "any"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "grandAmplitude",
+  "phases": [
+    {
+      "id": "lift",
+      "minimumTicks": 14,
+      "maximumTicks": 22,
+      "attributes": [
+        {
+          "attribute": "bodyLockAndLifts",
+          "percent": 40
+        },
+        {
+          "attribute": "lowerBodyStrength",
+          "percent": 40
+        },
+        {
+          "attribute": "explosiveness",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.6,
+      "burstCost": 16,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.hip_block",
+          "fromTick": 0,
+          "toTick": 12
+        },
+        {
+          "technique": "technique.all.counter_lift",
+          "fromTick": 4,
+          "toTick": 18
+        }
+      ],
+      "endStates": [],
+      "animation": "anim.front_suplex.lift"
+    },
+    {
+      "id": "arch",
+      "minimumTicks": 18,
+      "maximumTicks": 30,
+      "attributes": [
+        {
+          "attribute": "bodyLockAndLifts",
+          "percent": 50
+        },
+        {
+          "attribute": "flexibility",
+          "percent": 20
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 30
+        }
+      ],
+      "steepness": 1.3,
+      "staminaCost": 2.0,
+      "burstCost": 20,
+      "outcomes": [
+        "clean",
+        "partial",
+        "countered",
+        "failedIntoScramble"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.re_arch",
+          "fromTick": 6,
+          "toTick": 26
+        }
+      ],
+      "endStates": [
+        "dangerDirect",
+        "flank",
+        "scramble"
+      ],
+      "animation": "anim.front_suplex.arch"
+    }
+  ],
+  "gesture": {
+    "family": "scoopOver"
+  },
+  "fouls": []
+}

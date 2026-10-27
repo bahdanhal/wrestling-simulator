@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.fs.single_leg_high",
+  "nameKey": "tech.single_leg_high.name",
+  "role": "attack",
+  "family": "legAttacks",
+  "styles": [
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralApart",
+      "neutralTied"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 0.85
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "penetration",
+      "minimumTicks": 10,
+      "maximumTicks": 16,
+      "attributes": [
+        {
+          "attribute": "legAttacks",
+          "percent": 50
+        },
+        {
+          "attribute": "speed",
+          "percent": 30
+        },
+        {
+          "attribute": "explosiveness",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 0.8,
+      "burstCost": 10,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.fs.sprawl",
+          "fromTick": 0,
+          "toTick": 12
+        },
+        {
+          "technique": "technique.fs.whizzer",
+          "fromTick": 4,
+          "toTick": 16
+        }
+      ],
+      "endStates": [],
+      "animation": "anim.single_leg_high.penetration"
+    },
+    {
+      "id": "finish",
+      "minimumTicks": 18,
+      "maximumTicks": 32,
+      "attributes": [
+        {
+          "attribute": "legAttacks",
+          "percent": 50
+        },
+        {
+          "attribute": "balance",
+          "percent": 20
+        },
+        {
+          "attribute": "workRate",
+          "percent": 30
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.2,
+      "burstCost": 10,
+      "outcomes": [
+        "clean",
+        "partial",
+        "failedIntoScramble",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.fs.whizzer",
+          "fromTick": 0,
+          "toTick": 16
+        }
+      ],
+      "endStates": [
+        "controlBehind",
+        "scramble"
+      ],
+      "animation": "anim.single_leg_high.finish"
+    }
+  ],
+  "gesture": {
+    "family": "straightSwipeDown"
+  },
+  "fouls": []
+}

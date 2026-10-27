@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.fs.inside_trip",
+  "nameKey": "tech.inside_trip.name",
+  "role": "attack",
+  "family": "tripsAndSweeps",
+  "styles": [
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralTied"
+    ],
+    "requiredGrips": [
+      {
+        "type": "bodyLock",
+        "side": "any"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "trip",
+      "minimumTicks": 14,
+      "maximumTicks": 24,
+      "attributes": [
+        {
+          "attribute": "tripsAndSweeps",
+          "percent": 50
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 30
+        },
+        {
+          "attribute": "balance",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.0,
+      "burstCost": 10,
+      "outcomes": [
+        "clean",
+        "partial",
+        "failedIntoScramble",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.counter_throw_landing",
+          "fromTick": 6,
+          "toTick": 20
+        }
+      ],
+      "endStates": [
+        "dangerDirect",
+        "flank",
+        "scramble"
+      ],
+      "animation": "anim.inside_trip.trip"
+    }
+  ],
+  "gesture": {
+    "family": "sidewaysFlick"
+  },
+  "fouls": []
+}

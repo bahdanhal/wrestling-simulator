@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.body_lock_throw",
+  "nameKey": "tech.body_lock_throw.name",
+  "role": "attack",
+  "family": "bodyLockAndLifts",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralTied"
+    ],
+    "requiredGrips": [
+      {
+        "type": "bodyLock",
+        "side": "any"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "grandAmplitude",
+  "phases": [
+    {
+      "id": "lock",
+      "minimumTicks": 12,
+      "maximumTicks": 20,
+      "attributes": [
+        {
+          "attribute": "bodyLockAndLifts",
+          "percent": 40
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 40
+        },
+        {
+          "attribute": "lowerBodyStrength",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.2,
+      "burstCost": 12,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.hip_block",
+          "fromTick": 0,
+          "toTick": 12
+        }
+      ],
+      "endStates": [],
+      "animation": "anim.body_lock_throw.lock"
+    },
+    {
+      "id": "flight",
+      "minimumTicks": 18,
+      "maximumTicks": 30,
+      "attributes": [
+        {
+          "attribute": "bodyLockAndLifts",
+          "percent": 40
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 30
+        },
+        {
+          "attribute": "explosiveness",
+          "percent": 30
+        }
+      ],
+      "steepness": 1.2,
+      "staminaCost": 1.8,
+      "burstCost": 18,
+      "outcomes": [
+        "clean",
+        "partial",
+        "countered",
+        "failedIntoScramble"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.re_arch",
+          "fromTick": 6,
+          "toTick": 24
+        }
+      ],
+      "endStates": [
+        "dangerDirect",
+        "flank",
+        "scramble"
+      ],
+      "animation": "anim.body_lock_throw.flight"
+    }
+  ],
+  "gesture": {
+    "family": "scoopOver"
+  },
+  "fouls": []
+}

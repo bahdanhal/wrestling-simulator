@@ -13,6 +13,7 @@ namespace Wrestling.Core.Match
         private static readonly Fix64 ShotDistanceFactor = Fix64.FromInt(2);
         private static readonly Fix64 PartialQualityFactor = Fix64.FromRatio(3, 4);
         private static readonly Fix64 DangerTorsoRotation = Fix64.FromInt(130);
+        private static readonly Fix64 CounterOutcomeShare = Fix64.FromRatio(1, 200);
 
         private void StartRequestedTechniques()
         {
@@ -211,7 +212,7 @@ namespace Wrestling.Core.Match
             self.Burst = Fix64.Max(Fix64.Zero, self.Burst - phase.BurstCost);
 
             Fix64 attack = ContestFormulas.AttackScore(self, phase, execution.Quality, execution.GripBonus, opponent.Body.Balance, Tuning);
-            Fix64 defence = ContestFormulas.DefenceScore(opponent, execution.Definition);
+            Fix64 defence = ContestFormulas.DefenceScore(opponent, execution.Definition, Tuning);
             Fix64 chance = ContestFormulas.PhaseChance(phase, attack, defence, Tuning);
             Fix64 roll = _random.NextFix01();
 
@@ -263,7 +264,9 @@ namespace Wrestling.Core.Match
 
                     return;
                 case PhaseOutcome.Countered:
-                    TechniqueDefinition? counter = execution.Phase.CounterWindows
+                    // Turning a failed attack into a counter takes counter-wrestling skill.
+                    Fix64 counterChance = Wrestler(defender).Effective(WrestlerAttribute.CounterWrestling) * CounterOutcomeShare;
+                    TechniqueDefinition? counter = !_random.Chance(counterChance) ? null : execution.Phase.CounterWindows
                         .Where(w => CanCounter(defender, w.Technique))
                         .Select(w => Catalog.Get(w.Technique))
                         .OrderByDescending(c => Wrestler(defender).Known(c.Id)!.Proficiency)

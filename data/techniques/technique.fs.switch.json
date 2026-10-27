@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.fs.switch",
+  "nameKey": "tech.switch.name",
+  "role": "defence",
+  "family": null,
+  "styles": [
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "parTerreBottom",
+      "opponentTechnique"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "switch",
+      "minimumTicks": 16,
+      "maximumTicks": 26,
+      "attributes": [
+        {
+          "attribute": "parTerreBottomDefence",
+          "percent": 40
+        },
+        {
+          "attribute": "explosiveness",
+          "percent": 30
+        },
+        {
+          "attribute": "agility",
+          "percent": 30
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.2,
+      "burstCost": 12,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "controlBehind",
+        "neutral"
+      ],
+      "animation": "anim.switch.switch"
+    }
+  ],
+  "gesture": {
+    "family": "swipeAround"
+  },
+  "fouls": []
+}

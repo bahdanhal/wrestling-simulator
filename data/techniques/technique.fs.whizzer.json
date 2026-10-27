@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.fs.whizzer",
+  "nameKey": "tech.whizzer.name",
+  "role": "defence",
+  "family": null,
+  "styles": [
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "opponentTechnique"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "whizzer",
+      "minimumTicks": 12,
+      "maximumTicks": 20,
+      "attributes": [
+        {
+          "attribute": "legDefence",
+          "percent": 40
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 40
+        },
+        {
+          "attribute": "balance",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.0,
+      "burstCost": 8,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "neutral",
+        "scramble"
+      ],
+      "animation": "anim.whizzer.whizzer"
+    }
+  ],
+  "gesture": {
+    "family": "swipeAway"
+  },
+  "fouls": []
+}

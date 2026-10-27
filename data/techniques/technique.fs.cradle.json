@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.fs.cradle",
+  "nameKey": "tech.cradle.name",
+  "role": "attack",
+  "family": "parTerreTurns",
+  "styles": [
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "parTerreTop"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [
+      "behind"
+    ],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "lock",
+      "minimumTicks": 16,
+      "maximumTicks": 28,
+      "attributes": [
+        {
+          "attribute": "parTerreTurns",
+          "percent": 40
+        },
+        {
+          "attribute": "gripStrength",
+          "percent": 40
+        },
+        {
+          "attribute": "flexibility",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.0,
+      "burstCost": 8,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [],
+      "endStates": [],
+      "animation": "anim.cradle.lock"
+    },
+    {
+      "id": "roll",
+      "minimumTicks": 20,
+      "maximumTicks": 32,
+      "attributes": [
+        {
+          "attribute": "parTerreTurns",
+          "percent": 50
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 50
+        }
+      ],
+      "steepness": 1.1,
+      "staminaCost": 1.4,
+      "burstCost": 10,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.par_terre_reversal",
+          "fromTick": 0,
+          "toTick": 10
+        },
+        {
+          "technique": "technique.fs.granby_roll",
+          "fromTick": 0,
+          "toTick": 12
+        }
+      ],
+      "endStates": [
+        "dangerDelayed",
+        "neutral"
+      ],
+      "animation": "anim.cradle.roll"
+    }
+  ],
+  "gesture": {
+    "family": "circle"
+  },
+  "fouls": []
+}

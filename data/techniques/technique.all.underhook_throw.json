@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.underhook_throw",
+  "nameKey": "tech.underhook_throw.name",
+  "role": "attack",
+  "family": "upperBodyThrows",
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralTied"
+    ],
+    "requiredGrips": [
+      {
+        "type": "underhook",
+        "side": "same"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "grandAmplitude",
+  "phases": [
+    {
+      "id": "entry",
+      "minimumTicks": 12,
+      "maximumTicks": 20,
+      "attributes": [
+        {
+          "attribute": "upperBodyThrows",
+          "percent": 50
+        },
+        {
+          "attribute": "explosiveness",
+          "percent": 30
+        },
+        {
+          "attribute": "balance",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.0,
+      "burstCost": 12,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.hip_block",
+          "fromTick": 0,
+          "toTick": 12
+        }
+      ],
+      "endStates": [],
+      "animation": "anim.underhook_throw.entry"
+    },
+    {
+      "id": "flight",
+      "minimumTicks": 16,
+      "maximumTicks": 26,
+      "attributes": [
+        {
+          "attribute": "upperBodyThrows",
+          "percent": 50
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 50
+        }
+      ],
+      "steepness": 1.2,
+      "staminaCost": 1.4,
+      "burstCost": 14,
+      "outcomes": [
+        "clean",
+        "partial",
+        "countered",
+        "failedIntoScramble"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.counter_throw_landing",
+          "fromTick": 6,
+          "toTick": 22
+        }
+      ],
+      "endStates": [
+        "dangerDirect",
+        "flank",
+        "scramble"
+      ],
+      "animation": "anim.underhook_throw.flight"
+    }
+  ],
+  "gesture": {
+    "family": "arc"
+  },
+  "fouls": []
+}

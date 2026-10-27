@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.fs.fireman_carry",
+  "nameKey": "tech.fireman_carry.name",
+  "role": "attack",
+  "family": "legAttacks",
+  "styles": [
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "neutralTied"
+    ],
+    "requiredGrips": [
+      {
+        "type": "wristControl",
+        "side": "same"
+      }
+    ],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "grandAmplitude",
+  "phases": [
+    {
+      "id": "drop",
+      "minimumTicks": 12,
+      "maximumTicks": 18,
+      "attributes": [
+        {
+          "attribute": "legAttacks",
+          "percent": 40
+        },
+        {
+          "attribute": "explosiveness",
+          "percent": 40
+        },
+        {
+          "attribute": "agility",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.2,
+      "burstCost": 14,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked",
+        "countered"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.fs.sprawl",
+          "fromTick": 0,
+          "toTick": 12
+        }
+      ],
+      "endStates": [],
+      "animation": "anim.fireman_carry.drop"
+    },
+    {
+      "id": "throw",
+      "minimumTicks": 18,
+      "maximumTicks": 30,
+      "attributes": [
+        {
+          "attribute": "legAttacks",
+          "percent": 40
+        },
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 30
+        },
+        {
+          "attribute": "lowerBodyStrength",
+          "percent": 30
+        }
+      ],
+      "steepness": 1.2,
+      "staminaCost": 1.6,
+      "burstCost": 16,
+      "outcomes": [
+        "clean",
+        "partial",
+        "countered",
+        "failedIntoScramble"
+      ],
+      "counterWindows": [
+        {
+          "technique": "technique.all.counter_throw_landing",
+          "fromTick": 6,
+          "toTick": 22
+        }
+      ],
+      "endStates": [
+        "dangerDirect",
+        "flank",
+        "scramble"
+      ],
+      "animation": "anim.fireman_carry.throw"
+    }
+  ],
+  "gesture": {
+    "family": "scoopOver"
+  },
+  "fouls": []
+}

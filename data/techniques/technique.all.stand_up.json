@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.stand_up",
+  "nameKey": "tech.stand_up.name",
+  "role": "defence",
+  "family": null,
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "parTerreBottom",
+      "opponentTechnique"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "rise",
+      "minimumTicks": 18,
+      "maximumTicks": 30,
+      "attributes": [
+        {
+          "attribute": "parTerreBottomDefence",
+          "percent": 50
+        },
+        {
+          "attribute": "explosiveness",
+          "percent": 30
+        },
+        {
+          "attribute": "lowerBodyStrength",
+          "percent": 20
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.2,
+      "burstCost": 12,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "neutral"
+      ],
+      "animation": "anim.stand_up.rise"
+    }
+  ],
+  "gesture": {
+    "family": "upwardPull"
+  },
+  "fouls": []
+}

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "id": "technique.all.par_terre_reversal",
+  "nameKey": "tech.par_terre_reversal.name",
+  "role": "defence",
+  "family": null,
+  "styles": [
+    "grecoRoman",
+    "freestyle",
+    "womens"
+  ],
+  "forbiddenForAges": [],
+  "start": {
+    "positions": [
+      "parTerreBottom",
+      "opponentTechnique"
+    ],
+    "requiredGrips": [],
+    "optionalGrips": [],
+    "relativePositions": [],
+    "minimumOwnLevel": 0,
+    "maximumOwnLevel": 1
+  },
+  "amplitude": "none",
+  "phases": [
+    {
+      "id": "reverse",
+      "minimumTicks": 18,
+      "maximumTicks": 30,
+      "attributes": [
+        {
+          "attribute": "parTerreBottomDefence",
+          "percent": 40
+        },
+        {
+          "attribute": "agility",
+          "percent": 30
+        },
+        {
+          "attribute": "counterWrestling",
+          "percent": 30
+        }
+      ],
+      "steepness": 1.0,
+      "staminaCost": 1.4,
+      "burstCost": 14,
+      "outcomes": [
+        "clean",
+        "stalled",
+        "blocked"
+      ],
+      "counterWindows": [],
+      "endStates": [
+        "controlBehind",
+        "neutral"
+      ],
+      "animation": "anim.par_terre_reversal.reverse"
+    }
+  ],
+  "gesture": {
+    "family": "swipeAgainst"
+  },
+  "fouls": []
+}
