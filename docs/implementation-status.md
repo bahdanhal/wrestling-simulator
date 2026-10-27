@@ -35,6 +35,8 @@ What is built, against [game-design.md](game-design.md). Updated with every chan
 | Technique content model, catalogue cross-checks and loader | `Wrestling.Core.Techniques`, `Wrestling.Data.Techniques` | 6.2, 13.4 |
 | Scoring evaluator: Art. 34/37/38/45 values from action facts, step-outs, risk rule | `Wrestling.Core.Match.ScoringEvaluator` | 3.5, 3.6, 5.10 |
 | Freestyle activity clock, Greco-Roman passivity, video challenge procedures | `ActivityClockProcedure`, `GrecoPassivityProcedure`, `ChallengeProcedure` | 3.8, 3.12 |
+| Engine tuning as data | `EngineTuning`, `data/engine/tuning.json` | 5, 15 |
+| Bout engine tick loop: intents, hand-fight, pressure and balance, techniques with phases and counters, par terre, danger and falls, scrambles, risk rule, step-outs and deliberate push-outs, zone calls, passivity in both styles, stoppages and restarts, fatigue, events | `Wrestling.Core.Match.BoutEngine` | 5.1–5.12 |
 
 ## Known rule gaps
 
@@ -47,8 +49,9 @@ Rules from the rulebook that the competition code does not handle yet:
 
 In dependency order:
 
-1. Bout state and tick loop (intents, hand-fight, movement, techniques, fatigue, events)
-2. Officials model (observation noise, passivity detection, caution strictness)
-3. Technique catalogue content (section 6.3), tuned with the headless runner
-4. Event scheduling (sessions, mats, 20-minute rest, two-day categories)
-5. Wrestler creation (backgrounds, point-buy), ageing and training
+1. AI wrestler controller with tactics (design 5.13)
+2. Technique catalogue content (section 6.3) and calibration against real statistics with the headless runner (attack frequency, scores, victory types)
+3. Officials model: observation noise, wrong calls, challenge decisions (the engine currently officiates exactly)
+4. Engine performance pass (allocation-free hot paths; target under 5 ms per bout on a mid-range phone)
+5. Event scheduling (sessions, mats, 20-minute rest, two-day categories)
+6. Wrestler creation (backgrounds, point-buy), ageing and training

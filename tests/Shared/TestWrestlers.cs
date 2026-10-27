@@ -8,6 +8,18 @@ namespace Wrestling.Tests.Shared;
 /// <summary>Builds valid fictional wrestlers for tests.</summary>
 public static class TestWrestlers
 {
+    /// <summary>A wrestler who knows the given techniques at the given proficiency.</summary>
+    public static Wrestler WithRepertoire(Wrestler wrestler, int proficiency, params string[] techniqueIds)
+    {
+        wrestler.Repertoire.Clear();
+        foreach (string id in techniqueIds)
+        {
+            wrestler.Repertoire.Add(new RepertoireEntry { TechniqueId = id, Proficiency = proficiency, Side = TechniqueSide.Both });
+        }
+
+        return wrestler;
+    }
+
     public static Wrestler Create(
         string id = "wr-1",
         Gender gender = Gender.Male,

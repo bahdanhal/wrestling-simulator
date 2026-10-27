@@ -97,6 +97,19 @@ namespace Wrestling.Core.Techniques
         SwipeAgainst,
     }
 
+    /// <summary>Whether the opponent leaves the mat during the technique (Art. 37, 38).</summary>
+    public enum Amplitude
+    {
+        /// <summary>The opponent keeps contact with the mat (takedowns, trips, turns).</summary>
+        None,
+
+        /// <summary>The opponent is lifted completely, over a short amplitude.</summary>
+        Lift,
+
+        /// <summary>A broad, controlled sweeping curve through the air (grand amplitude).</summary>
+        GrandAmplitude,
+    }
+
     public enum GripSideRequirement
     {
         Any,
@@ -229,6 +242,9 @@ namespace Wrestling.Core.Techniques
         public IReadOnlyList<AgeCategory> ForbiddenForAges { get; init; } = Array.Empty<AgeCategory>();
 
         public StartRequirements Start { get; init; } = new StartRequirements();
+
+        /// <summary>How far the opponent leaves the mat when the technique is completed.</summary>
+        public Amplitude Amplitude { get; init; }
 
         public IReadOnlyList<PhaseDefinition> Phases { get; init; } = Array.Empty<PhaseDefinition>();
 

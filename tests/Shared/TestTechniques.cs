@@ -19,6 +19,7 @@ public static class TestTechniques
         Role = TechniqueRole.Attack,
         Family = TechniqueFamily.UpperBodyThrows,
         Styles = AllStyles,
+        Amplitude = Amplitude.GrandAmplitude,
         Start = new StartRequirements
         {
             Positions = new[] { StartPosition.NeutralTied },
@@ -69,8 +70,49 @@ public static class TestTechniques
             Phase("finish", new[] { (WrestlerAttribute.LegAttacks, 60), (WrestlerAttribute.Explosiveness, 40) },
                 System.Array.Empty<CounterWindow>(), new[] { EndState.ControlBehind, EndState.Scramble }),
         },
+        Amplitude = Amplitude.None,
         Gesture = new GestureDefinition { Family = GestureFamily.StraightSwipeDown },
     };
+
+    public static TechniqueDefinition GutWrench() => new()
+    {
+        SchemaVersion = 1,
+        Id = "technique.all.gut_wrench",
+        NameKey = "tech.gut_wrench.name",
+        Role = TechniqueRole.Attack,
+        Family = TechniqueFamily.ParTerreTurns,
+        Styles = AllStyles,
+        Amplitude = Amplitude.None,
+        Start = new StartRequirements { Positions = new[] { StartPosition.ParTerreTop }, RelativePositions = new[] { RelativePosition.Behind }, MinimumOwnLevel = Fix64.Zero, MaximumOwnLevel = Fix64.One },
+        Phases = new[]
+        {
+            Phase("turn", new[] { (WrestlerAttribute.ParTerreTurns, 60), (WrestlerAttribute.UpperBodyStrength, 40) },
+                System.Array.Empty<CounterWindow>(), new[] { EndState.DangerDelayed, EndState.Neutral }),
+        },
+        Gesture = new GestureDefinition { Family = GestureFamily.Circle },
+    };
+
+    public static TechniqueDefinition StandUp() => new()
+    {
+        SchemaVersion = 1,
+        Id = "technique.all.stand_up",
+        NameKey = "tech.stand_up.name",
+        Role = TechniqueRole.Defence,
+        Family = null,
+        Styles = AllStyles,
+        Amplitude = Amplitude.None,
+        Start = new StartRequirements { Positions = new[] { StartPosition.ParTerreBottom, StartPosition.OpponentTechnique }, MinimumOwnLevel = Fix64.Zero, MaximumOwnLevel = Fix64.One },
+        Phases = new[]
+        {
+            Phase("rise", new[] { (WrestlerAttribute.ParTerreBottomDefence, 60), (WrestlerAttribute.Explosiveness, 40) },
+                System.Array.Empty<CounterWindow>(), new[] { EndState.Neutral }),
+        },
+        Gesture = new GestureDefinition { Family = GestureFamily.SwipeAway },
+    };
+
+    /// <summary>A small catalogue covering neutral attacks, a counter, par terre and an escape.</summary>
+    public static Wrestling.Core.Techniques.TechniqueCatalog EngineCatalog() =>
+        Wrestling.Core.Techniques.TechniqueCatalog.Create(new[] { HipToss(), HipBlock(), DoubleLeg(), GutWrench(), StandUp() });
 
     private static PhaseDefinition Phase(string id, (WrestlerAttribute Attribute, int Percent)[] weights, CounterWindow[] counters, EndState[]? endStates) => new()
     {

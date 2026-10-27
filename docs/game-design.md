@@ -471,16 +471,19 @@ Every tick, in a fixed order:
 
 ### 5.7 Resolution model
 
-Every contested moment (a phase transition, a grip contest, a push) is resolved with a logistic success function:
+Every contested moment (a phase transition, a grip contest, a push) is resolved with a sigmoid success function:
 
 ```
-p(success) = 1 / (1 + e^-(k * (A - D + C)))
+x = k * (A - D + C) / resolutionScale
+p(success) = 0.5 + 0.5 * x / (1 + |x|)
 ```
+
+The algebraic sigmoid replaces the exponential logistic curve: it has the same S-shape but is exact in fixed-point arithmetic, so results are identical on every platform. All scales and rates are in `data/engine/tuning.json`.
 
 - **A** (attacker score): technique rating (section 4.3) × fatigue multiplier × grip quality × **execution quality** + opening bonus
 - **D** (defender score): the relevant defensive attribute × fatigue multiplier × reaction quality × anticipation (Wrestling IQ, history of this opponent using this technique in the bout)
 - **C** (context): position on the mat, momentum, balance difference, body leverage for this technique, score and clock pressure × composure
-- **k**: steepness, set per technique family in data
+- **k**: steepness, set per technique phase in data
 
 Outcomes are not binary. Each phase defines graded outcomes (clean success, partial success, stalled, failed into scramble, countered), each with its own probability band.
 
@@ -1034,6 +1037,7 @@ One file per technique under `data/techniques/`, named after its id (`technique.
     "minimumOwnLevel": 0,
     "maximumOwnLevel": 1
   },
+  "amplitude": "grandAmplitude",
   "phases": [
     {
       "id": "entry",
