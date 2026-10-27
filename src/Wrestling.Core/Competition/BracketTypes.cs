@@ -54,24 +54,37 @@ namespace Wrestling.Core.Competition
         Qualification,
         Main,
         Repechage,
+        Pool,
     }
 
     /// <summary>Where a bout participant comes from.</summary>
     internal sealed class SlotSource
     {
-        private SlotSource(string? entrantId, int? winnerOfBoutId)
+        private SlotSource(string? entrantId, int? fromBoutId, bool takesLoser, bool isVacant)
         {
             EntrantId = entrantId;
-            WinnerOfBoutId = winnerOfBoutId;
+            FromBoutId = fromBoutId;
+            TakesLoser = takesLoser;
+            IsVacant = isVacant;
         }
 
         public string? EntrantId { get; }
 
-        public int? WinnerOfBoutId { get; }
+        /// <summary>The bout whose winner (or loser, when <see cref="TakesLoser"/>) fills this slot.</summary>
+        public int? FromBoutId { get; }
 
-        public static SlotSource Entrant(string id) => new SlotSource(id, null);
+        public bool TakesLoser { get; }
 
-        public static SlotSource WinnerOf(int boutId) => new SlotSource(null, boutId);
+        /// <summary>A slot that will never be filled.</summary>
+        public bool IsVacant { get; }
+
+        public static SlotSource Entrant(string id) => new SlotSource(id, null, false, false);
+
+        public static SlotSource WinnerOf(int boutId) => new SlotSource(null, boutId, false, false);
+
+        public static SlotSource LoserOf(int boutId) => new SlotSource(null, boutId, true, false);
+
+        public static SlotSource Vacant() => new SlotSource(null, null, false, true);
     }
 
     /// <summary>One bout in a bracket. The top participant wrestles in red, the bottom in blue.</summary>

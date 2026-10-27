@@ -354,3 +354,40 @@ namespace Wrestling.Core.Rules
         }
     }
 }
+
+namespace Wrestling.Core.Rules
+{
+    /// <summary>Team ranking points by individual placing (Art. 32).</summary>
+    public sealed class TeamRankingRules
+    {
+        /// <summary>Points for rank 1, 2, 3, ...; ranks beyond the list score nothing.</summary>
+        public System.Collections.Generic.IReadOnlyList<int> PointsByRank { get; init; } = System.Array.Empty<int>();
+
+        public int PointsFor(int rank)
+        {
+            if (rank < 1)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(rank), "Ranks start at 1.");
+            }
+
+            return rank <= PointsByRank.Count ? PointsByRank[rank - 1] : 0;
+        }
+
+        internal void Validate(ValidationContext context)
+        {
+            if (PointsByRank.Count == 0)
+            {
+                context.Error("teamRanking.pointsByRank must not be empty.");
+            }
+
+            for (int i = 0; i < PointsByRank.Count; i++)
+            {
+                context.RequireRange(PointsByRank[i], 0, 1000, "teamRanking.pointsByRank[]");
+                if (i > 0 && PointsByRank[i] > PointsByRank[i - 1])
+                {
+                    context.Error("teamRanking.pointsByRank must not increase with rank.");
+                }
+            }
+        }
+    }
+}

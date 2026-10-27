@@ -1203,3 +1203,5 @@ These are facts or decisions to settle with research or a product decision. Syst
 5. **Launch languages and target markets.**
 6. **Business model** (premium, premium with expansions, or other). This affects content delivery and store setup, not gameplay systems.
 7. **Mocap partners and sessions:** wrestlers and venue for capturing the technique catalogue (section 6.3).
+8. **Veterans weight categories:** the rulebook defers them to separate veterans regulations, so the ruleset has none yet.
+9. **Official UWW bracket charts** (no seeds, 4 seeds, 8 seeds; published at uww.org): bracket placement uses a balanced algorithm that follows the rulebook's principles (seeds far apart, qualification top-bottom/bottom-top). Compare it with the official charts and switch to chart data if they differ.

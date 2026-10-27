@@ -40,6 +40,8 @@ namespace Wrestling.Core.Rules
 
         public ClassificationPointsTable ClassificationPoints { get; init; } = new ClassificationPointsTable();
 
+        public TeamRankingRules TeamRanking { get; init; } = new TeamRankingRules();
+
         /// <summary>Returns every validation problem; empty when the ruleset is usable.</summary>
         public IReadOnlyList<string> Validate()
         {
@@ -60,6 +62,7 @@ namespace Wrestling.Core.Rules
             context.RequireNotNull(Procedure, "procedure")?.Validate(context);
             context.RequireNotNull(WeighIn, "weighIn")?.Validate(context);
             context.RequireNotNull(ClassificationPoints, "classificationPoints")?.Validate(context);
+            context.RequireNotNull(TeamRanking, "teamRanking")?.Validate(context);
             return context.Errors;
         }
 
