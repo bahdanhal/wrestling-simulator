@@ -1,5 +1,14 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
+using Wrestling.Core.AI;
+using Wrestling.Core.Bouts;
+using Wrestling.Core.Competition;
 using Wrestling.Core.Diagnostics;
+using Wrestling.Core.Match;
+using Wrestling.Core.Numerics;
+using Wrestling.Core.Rules;
+using Wrestling.Core.Wrestlers;
+using Wrestling.Data;
 
 namespace Wrestling.Sim;
 
@@ -10,9 +19,16 @@ public static class Program
         Usage: wrestling-sim <command> [options]
 
         Commands:
-          determinism-probe [--iterations N]   Print the determinism hash for this machine.
-                                               Every platform must print the same value.
-          help                                 Show this help.
+          determinism-probe [--iterations N]       Print this machine's determinism hash.
+          bout [--style fs|gr|ww] [--seed N]       Simulate one AI bout and print its events.
+          balance [--style fs|gr|ww] [--bouts N]   Simulate many AI bouts and report statistics.
+                  [--seed N] [--level N] [--spread N]
+          tournament [--style fs|gr|ww]            Simulate a weight category (any size) and print standings.
+                  [--entrants N] [--seed N]
+          help                                     Show this help.
+
+        Common options:
+          --data DIR    Content folder (default: the repository's data/ folder).
         """;
 
     public static int Main(string[] args)
@@ -25,9 +41,13 @@ public static class Program
 
         try
         {
+            Options options = Options.Parse(args.AsSpan(1));
             return args[0] switch
             {
-                "determinism-probe" => RunDeterminismProbe(args.AsSpan(1)),
+                "determinism-probe" => RunDeterminismProbe(options),
+                "bout" => RunBout(options),
+                "balance" => RunBalance(options),
+                "tournament" => RunTournament(options),
                 _ => Fail($"Unknown command '{args[0]}'."),
             };
         }
@@ -37,24 +57,10 @@ public static class Program
         }
     }
 
-    private static int RunDeterminismProbe(ReadOnlySpan<string> options)
+    private static int RunDeterminismProbe(Options options)
     {
-        int iterations = DeterminismProbe.DefaultIterations;
-        for (int i = 0; i < options.Length; i++)
-        {
-            if (options[i] == "--iterations" && i + 1 < options.Length)
-            {
-                if (!int.TryParse(options[++i], NumberStyles.Integer, CultureInfo.InvariantCulture, out iterations) || iterations <= 0)
-                {
-                    throw new ArgumentException("--iterations must be a positive integer.");
-                }
-            }
-            else
-            {
-                throw new ArgumentException($"Unknown option '{options[i]}'.");
-            }
-        }
-
+        int iterations = options.Int("iterations", DeterminismProbe.DefaultIterations, 1);
+        options.EnsureAllUsed();
         ulong hash = DeterminismProbe.Run(iterations);
         Console.WriteLine($"iterations={iterations} hash=0x{hash:X16}");
         if (iterations != DeterminismProbe.DefaultIterations)
@@ -67,10 +73,238 @@ public static class Program
         return matches ? 0 : 2;
     }
 
+    private static int RunBout(Options options)
+    {
+        GameContent content = LoadContent(options);
+        WrestlingStyle style = options.Style();
+        ulong seed = (ulong)options.Int("seed", 1, 0);
+        options.EnsureAllUsed();
+
+        var random = new Pcg32(seed, 17);
+        Wrestler red = SimWrestlers.Generate("red", style, 60, 12, content.Techniques, random);
+        Wrestler blue = SimWrestlers.Generate("blue", style, 60, 12, content.Techniques, random);
+        BoutEngine engine = CreateEngine(content, style, red, blue, seed);
+        BoutResult result = engine.RunToEnd();
+
+        Console.WriteLine($"{style}: RED {red.Name} vs BLUE {blue.Name} (seed {seed})");
+        foreach (BoutEvent e in engine.Events.Where(Interesting))
+        {
+            Console.WriteLine($"  {Clock(e.Time, engine.Clock)}  {Describe(e, content, red, blue)}");
+        }
+
+        string winner = result.Winner == Corner.Red ? red.Name.Full : blue.Name.Full;
+        Console.WriteLine($"Result: {winner} wins {result.RedPoints}-{result.BluePoints} by {result.VictoryType} ({result.Code}, {result.RedClassificationPoints}:{result.BlueClassificationPoints})");
+        return 0;
+    }
+
+    private static int RunBalance(Options options)
+    {
+        GameContent content = LoadContent(options);
+        WrestlingStyle style = options.Style();
+        int bouts = options.Int("bouts", 300, 1);
+        ulong seed = (ulong)options.Int("seed", 1, 0);
+        int level = options.Int("level", 55, 1);
+        int spread = options.Int("spread", 12, 0);
+        options.EnsureAllUsed();
+
+        var victories = new Dictionary<VictoryType, int>();
+        var reasons = new Dictionary<string, int>(StringComparer.Ordinal);
+        int points = 0;
+        int attempts = 0;
+        int successes = 0;
+        var stopwatch = Stopwatch.StartNew();
+        for (int i = 0; i < bouts; i++)
+        {
+            ulong boutSeed = seed + (ulong)i;
+            var random = new Pcg32(boutSeed, 17);
+            Wrestler red = SimWrestlers.Generate("red", style, level, spread, content.Techniques, random);
+            Wrestler blue = SimWrestlers.Generate("blue", style, level, spread, content.Techniques, random);
+            BoutEngine engine = CreateEngine(content, style, red, blue, boutSeed);
+            BoutResult result = engine.RunToEnd();
+            BoutStatistics statistics = BoutStatistics.From(engine);
+
+            victories[result.VictoryType!.Value] = victories.GetValueOrDefault(result.VictoryType.Value) + 1;
+            points += result.RedPoints + result.BluePoints;
+            foreach (WrestlerBoutStatistics side in new[] { statistics.Red, statistics.Blue })
+            {
+                attempts += side.Attempts;
+                successes += side.Successes;
+                foreach ((string reason, int value) in side.PointsByReason)
+                {
+                    reasons[reason] = reasons.GetValueOrDefault(reason) + value;
+                }
+            }
+        }
+
+        double milliseconds = stopwatch.Elapsed.TotalMilliseconds / bouts;
+        Console.WriteLine($"{style}: {bouts} bouts, level {level} ± {spread}, {milliseconds:F1} ms per bout");
+        foreach ((VictoryType type, int count) in victories.OrderByDescending(v => v.Value))
+        {
+            Console.WriteLine($"  {type,-22} {100.0 * count / bouts,5:F1}%");
+        }
+
+        Console.WriteLine($"  points per bout        {(double)points / bouts,5:F1}");
+        Console.WriteLine($"  attempts per bout      {(double)attempts / bouts,5:F1}");
+        Console.WriteLine($"  attack success         {(attempts == 0 ? 0 : 100.0 * successes / attempts),5:F1}%");
+        Console.WriteLine("  points by reason       " + string.Join(", ", reasons.OrderByDescending(r => r.Value).Select(r => $"{r.Key} {100.0 * r.Value / Math.Max(1, points):F0}%")));
+        return 0;
+    }
+
+    private static int RunTournament(Options options)
+    {
+        GameContent content = LoadContent(options);
+        WrestlingStyle style = options.Style();
+        int count = options.Int("entrants", 20, 2);
+        ulong seed = (ulong)options.Int("seed", 1, 0);
+        options.EnsureAllUsed();
+
+        var random = new Pcg32(seed, 23);
+        var wrestlers = new Dictionary<string, Wrestler>();
+        var entrants = new List<Entrant>();
+        for (int i = 1; i <= count; i++)
+        {
+            string id = $"W{i:00}";
+            wrestlers[id] = SimWrestlers.Generate(id, style, 40 + random.NextInt(0, 40), 10, content.Techniques, random);
+            entrants.Add(new Entrant(id, i));
+        }
+
+        ICompetitionFormat format = CompetitionSystems.Create(entrants, content.Rules);
+        int boutNumber = 0;
+        IReadOnlyList<Placement> standings = CategoryRunner.Run(format, bout =>
+        {
+            boutNumber++;
+            BoutEngine engine = CreateEngine(content, style, wrestlers[bout.Top!], wrestlers[bout.Bottom!], seed * 1000 + (ulong)boutNumber);
+            BoutResult result = engine.RunToEnd();
+            Console.WriteLine($"  {bout.Name,-13} {Label(wrestlers[bout.Top!]),-22} {result.RedPoints,2}-{result.BluePoints,-2} {Label(wrestlers[bout.Bottom!]),-22} {result.Code}");
+            return result;
+        });
+
+        Console.WriteLine($"{style}: {count} entrants, {CompetitionSystems.ForEntrantCount(count)}, {boutNumber} bouts");
+        foreach (Placement placement in standings)
+        {
+            Console.WriteLine($"  {placement.Rank?.ToString(CultureInfo.InvariantCulture) ?? "-",3}  {Label(wrestlers[placement.EntrantId])}");
+        }
+
+        return 0;
+    }
+
+    private static BoutEngine CreateEngine(GameContent content, WrestlingStyle style, Wrestler red, Wrestler blue, ulong seed) => new(new BoutSetup
+    {
+        Rules = content.Rules,
+        Tuning = content.Tuning,
+        Catalog = content.Techniques,
+        Style = style,
+        Red = red,
+        Blue = blue,
+        RedController = new AiController(Tactics.Default, seed * 2),
+        BlueController = new AiController(Tactics.Default, (seed * 2) + 1),
+        Seed = seed,
+    });
+
+    private static GameContent LoadContent(Options options)
+    {
+        string? data = options.String("data") ?? GameContent.FindDataDirectory(Directory.GetCurrentDirectory()) ?? GameContent.FindDataDirectory(AppContext.BaseDirectory);
+        if (data == null)
+        {
+            throw new ArgumentException("Could not find the data/ folder; pass --data DIR.");
+        }
+
+        return GameContent.Load(data);
+    }
+
+    private static bool Interesting(BoutEvent e) => e.Type is BoutEventType.TechniqueCompleted or BoutEventType.PointsAwarded or BoutEventType.CounterStarted
+        or BoutEventType.StepOut or BoutEventType.PassivityCall or BoutEventType.ActivityPeriodStarted or BoutEventType.Warning
+        or BoutEventType.Escape or BoutEventType.PeriodStarted or BoutEventType.PeriodEnded or BoutEventType.BoutEnded;
+
+    private static string Describe(BoutEvent e, GameContent content, Wrestler red, Wrestler blue)
+    {
+        string who = e.Wrestler == null ? string.Empty : (e.Wrestler == Corner.Red ? $"RED {red.Name.Family}" : $"BLUE {blue.Name.Family}");
+        string technique = e.TechniqueId == null ? string.Empty : content.English.Get(content.Techniques.Get(e.TechniqueId).NameKey);
+        return e.Type switch
+        {
+            BoutEventType.PointsAwarded => $"{who} +{e.Points} ({e.Detail})",
+            BoutEventType.TechniqueCompleted => $"{who} {technique} -> {e.Detail}",
+            BoutEventType.CounterStarted => content.Techniques.Get(e.TechniqueId!).Role == Wrestling.Core.Techniques.TechniqueRole.Defence
+                ? $"{who} defends: {technique}"
+                : $"{who} counters: {technique}",
+            _ => $"{e.Type} {who} {e.Detail}".Trim(),
+        };
+    }
+
+    private static string Clock(BoutTime time, BoutClock clock)
+    {
+        int seconds = ((time.Period - 1) * clock.PeriodTicks + time.TickInPeriod) / BoutClock.TicksPerSecond;
+        return $"P{time.Period} {seconds / 60}:{seconds % 60:00}";
+    }
+
+    private static string Label(Wrestler wrestler) => $"{wrestler.Id} {wrestler.Name.Family}";
+
     private static int Fail(string message)
     {
         Console.Error.WriteLine(message);
         Console.Error.WriteLine(Usage);
         return 1;
+    }
+
+    /// <summary>Minimal "--name value" option parser that rejects unknown or unused options.</summary>
+    private sealed class Options
+    {
+        private readonly Dictionary<string, string> _values = new(StringComparer.Ordinal);
+        private readonly HashSet<string> _used = new(StringComparer.Ordinal);
+
+        public static Options Parse(ReadOnlySpan<string> args)
+        {
+            var options = new Options();
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (!args[i].StartsWith("--", StringComparison.Ordinal) || i + 1 >= args.Length)
+                {
+                    throw new ArgumentException($"Expected '--name value', got '{args[i]}'.");
+                }
+
+                options._values[args[i][2..]] = args[++i];
+            }
+
+            return options;
+        }
+
+        public string? String(string name)
+        {
+            _used.Add(name);
+            return _values.TryGetValue(name, out string? value) ? value : null;
+        }
+
+        public int Int(string name, int fallback, int minimum)
+        {
+            string? text = String(name);
+            if (text == null)
+            {
+                return fallback;
+            }
+
+            if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value) || value < minimum)
+            {
+                throw new ArgumentException($"--{name} must be an integer of at least {minimum}.");
+            }
+
+            return value;
+        }
+
+        public WrestlingStyle Style() => (String("style") ?? "fs") switch
+        {
+            "fs" => WrestlingStyle.Freestyle,
+            "gr" => WrestlingStyle.GrecoRoman,
+            "ww" => WrestlingStyle.Womens,
+            string other => throw new ArgumentException($"Unknown style '{other}'; use fs, gr or ww."),
+        };
+
+        public void EnsureAllUsed()
+        {
+            string? unknown = _values.Keys.FirstOrDefault(k => !_used.Contains(k));
+            if (unknown != null)
+            {
+                throw new ArgumentException($"Unknown option '--{unknown}'.");
+            }
+        }
     }
 }

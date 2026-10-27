@@ -261,12 +261,12 @@ namespace Wrestling.Core.AI
         /// <summary>Chance per decision to go for the chosen attack.</summary>
         private Fix64 AttackRate(IBoutView view, Corner self, WrestlerRuntime me, WrestlerRuntime opponent)
         {
-            // Per decision (about five a second): medium pace is roughly one attempt every 10–15 s.
+            // Per decision (about five a second): medium pace is roughly one attempt every 20 s per wrestler.
             Fix64 rate = Tactics.Pace switch
             {
-                Pace.Low => Fix64.FromRatio(8, 1000),
-                Pace.High => Fix64.FromRatio(25, 1000),
-                _ => Fix64.FromRatio(15, 1000),
+                Pace.Low => Fix64.FromRatio(5, 1000),
+                Pace.High => Fix64.FromRatio(16, 1000),
+                _ => Fix64.FromRatio(10, 1000),
             };
 
             rate *= Fix64.Half + (me.Effective(WrestlerAttribute.Aggression) / Hundred);

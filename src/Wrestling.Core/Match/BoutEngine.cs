@@ -42,6 +42,7 @@ namespace Wrestling.Core.Match
         private int _lastGrecoCheckElapsed;
         private readonly int[] _lastInactivityReport = new int[2];
         private readonly bool[] _zoneCalled = new bool[2];
+        private readonly int[] _positionTicks = new int[4];
 
         public BoutEngine(BoutSetup setup)
         {
@@ -67,10 +68,9 @@ namespace Wrestling.Core.Match
             _zones = new MatZoneMap(setup.Rules.Mat);
             _rates = new TickRates(setup.Tuning);
             _fallTicks = Math.Max(1, (setup.Rules.Procedure.FallConfirmationSeconds * Fix64.FromInt(BoutClock.TicksPerSecond)).FloorToInt());
-            for (int i = 0; i < 2; i++)
-            {
-                _lastInactivityReport[i] = int.MinValue / 2;
-            }
+            // Officials judge inactivity only after the wrestlers have had time to engage.
+            _lastInactivityReport[0] = 0;
+            _lastInactivityReport[1] = 0;
 
             RestartStanding();
         }
@@ -108,6 +108,9 @@ namespace Wrestling.Core.Match
         public IReadOnlyList<BoutEvent> Events => _events;
 
         public WrestlerRuntime Wrestler(Corner corner) => _wrestlers[(int)corner];
+
+        /// <summary>Wrestling ticks (clock running) spent in a position.</summary>
+        public int PositionTicks(BoutPosition position) => _positionTicks[(int)position];
 
         /// <summary>Runs ticks until the bout ends and returns the result.</summary>
         public BoutResult RunToEnd()
@@ -164,6 +167,7 @@ namespace Wrestling.Core.Match
             }
 
             bool periodEnded = Clock.Tick();
+            _positionTicks[(int)Position]++;
 
             Decide();
             switch (Position)

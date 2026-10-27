@@ -21,7 +21,7 @@
   "fatigueFloor": 0.65,
   "resolutionScale": 25,
   "openingWeight": 20,
-  "defenceReadiness": 10,
+  "defenceReadiness": 2,
   "gripBonusWeight": 30,
   "failedAttackBalanceLoss": 0.25,
   "attackRecoverySeconds": 1.5,

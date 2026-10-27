@@ -33,6 +33,24 @@ dotnet test
 
 `dotnet build` copies `Wrestling.Core.dll` and `Wrestling.Data.dll` into `unity/WrestlingSimulator/Assets/Plugins/Wrestling/`. These DLLs are not committed, so **build once before opening the Unity project**.
 
+## Headless simulation
+
+`Wrestling.Sim` runs bouts and competitions without the game, for balancing and checks:
+
+```bash
+dotnet run --project src/Wrestling.Sim -c Release -- bout --style fs --seed 4
+```
+
+```bash
+dotnet run --project src/Wrestling.Sim -c Release -- balance --style gr --bouts 300
+```
+
+```bash
+dotnet run --project src/Wrestling.Sim -c Release -- tournament --style ww --entrants 20 --seed 1
+```
+
+Styles are `fs` (Freestyle), `gr` (Greco-Roman) and `ww` (Women's). Run `help` for all options.
+
 ## Determinism check
 
 The simulation must give identical results on every platform. A fixed workload produces a hash that every platform must reproduce:

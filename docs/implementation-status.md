@@ -38,6 +38,10 @@ What is built, against [game-design.md](game-design.md). Updated with every chan
 | Engine tuning as data | `EngineTuning`, `data/engine/tuning.json` | 5, 15 |
 | Technique catalogue: 51 techniques (standing attacks, leg attacks and trips, par terre turns and lifts, escapes and reversals, defences and counters) with English names | `data/techniques/`, `data/localization/en.json` | 6.3 |
 | Localisation tables | `Wrestling.Data.Localization` | 12.5 |
+| Bout statistics (attempts and successes by family, points by reason, time per position) | `BoutStatistics` | 5.14 |
+| Category runner for any competition format | `CategoryRunner` | 10 |
+| Content loader for the whole data folder | `Wrestling.Data.GameContent` | 13 |
+| Headless CLI: `bout`, `balance`, `tournament`, `determinism-probe` | `Wrestling.Sim` | 15.2 |
 | AI wrestler: expected-value attack choice with the engine's own formulas, pace/focus/pressure/risk tactics, openings, score and clock awareness, counters, par terre top and bottom, edge awareness | `Wrestling.Core.AI` | 5.13 |
 | Bout engine tick loop: intents, hand-fight, pressure and balance, techniques with phases and counters, par terre, danger and falls, scrambles, risk rule, step-outs and deliberate push-outs, zone calls, passivity in both styles, stoppages and restarts, fatigue, events | `Wrestling.Core.Match.BoutEngine` | 5.1–5.12 |
 
@@ -60,11 +64,12 @@ In dependency order:
 
 ## Calibration snapshot
 
-300 AI bouts per style between generated wrestlers (attributes 45–65 ± 12, full style repertoire, default tactics), engine tuning as committed:
+`balance --bouts 300` per style (generated wrestlers at level 55 ± 12 with the full style repertoire, default tactics), engine tuning as committed:
 
-| Style | Points wins | Technical superiority | Falls | Points per bout | Attempts per bout |
-|---|---|---|---|---|---|
-| Freestyle | 58% | 35% | 7% | 13.2 | 33 |
-| Greco-Roman | 66% | 26% | 8% | 9.9 | 25 |
+| Style | Points wins | Technical superiority | Falls | Points per bout | Attempts per bout | Attack success |
+|---|---|---|---|---|---|---|
+| Freestyle | 72% | 22% | 6% | 11.4 | 27 | 9% |
+| Greco-Roman | 70% | 25% | 4% | 9.4 | 20 | 9% |
+| Women's | 75% | 21% | 4% | 11.6 | 27 | 9% |
 
-Real reference values still have to be compiled (open item 3). Known tendencies to check against them: Greco-Roman falls are probably too frequent, and takedowns from scrambles remain a large share of freestyle points.
+Real reference values still have to be compiled (open item 3). Known tendencies to check against them: attack success is low while counters score a large share of points, and takedowns from scrambles remain common.

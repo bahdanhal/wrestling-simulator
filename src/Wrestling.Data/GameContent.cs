@@ -1,0 +1,65 @@
+using System.IO;
+using Wrestling.Core.Match;
+using Wrestling.Core.Rules;
+using Wrestling.Core.Techniques;
+using Wrestling.Data.Engine;
+using Wrestling.Data.Localization;
+using Wrestling.Data.Rulesets;
+using Wrestling.Data.Techniques;
+
+namespace Wrestling.Data
+{
+    /// <summary>All content the simulation needs, loaded and validated from a <c>data/</c> folder.</summary>
+    public sealed class GameContent
+    {
+        public const string DefaultRulesetId = "uww-2026-01";
+
+        private GameContent(Ruleset rules, EngineTuning tuning, TechniqueCatalog techniques, LocalizationTable english)
+        {
+            Rules = rules;
+            Tuning = tuning;
+            Techniques = techniques;
+            English = english;
+        }
+
+        public Ruleset Rules { get; }
+
+        public EngineTuning Tuning { get; }
+
+        public TechniqueCatalog Techniques { get; }
+
+        public LocalizationTable English { get; }
+
+        public static GameContent Load(string dataDirectory, string rulesetId = DefaultRulesetId)
+        {
+            if (!Directory.Exists(dataDirectory))
+            {
+                throw new DirectoryNotFoundException($"Content folder '{dataDirectory}' does not exist.");
+            }
+
+            return new GameContent(
+                RulesetLoader.FromFile(Path.Combine(dataDirectory, "rulesets", rulesetId + ".json")),
+                TuningLoader.FromFile(Path.Combine(dataDirectory, "engine", "tuning.json")),
+                TechniqueLoader.FromDirectory(Path.Combine(dataDirectory, "techniques")),
+                LocalizationTable.FromFile(Path.Combine(dataDirectory, "localization", "en.json")));
+        }
+
+        /// <summary>Finds the repository's <c>data/</c> folder from <paramref name="start"/> or its parents.</summary>
+        public static string? FindDataDirectory(string start)
+        {
+            DirectoryInfo? directory = new DirectoryInfo(start);
+            while (directory != null)
+            {
+                string candidate = Path.Combine(directory.FullName, "data");
+                if (File.Exists(Path.Combine(candidate, "engine", "tuning.json")))
+                {
+                    return candidate;
+                }
+
+                directory = directory.Parent;
+            }
+
+            return null;
+        }
+    }
+}
