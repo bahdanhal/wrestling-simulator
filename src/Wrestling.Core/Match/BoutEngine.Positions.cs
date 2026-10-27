@@ -24,7 +24,7 @@ namespace Wrestling.Core.Match
             Fix64 power = upper.Score((WrestlerAttribute.UpperBodyStrength, 50), (WrestlerAttribute.ParTerreTurns, 50));
             Fix64 bridge = bottom.Score((WrestlerAttribute.BridgingAndDangerDefence, 60), (WrestlerAttribute.Flexibility, 40));
 
-            if (_random.Chance(Contest(bridge, power, PerTick(Tuning.DangerEscapePerSecond))))
+            if (_random.Chance(Contest(bridge, power, _rates.DangerEscapePerSecond)))
             {
                 bottom.Body.LeftShoulderOnMat = false;
                 bottom.Body.RightShoulderOnMat = false;
@@ -42,13 +42,13 @@ namespace Wrestling.Core.Match
             _shoulderTicks = shouldersDown ? _shoulderTicks + 1 : 0;
 
             // A fall counts only with both shoulders inside the wrestling area (Art. 42, 45).
-            if (_shoulderTicks >= _fallTicks && Rules.Mat.ZoneAt(bottom.Body.Position) <= MatZone.PassivityZone)
+            if (_shoulderTicks >= _fallTicks && _zones.ZoneAt(bottom.Body.Position) <= MatZone.PassivityZone)
             {
                 Finish(BoutResult.Win(top, VictoryType.Fall, Sheet, Rules));
                 return;
             }
 
-            if (_dangerTicks >= Ticks(Tuning.DangerMaximumSeconds))
+            if (_dangerTicks >= _rates.DangerMaximumTicks)
             {
                 // The bottom wrestler turned to the stomach: wrestling continues in par terre.
                 bottom.Body.LeftShoulderOnMat = false;
@@ -68,7 +68,7 @@ namespace Wrestling.Core.Match
             Grips.Clear();
             _scrambleOrigin = origin;
             _scrambleFromFailure = fromFailure;
-            _scrambleTicks = Ticks(Tuning.ScrambleSeconds);
+            _scrambleTicks = _rates.ScrambleTicks;
             Emit(BoutEventType.Scramble, origin, null, 0, fromFailure ? "after a failed attack" : string.Empty);
         }
 
@@ -97,7 +97,7 @@ namespace Wrestling.Core.Match
 
             Fix64 attackerScore = attacker.Score((WrestlerAttribute.Agility, 40), (WrestlerAttribute.WrestlingIq, 30), (WrestlerAttribute.Balance, 30));
             Fix64 defenderScore = defender.Score((WrestlerAttribute.Agility, 40), (WrestlerAttribute.WrestlingIq, 30), (WrestlerAttribute.Balance, 30));
-            bool attackerOnTop = _random.Chance(FixMath.Sigmoid((attackerScore - defenderScore) / Tuning.ResolutionScale));
+            bool attackerOnTop = _random.Chance(FixMath.Sigmoid((attackerScore - defenderScore) * _rates.InverseResolutionScale));
             Corner winner = attackerOnTop ? origin : origin.Opponent();
 
             if (!attackerOnTop && _scrambleFromFailure)
@@ -123,7 +123,7 @@ namespace Wrestling.Core.Match
             }
 
             // Time counts while the top wrestler attempts holds, but the referee waits for an action to finish.
-            if (++_parTerreTicks >= Ticks(Tuning.ParTerreStalemateSeconds) && ActiveTechnique == null)
+            if (++_parTerreTicks >= _rates.ParTerreStalemateTicks && ActiveTechnique == null)
             {
                 Stop(RestartPosition.StandingCentre, Top ?? Corner.Red, "no progress in par terre");
             }

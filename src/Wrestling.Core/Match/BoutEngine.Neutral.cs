@@ -7,7 +7,7 @@ namespace Wrestling.Core.Match
 {
     public sealed partial class BoutEngine
     {
-        private static readonly Fix64 Hundred = Fix64.FromInt(100);
+        private static readonly Fix64 Hundredth = Fix64.FromRatio(1, 100);
         private static readonly Fix64 BalanceResistShare = Fix64.FromRatio(3, 10);
         private static readonly Fix64 LowEffort = Fix64.FromRatio(3, 10);
         private static readonly Fix64 GripReach = Fix64.FromRatio(12, 10);
@@ -28,7 +28,7 @@ namespace Wrestling.Core.Match
                 Fix64 theirs = other.Effective(WrestlerAttribute.HandFighting);
 
                 if (inReach && intent.GripGoal.HasValue && Grips.CanTake(self.Corner, intent.GripGoal.Value, intent.GripGoalSide, out _)
-                    && _random.Chance(Contest(own, theirs, PerTick(Tuning.GripGainPerSecond))))
+                    && _random.Chance(Contest(own, theirs, _rates.GripGainPerSecond)))
                 {
                     Fix64 quality = Fix64.FromRatio(4, 10) + (Fix64.FromRatio(6, 10) * _random.NextFix01());
                     Grip grip = Grips.Take(self.Corner, intent.GripGoal.Value, intent.GripGoalSide, quality, Fix64.One, Tick);
@@ -37,9 +37,10 @@ namespace Wrestling.Core.Match
 
                 if (intent.StripGrips)
                 {
-                    foreach (Grip grip in Grips.Of(other.Corner).ToList())
+                    for (int i = Grips.All.Count - 1; i >= 0; i--)
                     {
-                        if (_random.Chance(Contest(own, theirs * grip.Strength, PerTick(Tuning.GripStripPerSecond))))
+                        Grip grip = Grips.All[i];
+                        if (grip.Owner == other.Corner && _random.Chance(Contest(own, theirs * grip.Strength, _rates.GripStripPerSecond)))
                         {
                             Grips.Release(grip);
                             Emit(BoutEventType.GripLost, other.Corner, null, 0, grip.Type.ToString());
@@ -49,11 +50,12 @@ namespace Wrestling.Core.Match
             }
 
             // Grips weaken over time; strong hands keep them longer.
-            foreach (Grip grip in Grips.All.ToList())
+            for (int i = Grips.All.Count - 1; i >= 0; i--)
             {
+                Grip grip = Grips.All[i];
                 WrestlerRuntime owner = Wrestler(grip.Owner);
                 Fix64 resistance = Fix64.One - (owner.Effective(WrestlerAttribute.GripStrength) / Fix64.FromInt(200));
-                grip.Strength -= PerTick(Tuning.GripStrengthDecayPerSecond) * resistance;
+                grip.Strength -= _rates.GripStrengthDecayPerSecond * resistance;
                 if (grip.Strength == Fix64.Zero)
                 {
                     Grips.Release(grip);
@@ -82,15 +84,15 @@ namespace Wrestling.Core.Match
             {
                 foreach (WrestlerRuntime self in _wrestlers)
                 {
-                    Fix64 speed = Tuning.ApproachSpeed * (self.Effective(WrestlerAttribute.Speed) / Hundred) * self.Intent.PushIntensity;
-                    self.Body.Position += self.Intent.PushDirection.Normalized() * PerTick(speed);
+                    Fix64 speed = Tuning.ApproachSpeed * (self.Effective(WrestlerAttribute.Speed) * Hundredth) * self.Intent.PushIntensity;
+                    self.Body.Position += self.PushUnit * PerTick(speed);
                 }
 
                 // Never pass through each other: stop at contact distance.
                 FixVector2 gap = blue.Body.Position - red.Body.Position;
                 if (gap.LengthSquared < Tuning.ContactDistance * Tuning.ContactDistance)
                 {
-                    FixVector2 centre = (red.Body.Position + blue.Body.Position) / Fix64.FromInt(2);
+                    FixVector2 centre = (red.Body.Position + blue.Body.Position) * Fix64.Half;
                     Separate(red, blue, centre, direction);
                 }
             }
@@ -98,8 +100,8 @@ namespace Wrestling.Core.Match
             {
                 FixVector2 redForce = Force(red);
                 FixVector2 blueForce = Force(blue);
-                FixVector2 displacement = (redForce + blueForce) * PerTick(Tuning.PushSpeed);
-                FixVector2 centre = ((red.Body.Position + blue.Body.Position) / Fix64.FromInt(2)) + displacement;
+                FixVector2 displacement = (redForce + blueForce) * _rates.PushSpeed;
+                FixVector2 centre = ((red.Body.Position + blue.Body.Position) * Fix64.Half) + displacement;
                 Separate(red, blue, centre, direction);
                 UpdateBalance(red, blueForce, redForce, direction);
                 UpdateBalance(blue, redForce, blueForce, -direction);
@@ -107,19 +109,19 @@ namespace Wrestling.Core.Match
                 AddPressureActivity(blue, blueForce, -direction);
             }
 
-            red.Body.Facing = direction;
-            blue.Body.Facing = -direction;
+            red.Body.SetUnitFacing(direction);
+            blue.Body.SetUnitFacing(-direction);
             red.Body.Momentum = (red.Body.Position - redBefore) * Fix64.FromInt(BoutClock.TicksPerSecond);
             blue.Body.Momentum = (blue.Body.Position - blueBefore) * Fix64.FromInt(BoutClock.TicksPerSecond);
             foreach (WrestlerRuntime self in _wrestlers)
             {
-                self.Body.Level = FixMath.MoveTowards(self.Body.Level, self.Intent.TargetLevel, PerTick(Tuning.LevelChangePerSecond));
+                self.Body.Level = FixMath.MoveTowards(self.Body.Level, self.Intent.TargetLevel, _rates.LevelChangePerSecond);
             }
         }
 
         private void Separate(WrestlerRuntime red, WrestlerRuntime blue, FixVector2 centre, FixVector2 direction)
         {
-            FixVector2 offset = direction * (Tuning.ContactDistance / Fix64.FromInt(2));
+            FixVector2 offset = direction * (Tuning.ContactDistance * Fix64.Half);
             red.Body.Position = centre - offset;
             blue.Body.Position = centre + offset;
         }
@@ -127,19 +129,19 @@ namespace Wrestling.Core.Match
         /// <summary>Pushing force: intended direction × effort × leg-driven strength.</summary>
         private static FixVector2 Force(WrestlerRuntime self)
         {
-            Fix64 strength = self.Score((WrestlerAttribute.LowerBodyStrength, 60), (WrestlerAttribute.UpperBodyStrength, 40)) / Hundred;
-            return self.Intent.PushDirection.Normalized() * (self.Intent.PushIntensity * strength);
+            Fix64 strength = self.Score((WrestlerAttribute.LowerBodyStrength, 60), (WrestlerAttribute.UpperBodyStrength, 40)) * Hundredth;
+            return self.PushUnit * (self.Intent.PushIntensity * strength);
         }
 
         /// <summary>Being driven back faster than one can resist costs balance; otherwise balance recovers.</summary>
         private void UpdateBalance(WrestlerRuntime self, FixVector2 opponentForce, FixVector2 ownForce, FixVector2 towardOpponent)
         {
             Fix64 pushedBack = Fix64.Max(Fix64.Zero, FixVector2.Dot(opponentForce, -towardOpponent));
-            Fix64 resisting = Fix64.Max(Fix64.Zero, FixVector2.Dot(ownForce, towardOpponent)) + ((self.Effective(WrestlerAttribute.Balance) / Hundred) * BalanceResistShare);
+            Fix64 resisting = Fix64.Max(Fix64.Zero, FixVector2.Dot(ownForce, towardOpponent)) + ((self.Effective(WrestlerAttribute.Balance) * Hundredth) * BalanceResistShare);
             Fix64 excess = pushedBack - resisting;
             if (excess > Fix64.Zero)
             {
-                self.Body.Balance -= excess * PerTick(Tuning.PushBalanceLoss);
+                self.Body.Balance -= excess * _rates.PushBalanceLoss;
             }
         }
 
@@ -147,7 +149,7 @@ namespace Wrestling.Core.Match
         {
             if (FixVector2.Dot(force, towardOpponent) > Fix64.Zero)
             {
-                self.Activity += self.Intent.PushIntensity * PerTick(Tuning.ActivityPerPushSecond);
+                self.Activity += self.Intent.PushIntensity * _rates.ActivityPerPushSecond;
             }
         }
 
@@ -157,23 +159,32 @@ namespace Wrestling.Core.Match
             foreach (WrestlerRuntime self in _wrestlers)
             {
                 Fix64 effort = Position == BoutPosition.Neutral ? self.Intent.PushIntensity : Fix64.Half;
-                Fix64 drain = effort * PerTick(Tuning.StaminaDrainPerSecond);
-                drain += Fix64.FromInt(Grips.Of(self.Corner).Count()) * PerTick(Tuning.StaminaDrainPerSecond) / Fix64.FromInt(2);
+                Fix64 drain = effort * _rates.StaminaDrainPerSecond;
+                int held = 0;
+                for (int i = 0; i < Grips.All.Count; i++)
+                {
+                    if (Grips.All[i].Owner == self.Corner)
+                    {
+                        held++;
+                    }
+                }
+
+                drain += Fix64.FromInt(held) * _rates.StaminaDrainPerSecond / Fix64.FromInt(2);
                 if (Position == BoutPosition.Danger && Top.HasValue && self.Corner != Top.Value)
                 {
-                    drain += PerTick(Tuning.StaminaDrainPerSecond) * Fix64.FromInt(2);
+                    drain += _rates.StaminaDrainPerSecond * Fix64.FromInt(2);
                 }
 
                 self.Stamina = Fix64.Max(Fix64.Zero, self.Stamina - drain);
                 if (effort < LowEffort && ActiveTechnique == null)
                 {
-                    Fix64 recovery = PerTick(Tuning.StaminaRecoveryPerSecond) * (Fix64.FromInt(self.Wrestler.Attributes[WrestlerAttribute.Recovery]) / Hundred);
+                    Fix64 recovery = _rates.StaminaRecoveryPerSecond * (Fix64.FromInt(self.Wrestler.Attributes[WrestlerAttribute.Recovery]) * Hundredth);
                     self.Stamina = Fix64.Min(self.StaminaMax, self.Stamina + recovery);
                 }
 
-                Fix64 burstRecovery = PerTick(Tuning.BurstRecoveryPerSecond) * (Fix64.FromInt(self.Wrestler.Attributes[WrestlerAttribute.AnaerobicCapacity]) / Hundred);
+                Fix64 burstRecovery = _rates.BurstRecoveryPerSecond * (Fix64.FromInt(self.Wrestler.Attributes[WrestlerAttribute.AnaerobicCapacity]) * Hundredth);
                 self.Burst = Fix64.Min(self.BurstMax, self.Burst + burstRecovery);
-                self.Body.Balance += PerTick(Tuning.BalanceRecoveryPerSecond) * (self.Effective(WrestlerAttribute.Balance) / Hundred);
+                self.Body.Balance += _rates.BalanceRecoveryPerSecond * (self.Effective(WrestlerAttribute.Balance) * Hundredth);
                 self.Activity *= _activityDecayPerTick;
             }
         }

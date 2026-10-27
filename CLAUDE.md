@@ -63,7 +63,8 @@ The full game design document is [docs/game-design.md](docs/game-design.md). It 
 - Layout and setup: see `README.md`. Unity project: `unity/WrestlingSimulator` (Unity 6000.6.7f1, URP).
 - Build and test: `dotnet build -c Release` then `dotnet test`. Building copies the core DLLs into `unity/WrestlingSimulator/Assets/Plugins/Wrestling/` (not committed).
 - `src/` libraries target .NET Standard 2.1 with C# 9 (Unity's limit). Warnings are errors.
-- Simulation code uses `Fix64` (Q32.32) and `Pcg32` from `Wrestling.Core.Numerics`. Never use `float`, `double`, `System.Random` or `DateTime.Now` in simulation paths; floats are for rendering only.
+- Simulation code uses `Fix64` (Q32.32) and `Pcg32` from `Wrestling.Core.Numerics`. Never use `float`, `double`, `System.Random` or `DateTime.Now` in simulation paths; floats are for rendering only. (The one exception is `Fix64.Sqrt`, which takes a `Math.Sqrt` estimate as a starting point and then corrects it with exact integer checks, so its result never depends on floating point.)
+- Engine balancing numbers live in `data/engine/tuning.json`; the AI is `Wrestling.Core.AI.AiController`. Profile with `dotnet-trace` (installed; set `DOTNET_ROOT` to the Homebrew .NET `libexec` folder).
 - `DeterminismProbe.ReferenceHash` must match on every platform. Changing `Fix64` or `Pcg32` behaviour breaks replays; update the hash only on purpose.
 - Unity scripts live in `Assets/Scripts/<Area>/` with their own `.asmdef`, referencing `Wrestling.Core.dll` through `precompiledReferences`. No gameplay logic in Unity code.
 - Every rule from `docs/game-design.md` section 3 gets unit tests, using the rulebook's own examples where they exist.

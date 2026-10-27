@@ -51,7 +51,13 @@ namespace Wrestling.Core.Numerics
         public FixVector2 Normalized()
         {
             Fix64 length = Length;
-            return length == Fix64.Zero ? Zero : this / length;
+            if (length == Fix64.Zero)
+            {
+                return Zero;
+            }
+
+            Fix64 inverse = Fix64.One / length;
+            return new FixVector2(X * inverse, Y * inverse);
         }
 
         /// <summary>Rotated 90° counter-clockwise.</summary>

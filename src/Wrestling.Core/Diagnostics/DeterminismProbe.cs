@@ -16,7 +16,7 @@ namespace Wrestling.Core.Diagnostics
         /// The hash every platform must produce for <see cref="DefaultIterations"/>. Changing
         /// Fix64 or Pcg32 behaviour changes it and breaks saved replays, so update it only on purpose.
         /// </summary>
-        public const ulong ReferenceHash = 0xC89E4DCE5377F168UL;
+        public const ulong ReferenceHash = 0x03AD71A1B5917B3CUL;
 
         /// <summary>True when this platform reproduces <see cref="ReferenceHash"/>.</summary>
         public static bool MatchesReference() => Run(DefaultIterations) == ReferenceHash;

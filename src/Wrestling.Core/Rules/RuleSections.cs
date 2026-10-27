@@ -20,6 +20,41 @@ namespace Wrestling.Core.Rules
         OffMat,
     }
 
+    /// <summary>
+    /// Precomputed squared zone radii for fast, allocation-free zone lookups. Immutable, so one
+    /// map can be shared by any number of threads.
+    /// </summary>
+    public readonly struct MatZoneMap
+    {
+        private readonly Fix64 _centralSquared;
+        private readonly Fix64 _wrestlingSquared;
+        private readonly Fix64 _outerSquared;
+
+        public MatZoneMap(MatGeometry mat)
+        {
+            _centralSquared = mat.CentralSurfaceRadius * mat.CentralSurfaceRadius;
+            _wrestlingSquared = mat.WrestlingAreaRadius * mat.WrestlingAreaRadius;
+            _outerSquared = mat.OuterRadius * mat.OuterRadius;
+        }
+
+        /// <summary>Zone of a point; boundaries belong to the inner zone.</summary>
+        public MatZone ZoneAt(FixVector2 position)
+        {
+            Fix64 distanceSquared = position.LengthSquared;
+            if (distanceSquared <= _centralSquared)
+            {
+                return MatZone.CentralSurface;
+            }
+
+            if (distanceSquared <= _wrestlingSquared)
+            {
+                return MatZone.PassivityZone;
+            }
+
+            return distanceSquared <= _outerSquared ? MatZone.ProtectionArea : MatZone.OffMat;
+        }
+    }
+
     /// <summary>Mat dimensions in metres (Art. 4).</summary>
     public sealed class MatGeometry
     {
@@ -49,21 +84,7 @@ namespace Wrestling.Core.Rules
         /// Zone of a point on the mat, measured from the centre (Art. 4, 45). Boundaries belong to
         /// the inner zone: a point exactly on the 9 m line is still in the passivity zone.
         /// </summary>
-        public MatZone ZoneAt(FixVector2 position)
-        {
-            Fix64 distanceSquared = position.LengthSquared;
-            if (distanceSquared <= CentralSurfaceRadius * CentralSurfaceRadius)
-            {
-                return MatZone.CentralSurface;
-            }
-
-            if (distanceSquared <= WrestlingAreaRadius * WrestlingAreaRadius)
-            {
-                return MatZone.PassivityZone;
-            }
-
-            return distanceSquared <= OuterRadius * OuterRadius ? MatZone.ProtectionArea : MatZone.OffMat;
-        }
+        public MatZone ZoneAt(FixVector2 position) => new MatZoneMap(this).ZoneAt(position);
 
         internal void Validate(ValidationContext context)
         {

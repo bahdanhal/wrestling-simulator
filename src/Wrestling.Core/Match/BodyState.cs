@@ -61,6 +61,9 @@ namespace Wrestling.Core.Match
             }
         }
 
+        /// <summary>Sets a facing that is already a unit vector, skipping normalisation (hot path).</summary>
+        internal void SetUnitFacing(FixVector2 unit) => _facing = unit;
+
         /// <summary>Carried velocity in metres per second.</summary>
         public FixVector2 Momentum { get; set; }
 
@@ -126,7 +129,7 @@ namespace Wrestling.Core.Match
         /// <summary>Foot positions from the centre of mass, facing, stance and base width.</summary>
         public (FixVector2 Left, FixVector2 Right) FootPositions()
         {
-            FixVector2 sideways = Facing.Perpendicular() * (BaseWidth / Fix64.FromInt(2)); // towards the left foot
+            FixVector2 sideways = Facing.Perpendicular() * (BaseWidth * Fix64.Half); // towards the left foot
             FixVector2 stagger = Facing * (BaseWidth * StaggerFraction);
             FixVector2 left = Position + sideways;
             FixVector2 right = Position - sideways;

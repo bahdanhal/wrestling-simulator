@@ -11,6 +11,9 @@ namespace Wrestling.Core.Bouts
     public sealed class BoutScoreSheet
     {
         private readonly List<ScoreSheetEntry> _entries = new List<ScoreSheetEntry>();
+        private readonly int[] _points = new int[2];
+        private readonly int[] _cautions = new int[2];
+        private int _passivityCalls;
         private int _nextSequence = 1;
 
         /// <summary>All entries in recording order, including revoked ones.</summary>
@@ -54,23 +57,12 @@ namespace Wrestling.Core.Bouts
             }
 
             entry.Revoke();
+            Count(entry, -1);
         }
 
-        public int Points(Corner corner)
-        {
-            int total = 0;
-            foreach (PointsEntry entry in ActivePoints())
-            {
-                if (entry.Wrestler == corner)
-                {
-                    total += entry.Points;
-                }
-            }
+        public int Points(Corner corner) => _points[(int)corner];
 
-            return total;
-        }
-
-        public int Cautions(Corner corner) => CountActive<CautionEntry>(corner);
+        public int Cautions(Corner corner) => _cautions[(int)corner];
 
         public int Warnings(Corner corner, WarningReason reason)
         {
@@ -87,22 +79,7 @@ namespace Wrestling.Core.Bouts
         }
 
         /// <summary>Passivity calls in the bout, both wrestlers together.</summary>
-        public int PassivityCalls
-        {
-            get
-            {
-                int count = 0;
-                foreach (ScoreSheetEntry entry in _entries)
-                {
-                    if (!entry.IsRevoked && entry is PassivityEntry)
-                    {
-                        count++;
-                    }
-                }
-
-                return count;
-            }
-        }
+        public int PassivityCalls => _passivityCalls;
 
         public int PassivityCallsAgainst(Corner corner) => CountActive<PassivityEntry>(corner);
 
@@ -166,7 +143,25 @@ namespace Wrestling.Core.Bouts
 
             _entries.Add(entry);
             _nextSequence++;
+            Count(entry, 1);
             return entry;
+        }
+
+        /// <summary>Keeps the running totals in step with active entries.</summary>
+        private void Count(ScoreSheetEntry entry, int sign)
+        {
+            switch (entry)
+            {
+                case PointsEntry points:
+                    _points[(int)points.Wrestler] += sign * points.Points;
+                    break;
+                case CautionEntry caution:
+                    _cautions[(int)caution.Wrestler] += sign;
+                    break;
+                case PassivityEntry _:
+                    _passivityCalls += sign;
+                    break;
+            }
         }
     }
 }

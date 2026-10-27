@@ -18,7 +18,7 @@ namespace Wrestling.Core.Match
     public sealed partial class BoutEngine : IBoutView
     {
         private const int MaximumTicks = 500_000;
-        private static readonly Corner[] Corners = { Corner.Red, Corner.Blue };
+        private static readonly Fix64 Two = Fix64.FromInt(2);
 
         private readonly BoutSetup _setup;
         private readonly Pcg32 _random;
@@ -27,6 +27,8 @@ namespace Wrestling.Core.Match
         private readonly ActivityClockProcedure? _activityClock;
         private readonly Fix64 _activityDecayPerTick;
         private readonly int _fallTicks;
+        private readonly MatZoneMap _zones;
+        private readonly TickRates _rates;
 
         private int _stoppageTicks;
         private RestartPosition _pendingRestart;
@@ -62,6 +64,8 @@ namespace Wrestling.Core.Match
             // Exponential decay with the configured half-life: factor = 1 - ln 2 / (half-life in ticks).
             Fix64 halfLifeTicks = setup.Tuning.ActivityHalfLifeSeconds * Fix64.FromInt(BoutClock.TicksPerSecond);
             _activityDecayPerTick = Fix64.One - (Fix64.FromRatio(693147, 1_000_000) / halfLifeTicks);
+            _zones = new MatZoneMap(setup.Rules.Mat);
+            _rates = new TickRates(setup.Tuning);
             _fallTicks = Math.Max(1, (setup.Rules.Procedure.FallConfirmationSeconds * Fix64.FromInt(BoutClock.TicksPerSecond)).FloorToInt());
             for (int i = 0; i < 2; i++)
             {
@@ -240,7 +244,7 @@ namespace Wrestling.Core.Match
 
             _pendingRestart = restart == RestartPosition.Continue ? RestartPosition.StandingCentre : restart;
             _pendingTop = top;
-            _stoppageTicks = Math.Max(1, (Tuning.StoppageSeconds * Fix64.FromInt(BoutClock.TicksPerSecond)).FloorToInt());
+            _stoppageTicks = _rates.StoppageTicks;
             Emit(BoutEventType.Stoppage, null, null, 0, reason);
         }
 
@@ -333,13 +337,11 @@ namespace Wrestling.Core.Match
         private void Emit(BoutEventType type, Corner? wrestler, string? technique, int points, string detail) =>
             _events.Add(new BoutEvent(Tick, Clock.Now, type, wrestler, technique, points, detail));
 
-        private int Ticks(Fix64 seconds) => Math.Max(1, (seconds * Fix64.FromInt(BoutClock.TicksPerSecond)).FloorToInt());
-
-        private Fix64 PerTick(Fix64 perSecond) => FixMath.PerTick(perSecond, BoutClock.TicksPerSecond);
+        private Fix64 PerTick(Fix64 perSecond) => perSecond * _rates.TickFraction;
 
         /// <summary>Sigmoid contest: chance that a side with <paramref name="score"/> beats <paramref name="opposition"/>, scaled to <paramref name="rate"/> at even strength.</summary>
         private Fix64 Contest(Fix64 score, Fix64 opposition, Fix64 rate) =>
-            Fix64.Min(Fix64.One, rate * Fix64.FromInt(2) * FixMath.Sigmoid((score - opposition) / Tuning.ResolutionScale));
+            Fix64.Min(Fix64.One, rate * Fix64.FromInt(2) * FixMath.Sigmoid((score - opposition) * _rates.InverseResolutionScale));
 
         IReadOnlyList<(TechniqueDefinition Technique, GripSide Side)> IBoutView.StartableTechniques(Corner corner) => StartableTechniques(corner);
 

@@ -31,7 +31,7 @@ namespace Wrestling.Core.Match
             {
                 Fix64 redSpeed = red.Score((WrestlerAttribute.Speed, 50), (WrestlerAttribute.Explosiveness, 50));
                 Fix64 blueSpeed = blue.Score((WrestlerAttribute.Speed, 50), (WrestlerAttribute.Explosiveness, 50));
-                first = _random.Chance(FixMath.Sigmoid((redSpeed - blueSpeed) / Tuning.ResolutionScale)) ? Corner.Red : Corner.Blue;
+                first = _random.Chance(FixMath.Sigmoid((redSpeed - blueSpeed) * _rates.InverseResolutionScale)) ? Corner.Red : Corner.Blue;
             }
             else if (blueWants)
             {
@@ -194,7 +194,7 @@ namespace Wrestling.Core.Match
         {
             WrestlerRuntime attacker = Wrestler(interrupted.Executor);
             attacker.Body.Balance -= Tuning.FailedAttackBalanceLoss;
-            attacker.AttackReadyTick = Tick + Ticks(Tuning.AttackRecoverySeconds);
+            attacker.AttackReadyTick = Tick + _rates.AttackRecoveryTicks;
             Emit(BoutEventType.TechniqueFailed, interrupted.Executor, interrupted.Definition.Id, 0, PhaseOutcome.Countered.ToString());
             Corner defender = interrupted.Executor.Opponent();
             ActiveTechnique = null;
@@ -210,12 +210,9 @@ namespace Wrestling.Core.Match
             self.Stamina = Fix64.Max(Fix64.Zero, self.Stamina - phase.StaminaCost);
             self.Burst = Fix64.Max(Fix64.Zero, self.Burst - phase.BurstCost);
 
-            Fix64 attack = self.Score(phase.Attributes.Select(a => (a.Attribute, a.Percent)).ToArray());
-            attack = (attack * (Fix64.Half + (Fix64.Half * execution.Quality)))
-                + (execution.GripBonus * Tuning.GripBonusWeight)
-                + ((Fix64.One - opponent.Body.Balance) * Tuning.OpeningWeight);
-            Fix64 defence = DefenceScore(opponent, execution.Definition);
-            Fix64 chance = FixMath.Sigmoid(phase.Steepness * (attack - defence) / Tuning.ResolutionScale);
+            Fix64 attack = ContestFormulas.AttackScore(self, phase, execution.Quality, execution.GripBonus, opponent.Body.Balance, Tuning);
+            Fix64 defence = ContestFormulas.DefenceScore(opponent, execution.Definition);
+            Fix64 chance = ContestFormulas.PhaseChance(phase, attack, defence, Tuning);
             Fix64 roll = _random.NextFix01();
 
             if (roll < chance)
@@ -237,28 +234,6 @@ namespace Wrestling.Core.Match
             List<PhaseOutcome> failures = phase.Outcomes.Where(o => o != PhaseOutcome.Clean).ToList();
             PhaseOutcome outcome = failures.Count == 0 ? PhaseOutcome.Blocked : failures[_random.NextInt(0, failures.Count)];
             Fail(execution, outcome);
-        }
-
-        /// <summary>Defensive score against a technique: the attributes that stop that kind of attack.</summary>
-        private static Fix64 DefenceScore(WrestlerRuntime defender, TechniqueDefinition technique)
-        {
-            if (technique.Role != TechniqueRole.Attack || technique.Family == null)
-            {
-                // Against a counter or an escape: staying balanced and reading it.
-                return defender.Score((WrestlerAttribute.Balance, 50), (WrestlerAttribute.WrestlingIq, 50));
-            }
-
-            return technique.Family.Value switch
-            {
-                TechniqueFamily.LegAttacks => defender.Score((WrestlerAttribute.LegDefence, 70), (WrestlerAttribute.Balance, 30)),
-                TechniqueFamily.TripsAndSweeps => defender.Score((WrestlerAttribute.Balance, 60), (WrestlerAttribute.LegDefence, 40)),
-                TechniqueFamily.UpperBodyThrows => defender.Score((WrestlerAttribute.UpperBodyDefence, 70), (WrestlerAttribute.Balance, 30)),
-                TechniqueFamily.BodyLockAndLifts => defender.Score((WrestlerAttribute.UpperBodyDefence, 50), (WrestlerAttribute.LowerBodyStrength, 50)),
-                TechniqueFamily.GoBehindsAndDrags => defender.Score((WrestlerAttribute.HandFighting, 50), (WrestlerAttribute.Agility, 50)),
-                TechniqueFamily.SnapDownsAndFrontHeadlock => defender.Score((WrestlerAttribute.Balance, 50), (WrestlerAttribute.UpperBodyDefence, 50)),
-                TechniqueFamily.ParTerreTurns => defender.Score((WrestlerAttribute.ParTerreBottomDefence, 70), (WrestlerAttribute.Flexibility, 30)),
-                _ => defender.Score((WrestlerAttribute.ParTerreBottomDefence, 60), (WrestlerAttribute.LowerBodyStrength, 40)),
-            };
         }
 
         /// <summary>End states are listed best first; a bigger success margin gives a better one.</summary>
@@ -305,7 +280,7 @@ namespace Wrestling.Core.Match
             }
 
             ActiveTechnique = null;
-            self.AttackReadyTick = Tick + Ticks(Tuning.AttackRecoverySeconds);
+            self.AttackReadyTick = Tick + _rates.AttackRecoveryTicks;
             Emit(BoutEventType.TechniqueFailed, execution.Executor, execution.Definition.Id, 0, outcome.ToString());
             switch (outcome)
             {
@@ -336,7 +311,7 @@ namespace Wrestling.Core.Match
             Corner defender = executor.Opponent();
             WrestlerRuntime self = Wrestler(executor);
             WrestlerRuntime opponent = Wrestler(defender);
-            self.AttackReadyTick = Tick + Ticks(Tuning.AttackRecoverySeconds);
+            self.AttackReadyTick = Tick + _rates.AttackRecoveryTicks;
             Emit(BoutEventType.TechniqueCompleted, executor, execution.Definition.Id, 0, endState.ToString());
 
             if (!execution.OpponentGroundedAtStart && Position == BoutPosition.Neutral)
@@ -347,7 +322,7 @@ namespace Wrestling.Core.Match
                 opponent.Body.Position += travel;
             }
 
-            bool inProtectionArea = Rules.Mat.ZoneAt(opponent.Body.Position) >= MatZone.ProtectionArea;
+            bool inProtectionArea = _zones.ZoneAt(opponent.Body.Position) >= MatZone.ProtectionArea;
             if (endState == EndState.PushedOut)
             {
                 ApplyScore(ScoringEvaluator.StepOut(defender, deliberatePushWithoutAction: false, opponent.Body.IsGrounded, Rules));
@@ -356,20 +331,7 @@ namespace Wrestling.Core.Match
                 return;
             }
 
-            bool lifted = execution.Definition.Amplitude != Amplitude.None;
-            var facts = new ActionFacts
-            {
-                Executor = executor,
-                OpponentGroundedAtStart = execution.OpponentGroundedAtStart,
-                Completed = endState != EndState.Neutral && endState != EndState.Scramble,
-                OpponentLifted = lifted,
-                GrandAmplitude = execution.Definition.Amplitude == Amplitude.GrandAmplitude,
-                Landing = LandingFor(endState),
-                ContinuousToDanger = endState == EndState.DangerDirect && !execution.OpponentGroundedAtStart,
-                TakedownBehind = endState == EndState.ControlBehind && !execution.ExecutorWasBottom,
-                Reversal = endState == EndState.ControlBehind && execution.ExecutorWasBottom,
-                EndedInProtectionArea = inProtectionArea,
-            };
+            ActionFacts facts = ContestFormulas.FactsFor(executor, execution.Definition, endState, execution.OpponentGroundedAtStart, execution.ExecutorWasBottom, inProtectionArea);
 
             if (facts.Completed)
             {
@@ -416,16 +378,6 @@ namespace Wrestling.Core.Match
                     break;
             }
         }
-
-        private static Landing LandingFor(EndState endState) => endState switch
-        {
-            EndState.DangerDirect => Landing.DirectDanger,
-            EndState.DangerDelayed => Landing.DelayedDanger,
-            EndState.Stomach => Landing.Stomach,
-            EndState.Flank => Landing.Flank,
-            EndState.ChestOrArms => Landing.ChestOrArms,
-            _ => Landing.None,
-        };
 
         private void EnterParTerre(Corner top)
         {

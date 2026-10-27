@@ -132,25 +132,25 @@ namespace Wrestling.Core.Numerics
                 throw new ArgumentOutOfRangeException(nameof(value), "Square root of a negative number.");
             }
 
-            // sqrt(raw / 2^32) * 2^32 = sqrt(raw * 2^32): integer square root of a 96-bit number,
-            // two bits at a time (digit-by-digit method).
+            // sqrt(raw / 2^32) * 2^32 = sqrt(raw * 2^32): the integer square root of the 96-bit
+            // number n = raw * 2^32. A hardware estimate gives a starting point within a few units;
+            // exact integer comparisons then fix the result, so it never depends on floating point.
             ulong raw = (ulong)value.Raw;
             ulong high = raw >> FractionalBits;
             ulong low = raw << FractionalBits;
-            ulong remainder = 0;
-            ulong root = 0;
-            for (int pair = 63; pair >= 0; pair--)
+            ulong root = (ulong)System.Math.Sqrt(raw * 4294967296.0);
+            while (root > 0 && SquareExceeds(root, high, low))
             {
-                ulong bits = pair >= 32 ? (high >> ((pair - 32) * 2)) & 3UL : (low >> (pair * 2)) & 3UL;
-                remainder = (remainder << 2) | bits;
-                root <<= 1;
-                ulong test = (root << 1) | 1UL;
-                if (remainder >= test)
-                {
-                    remainder -= test;
-                    root |= 1UL;
-                }
+                root--;
             }
+
+            while (!SquareExceeds(root + 1, high, low))
+            {
+                root++;
+            }
+
+            MultiplyUnsigned(root, root, out ulong squareHigh, out ulong squareLow);
+            ulong remainder = low - squareLow; // n - root^2, which fits in 64 bits because root^2 <= n < (root + 1)^2
 
             // remainder = n - root^2; round up when n is past (root + 0.5)^2.
             if (remainder > root)
@@ -212,20 +212,7 @@ namespace Wrestling.Core.Numerics
                 throw new OverflowException("Fix64 division overflow.");
             }
 
-            // Binary long division of the low word; the quotient fits in 64 bits because high < d.
-            ulong remainder = high;
-            ulong quotient = 0;
-            for (int bit = 63; bit >= 0; bit--)
-            {
-                ulong carry = remainder >> 63;
-                remainder = (remainder << 1) | ((low >> bit) & 1UL);
-                quotient <<= 1;
-                if (carry != 0 || remainder >= d)
-                {
-                    remainder = unchecked(remainder - d);
-                    quotient |= 1UL;
-                }
-            }
+            ulong quotient = Divide128By64(high, low, d, out ulong remainder);
 
             // Round half away from zero: 2 * remainder >= d, written without overflow.
             if (remainder >= d - remainder)
@@ -234,6 +221,71 @@ namespace Wrestling.Core.Numerics
             }
 
             return ApplySign(quotient, negative);
+        }
+
+        /// <summary>True when value^2 is greater than the 128-bit number (high:low).</summary>
+        private static bool SquareExceeds(ulong value, ulong high, ulong low)
+        {
+            MultiplyUnsigned(value, value, out ulong squareHigh, out ulong squareLow);
+            return squareHigh > high || (squareHigh == high && squareLow > low);
+        }
+
+        /// <summary>
+        /// (high:low) / divisor for high &lt; divisor, with two native 64-bit divisions on 32-bit
+        /// digits (Knuth algorithm D as in Hacker's Delight "divlu" and libdivide). Pure integer
+        /// arithmetic, so it is deterministic on every platform.
+        /// </summary>
+        private static ulong Divide128By64(ulong high, ulong low, ulong divisor, out ulong remainder)
+        {
+            const ulong Base = 1UL << 32;
+            int shift = LeadingZeroCount(divisor);
+            divisor <<= shift;
+            ulong divisorHigh = divisor >> 32;
+            ulong divisorLow = divisor & 0xFFFFFFFFUL;
+            ulong numerator32 = (high << shift) | (shift == 0 ? 0UL : low >> (64 - shift));
+            ulong numerator10 = low << shift;
+            ulong numerator1 = numerator10 >> 32;
+            ulong numerator0 = numerator10 & 0xFFFFFFFFUL;
+
+            ulong q1 = numerator32 / divisorHigh;
+            ulong rhat = numerator32 - (q1 * divisorHigh);
+            while (q1 >= Base || q1 * divisorLow > (Base * rhat) + numerator1)
+            {
+                q1--;
+                rhat += divisorHigh;
+                if (rhat >= Base)
+                {
+                    break;
+                }
+            }
+
+            ulong numerator21 = unchecked((numerator32 * Base) + numerator1 - (q1 * divisor));
+            ulong q0 = numerator21 / divisorHigh;
+            rhat = numerator21 - (q0 * divisorHigh);
+            while (q0 >= Base || q0 * divisorLow > (Base * rhat) + numerator0)
+            {
+                q0--;
+                rhat += divisorHigh;
+                if (rhat >= Base)
+                {
+                    break;
+                }
+            }
+
+            remainder = unchecked((numerator21 * Base) + numerator0 - (q0 * divisor)) >> shift;
+            return (q1 * Base) + q0;
+        }
+
+        private static int LeadingZeroCount(ulong value)
+        {
+            int count = 0;
+            if ((value & 0xFFFFFFFF00000000UL) == 0) { count += 32; value <<= 32; }
+            if ((value & 0xFFFF000000000000UL) == 0) { count += 16; value <<= 16; }
+            if ((value & 0xFF00000000000000UL) == 0) { count += 8; value <<= 8; }
+            if ((value & 0xF000000000000000UL) == 0) { count += 4; value <<= 4; }
+            if ((value & 0xC000000000000000UL) == 0) { count += 2; value <<= 2; }
+            if ((value & 0x8000000000000000UL) == 0) { count += 1; }
+            return count;
         }
 
         private static void MultiplyUnsigned(ulong a, ulong b, out ulong high, out ulong low)

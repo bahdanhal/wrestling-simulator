@@ -17,12 +17,15 @@ namespace Wrestling.Core.Match
             bool inAction = ActiveTechnique != null || Position == BoutPosition.Danger || Position == BoutPosition.Scramble;
             if (Position == BoutPosition.Neutral && ActiveTechnique == null)
             {
-                if (CheckStepOut())
+                (bool redOut, bool redZone) = FootZones(Wrestler(Corner.Red));
+                (bool blueOut, bool blueZone) = FootZones(Wrestler(Corner.Blue));
+                if (CheckStepOut(redOut, blueOut))
                 {
                     return;
                 }
 
-                CheckZone();
+                CheckZone(Corner.Red, redZone);
+                CheckZone(Corner.Blue, blueZone);
             }
 
             CheckParTerreStalemate();
@@ -49,22 +52,24 @@ namespace Wrestling.Core.Match
         private bool FootInProtectionArea(WrestlerRuntime wrestler)
         {
             (FixVector2 left, FixVector2 right) = wrestler.Body.FootPositions();
-            return Rules.Mat.ZoneAt(left) >= MatZone.ProtectionArea || Rules.Mat.ZoneAt(right) >= MatZone.ProtectionArea;
+            return _zones.ZoneAt(left) >= MatZone.ProtectionArea || _zones.ZoneAt(right) >= MatZone.ProtectionArea;
         }
 
-        private bool FootInPassivityZone(WrestlerRuntime wrestler)
+        /// <summary>Whether a foot is in the protection area, and whether a foot is in the passivity zone.</summary>
+        private (bool InProtectionArea, bool InPassivityZone) FootZones(WrestlerRuntime wrestler)
         {
             (FixVector2 left, FixVector2 right) = wrestler.Body.FootPositions();
-            return Rules.Mat.ZoneAt(left) == MatZone.PassivityZone || Rules.Mat.ZoneAt(right) == MatZone.PassivityZone;
+            MatZone leftZone = _zones.ZoneAt(left);
+            MatZone rightZone = _zones.ZoneAt(right);
+            return (leftZone >= MatZone.ProtectionArea || rightZone >= MatZone.ProtectionArea,
+                leftZone == MatZone.PassivityZone || rightZone == MatZone.PassivityZone);
         }
 
         /// <summary>One entire foot in the protection area without a hold (Art. 38, 45).</summary>
-        private bool CheckStepOut()
+        private bool CheckStepOut(bool redOut, bool blueOut)
         {
             WrestlerRuntime red = Wrestler(Corner.Red);
             WrestlerRuntime blue = Wrestler(Corner.Blue);
-            bool redOut = FootInProtectionArea(red);
-            bool blueOut = FootInProtectionArea(blue);
             if (!redOut && !blueOut)
             {
                 return false;
@@ -84,7 +89,7 @@ namespace Wrestling.Core.Match
             }
 
             WrestlerRuntime pusher = Wrestler(steppedOut.Opponent());
-            bool deliberate = Tick - pusher.LastAttackTick > Ticks(Tuning.DeliberatePushLookbackSeconds)
+            bool deliberate = Tick - pusher.LastAttackTick > _rates.DeliberatePushLookbackTicks
                 && pusher.Intent.PushIntensity >= DeliberatePushIntensity;
             if (deliberate && !Wrestler(steppedOut).Body.IsGrounded)
             {
@@ -103,15 +108,12 @@ namespace Wrestling.Core.Match
         }
 
         /// <summary>The referee calls "zone" the first time a wrestler steps into the passivity zone (Art. 49).</summary>
-        private void CheckZone()
+        private void CheckZone(Corner corner, bool inPassivityZone)
         {
-            foreach (WrestlerRuntime wrestler in _wrestlers)
+            if (inPassivityZone && !_zoneCalled[(int)corner])
             {
-                if (!_zoneCalled[(int)wrestler.Corner] && FootInPassivityZone(wrestler))
-                {
-                    _zoneCalled[(int)wrestler.Corner] = true;
-                    Emit(BoutEventType.ZoneCall, wrestler.Corner, null, 0, string.Empty);
-                }
+                _zoneCalled[(int)corner] = true;
+                Emit(BoutEventType.ZoneCall, corner, null, 0, string.Empty);
             }
         }
 
@@ -128,7 +130,7 @@ namespace Wrestling.Core.Match
                 {
                     WrestlerRuntime other = Wrestler(wrestler.Corner.Opponent());
                     bool inactive = wrestler.Activity < Tuning.InactivityThreshold && wrestler.Activity * Fix64.FromInt(2) < other.Activity;
-                    if (!inactive || Tick - _lastInactivityReport[(int)wrestler.Corner] < Ticks(Tuning.InactivityReportCooldownSeconds))
+                    if (!inactive || Tick - _lastInactivityReport[(int)wrestler.Corner] < _rates.InactivityReportCooldownTicks)
                     {
                         continue;
                     }
@@ -175,7 +177,7 @@ namespace Wrestling.Core.Match
                 return;
             }
 
-            if (Clock.ElapsedTicks - _lastGrecoCheckElapsed < Ticks(Tuning.GrecoPassivityCheckSeconds))
+            if (Clock.ElapsedTicks - _lastGrecoCheckElapsed < _rates.GrecoPassivityCheckTicks)
             {
                 return;
             }
