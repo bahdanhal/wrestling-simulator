@@ -131,38 +131,14 @@ namespace Wrestling.Core.Competition
 
         private bool IsOwnBout(BracketBout bout) => bout.Stage == BracketStage.Pool && bout.Top != null && bout.Bottom != null && _members.Contains(bout.Top) && _members.Contains(bout.Bottom);
 
-        /// <summary>Circle-method schedule: every pair meets once; corners alternate between rounds.</summary>
         private void Schedule(BracketStage stage)
         {
-            var circle = new List<string?>(_members);
-            if (circle.Count % 2 == 1)
+            Rounds = RoundRobin.RoundCount(_members.Count);
+            foreach (RoundRobinPairing<string> pairing in RoundRobin.Schedule(_members))
             {
-                circle.Add(null);
-            }
-
-            int n = circle.Count;
-            Rounds = n - 1;
-            for (int round = 0; round < Rounds; round++)
-            {
-                for (int i = 0; i < n / 2; i++)
-                {
-                    string? a = circle[i];
-                    string? b = circle[n - 1 - i];
-                    if (a == null || b == null)
-                    {
-                        continue;
-                    }
-
-                    bool swap = (round + i) % 2 == 1;
-                    BracketBout bout = _ledger.AddBout(stage, round + 1, Name, SlotSource.Entrant(swap ? b : a), SlotSource.Entrant(swap ? a : b));
-                    bout.Top = swap ? b : a;
-                    bout.Bottom = swap ? a : b;
-                }
-
-                // Keep the first position fixed and rotate the others clockwise.
-                string? last = circle[n - 1];
-                circle.RemoveAt(n - 1);
-                circle.Insert(1, last);
+                BracketBout bout = _ledger.AddBout(stage, pairing.Round, Name, SlotSource.Entrant(pairing.Home), SlotSource.Entrant(pairing.Away));
+                bout.Top = pairing.Home;
+                bout.Bottom = pairing.Away;
             }
         }
     }

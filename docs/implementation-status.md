@@ -20,6 +20,9 @@ What is built, against [game-design.md](game-design.md). Updated with every chan
 | Two pools with semi-finals (6–7 wrestlers) | `TwoPoolTournament` | 10.3 |
 | Team ranking points | `TeamStandings`, ruleset `teamRanking` | 10.5 |
 | Withdrawals, injuries, forfeits and double losses in every format | `BoutLedger` | 10.2, 10.7 |
+| Shared round-robin scheduler | `RoundRobin` | 10.3, 10.6 |
+| Team dual meets and team groups (Art. 33) | `DualMeet`, `TeamGroup` | 10.6 |
+| Weigh-in: tolerance by event and day, category eligibility, moving up | `WeighIn` | 8.5, 10.2 |
 
 ## Known rule gaps
 
@@ -32,8 +35,6 @@ Rules from the rulebook that the competition code does not handle yet:
 
 In dependency order:
 
-1. Team competitions (World Cup dual meets, Art. 33)
-2. Weigh-in procedure and tolerance per event type, using the ruleset
-3. Event scheduling (sessions, mats, 20-minute rest, two-day categories)
-4. Wrestler model (attributes, body, repertoire, condition)
-5. Match engine (body state, grips, techniques, officials, scoring evaluator)
+1. Event scheduling (sessions, mats, 20-minute rest, two-day categories)
+2. Wrestler model (attributes, body, repertoire, condition)
+3. Match engine (body state, grips, techniques, officials, scoring evaluator)
