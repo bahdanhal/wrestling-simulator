@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "id": "uww-2026-01",
+  "source": "UWW International Wrestling Rules, Greco-Roman, Freestyle, Women's Wrestling, January 2026",
+  "mat": {
+    "wrestlingAreaDiameter": 9.0,
+    "centralSurfaceDiameter": 7.0,
+    "passivityZoneWidth": 1.0,
+    "protectionAreaWidth": 1.5,
+    "centralCircleDiameter": 1.0
+  },
+  "ageEligibility": {
+    "u15": { "minimumAge": 14, "maximumAge": 15, "minimumAgeWithAuthorization": 13 },
+    "u17": { "minimumAge": 16, "maximumAge": 17, "minimumAgeWithAuthorization": 15 },
+    "u20": { "minimumAge": 18, "maximumAge": 20, "minimumAgeWithAuthorization": 17 },
+    "u23": { "minimumAge": 19, "maximumAge": 23, "minimumAgeWithAuthorization": 18 },
+    "senior": { "minimumAge": 18, "maximumAge": null, "minimumAgeWithAuthorization": null },
+    "veterans": { "minimumAge": 35, "maximumAge": null, "minimumAgeWithAuthorization": null }
+  },
+  "boutDuration": {
+    "u15": { "periods": 2, "periodSeconds": 120, "breakSeconds": 30 },
+    "u17": { "periods": 2, "periodSeconds": 120, "breakSeconds": 30 },
+    "u20": { "periods": 2, "periodSeconds": 180, "breakSeconds": 30 },
+    "u23": { "periods": 2, "periodSeconds": 180, "breakSeconds": 30 },
+    "senior": { "periods": 2, "periodSeconds": 180, "breakSeconds": 30 },
+    "veterans": { "periods": 2, "periodSeconds": 120, "breakSeconds": 30 }
+  },
+  "weightCategories": {
+    "senior": {
+      "grecoRoman": { "limitsKg": [55, 60, 63, 67, 72, 77, 82, 87, 97, 130], "lightestMinimumKg": null, "heaviestMinimumKgExclusive": 97 },
+      "freestyle": { "limitsKg": [57, 61, 65, 70, 74, 79, 86, 92, 97, 125], "lightestMinimumKg": null, "heaviestMinimumKgExclusive": 97 },
+      "womens": { "limitsKg": [50, 53, 55, 57, 59, 62, 65, 68, 72, 76], "lightestMinimumKg": null, "heaviestMinimumKgExclusive": 72 }
+    },
+    "u17": {
+      "grecoRoman": { "limitsKg": [45, 48, 51, 55, 60, 65, 71, 80, 92, 110], "lightestMinimumKg": 41, "heaviestMinimumKgExclusive": null },
+      "freestyle": { "limitsKg": [45, 48, 51, 55, 60, 65, 71, 80, 92, 110], "lightestMinimumKg": 41, "heaviestMinimumKgExclusive": null },
+      "womens": { "limitsKg": [40, 43, 46, 49, 53, 57, 61, 65, 69, 73], "lightestMinimumKg": 36, "heaviestMinimumKgExclusive": null }
+    },
+    "u15": {
+      "grecoRoman": { "limitsKg": [38, 41, 44, 48, 52, 57, 62, 68, 75, 85], "lightestMinimumKg": 34, "heaviestMinimumKgExclusive": null },
+      "freestyle": { "limitsKg": [38, 41, 44, 48, 52, 57, 62, 68, 75, 85], "lightestMinimumKg": 34, "heaviestMinimumKgExclusive": null },
+      "womens": { "limitsKg": [33, 36, 39, 42, 46, 50, 54, 58, 62, 66], "lightestMinimumKg": 29, "heaviestMinimumKgExclusive": null }
+    },
+    "olympic": {
+      "grecoRoman": { "limitsKg": [60, 67, 77, 87, 97, 130], "lightestMinimumKg": null, "heaviestMinimumKgExclusive": 97 },
+      "freestyle": { "limitsKg": [57, 65, 74, 86, 97, 125], "lightestMinimumKg": null, "heaviestMinimumKgExclusive": 97 },
+      "womens": { "limitsKg": [50, 53, 57, 62, 68, 76], "lightestMinimumKg": null, "heaviestMinimumKgExclusive": 72 }
+    },
+    "mayMoveUpOneCategory": ["senior", "u23"]
+  },
+  "technicalSuperiority": { "grecoRoman": 8, "freestyle": 10, "womens": 10 },
+  "technicalPoints": {
+    "stepOut": 1,
+    "reversal": 1,
+    "takedown": 2,
+    "throwToStomachOrFlank": 2,
+    "exposure": 2,
+    "blockAttackerInDanger": 2,
+    "standingHoldToDanger": 4,
+    "shortAmplitudeLiftToDanger": 4,
+    "grandAmplitudeWithoutDirectDanger": 4,
+    "completeLiftLandingOnChestOrArms": 4,
+    "instantaneousFallFromStanding": 4,
+    "grandAmplitudeToDirectDanger": 5,
+    "parTerreGrandAmplitudeToDirectDanger": 5,
+    "injuryStoppageWithoutVisibleInjury": 1
+  },
+  "penalties": {
+    "fleeingHold": 1,
+    "fleeingMat": 1,
+    "fleeingMatInDanger": 2,
+    "negativeWrestling": { "grecoRoman": 2, "freestyle": 1, "womens": 1 },
+    "defenderIllegalAction": { "grecoRoman": 2, "freestyle": 1, "womens": 1 },
+    "attackerRepeatedIllegalHold": 1,
+    "refuseParTerrePosition": { "grecoRoman": 2, "freestyle": 1, "womens": 1 },
+    "grecoAttackerLegFoul": 1,
+    "grecoDefenderLegFoul": 2,
+    "stalling": 1
+  },
+  "passivity": {
+    "grecoRoman": {
+      "pointsByCall": [1, 1, 0],
+      "activeWrestlerChoosesPosition": true
+    },
+    "activityClock": {
+      "activitySeconds": 30,
+      "pointIfNoScore": 1,
+      "verbalWarningFirst": { "u15": false, "u17": false, "u20": true, "u23": true, "senior": true, "veterans": false },
+      "scorelessDesignationAtSeconds": { "u15": 60, "u17": 60, "u20": 120, "u23": 120, "senior": 120, "veterans": 60 },
+      "finalSecondsEvasionWindow": 30,
+      "finalSecondsEvasionPoints": 1
+    }
+  },
+  "challenge": {
+    "perBout": 1,
+    "lostChallengePoints": 1,
+    "requestWindowSeconds": 10,
+    "successfulChallengeIsKept": true
+  },
+  "procedure": {
+    "cautionsForLoss": 3,
+    "minimumRestBetweenBoutsMinutes": 20,
+    "callsBeforeForfeit": 3,
+    "secondsBetweenCalls": 30,
+    "bleedingTreatmentSecondsPerBout": 240,
+    "fallConfirmationSeconds": 1.0
+  },
+  "weighIn": {
+    "firstDayDurationMinutes": 30,
+    "secondDayDurationMinutes": 15,
+    "firstDayToleranceKg": {
+      "olympicGames": 0,
+      "championships": 0,
+      "worldCup": 2,
+      "rankingSeries": 2,
+      "internationalTournament": 2
+    },
+    "secondDayToleranceKg": 0
+  },
+  "classificationPoints": {
+    "fall": { "winner": 5, "loser": 0 },
+    "injury": { "winner": 5, "loser": 0 },
+    "threeCautions": { "winner": 5, "loser": 0 },
+    "forfeit": { "winner": 5, "loser": 0 },
+    "disqualification": { "winner": 5, "loser": 0 },
+    "technicalSuperiority": { "winner": 4, "loser": 0 },
+    "technicalSuperiorityLoserScored": { "winner": 4, "loser": 1 },
+    "points": { "winner": 3, "loser": 0 },
+    "pointsLoserScored": { "winner": 3, "loser": 1 },
+    "doubleLoss": { "winner": 0, "loser": 0 }
+  }
+}

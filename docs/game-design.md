@@ -985,63 +985,27 @@ data/
   localization/        <language>.json string tables
 ```
 
-### 13.3 Ruleset (excerpt)
+### 13.3 Ruleset
+
+The shipped ruleset is [`data/rulesets/uww-2026-01.json`](../data/rulesets/uww-2026-01.json), loaded by `Wrestling.Data.Rulesets.RulesetLoader` into `Wrestling.Core.Rules.Ruleset`. Excerpt:
 
 ```json
 {
   "schemaVersion": 1,
   "id": "uww-2026-01",
-  "source": "UWW International Wrestling Rules, January 2026",
-  "mat": {
-    "wrestlingAreaDiameterM": 9.0,
-    "centralSurfaceDiameterM": 7.0,
-    "passivityZoneWidthM": 1.0,
-    "protectionAreaWidthM": 1.5,
-    "centralCircleDiameterM": 1.0
-  },
-  "boutDuration": {
-    "senior": { "periods": 2, "periodSeconds": 180, "breakSeconds": 30 },
-    "u23":    { "periods": 2, "periodSeconds": 180, "breakSeconds": 30 },
-    "u20":    { "periods": 2, "periodSeconds": 180, "breakSeconds": 30 },
-    "u17":    { "periods": 2, "periodSeconds": 120, "breakSeconds": 30 },
-    "u15":    { "periods": 2, "periodSeconds": 120, "breakSeconds": 30 },
-    "veterans": { "periods": 2, "periodSeconds": 120, "breakSeconds": 30 }
-  },
-  "technicalSuperiority": { "greco-roman": 8, "freestyle": 10, "womens": 10 },
-  "cautionsForLoss": 3,
-  "fallConfirmationSeconds": 1.0,
-  "challenge": { "perBout": 1, "lostChallengePoints": 1, "requestWindowSeconds": 10 },
-  "negativeWrestlingPoints": { "greco-roman": 2, "freestyle": 1, "womens": 1 },
+  "technicalSuperiority": { "grecoRoman": 8, "freestyle": 10, "womens": 10 },
+  "technicalPoints": { "stepOut": 1, "takedown": 2, "exposure": 2, "standingHoldToDanger": 4, "grandAmplitudeToDirectDanger": 5 },
   "passivity": {
-    "greco-roman": {
-      "type": "par-terre-choice",
-      "pointsByCall": [1, 1, 0],
-      "activeWrestlerChoosesPosition": true
-    },
-    "freestyle": {
-      "type": "activity-clock",
-      "verbalWarningFirst": true,
-      "activitySeconds": 30,
-      "pointIfNoScore": 1,
-      "mandatoryDesignationIfScorelessAtSeconds": { "senior": 120, "u17": 60 },
-      "finalSecondsEvasionWindow": 30
-    }
+    "grecoRoman": { "pointsByCall": [1, 1, 0], "activeWrestlerChoosesPosition": true },
+    "activityClock": { "activitySeconds": 30, "pointIfNoScore": 1 }
   },
-  "bleedingTreatmentSecondsPerBout": 240,
-  "minimumRestBetweenBoutsMinutes": 20,
-  "weighIn": {
-    "day1DurationMinutes": 30,
-    "day2DurationMinutes": 15,
-    "toleranceKgByEventType": { "world-cup": 2, "ranking-series": 2, "international": 2 }
-  },
-  "classificationPoints": {
-    "VFA": [5, 0], "VIN": [5, 0], "VCA": [5, 0], "VFO": [5, 0], "DSQ": [5, 0],
-    "VSU": [4, 0], "VSU1": [4, 1], "VPO": [3, 0], "VPO1": [3, 1]
-  }
+  "classificationPoints": { "fall": { "winner": 5, "loser": 0 }, "technicalSuperiorityLoserScored": { "winner": 4, "loser": 1 } }
 }
 ```
 
-The full file also contains the point-value table (section 3.5) as structured end-state conditions, tie criteria, foul penalties, restart rules, weight categories per age group, and competition format parameters.
+Rule **values** live in the ruleset; deciding **which** rule applies to a situation (for example whether a throw is grand amplitude into direct danger) is code in `Wrestling.Core`, tested against the rulebook's own examples.
+
+Loading is strict: every property is required (nullable values must be written as `null`), unknown properties and enum values are errors, numbers are read as exact decimals, and all validation errors are reported together.
 
 ### 13.4 Technique (excerpt)
 

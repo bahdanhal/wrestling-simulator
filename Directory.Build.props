@@ -6,9 +6,4 @@
     <WarningLevel>5</WarningLevel>
   </PropertyGroup>
 
-  <!-- Libraries used by Unity: Unity 6 compiles C# 9 against .NET Standard 2.1. -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
-    <LangVersion>9.0</LangVersion>
-    <DebugType>portable</DebugType>
-  </PropertyGroup>
 </Project>
