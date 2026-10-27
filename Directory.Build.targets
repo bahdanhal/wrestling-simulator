@@ -1,0 +1,12 @@
+<Project>
+  <!-- Projects that set CopyToUnity=true are copied into the Unity project after every build. -->
+  <PropertyGroup>
+    <UnityPluginsDir>$(MSBuildThisFileDirectory)unity/WrestlingSimulator/Assets/Plugins/Wrestling/</UnityPluginsDir>
+  </PropertyGroup>
+
+  <Target Name="CopyToUnityPlugins" AfterTargets="Build" Condition="'$(CopyToUnity)' == 'true' And Exists('$(MSBuildThisFileDirectory)unity/WrestlingSimulator/Assets')">
+    <Copy SourceFiles="$(TargetPath);$(TargetDir)$(TargetName).pdb"
+          DestinationFolder="$(UnityPluginsDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+</Project>

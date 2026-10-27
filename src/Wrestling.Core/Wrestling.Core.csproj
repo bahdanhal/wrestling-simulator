@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>Wrestling.Core</RootNamespace>
+    <CopyToUnity>true</CopyToUnity>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Wrestling.Core.Tests" />
+  </ItemGroup>
+
+</Project>

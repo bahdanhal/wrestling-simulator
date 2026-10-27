@@ -1,0 +1,47 @@
+# macOS
+.DS_Store
+
+# IDEs
+.idea/
+.vs/
+.vscode/
+*.user
+*.suo
+*.swp
+
+# .NET build output
+bin/
+obj/
+TestResults/
+*.binlog
+
+# Unity (project lives in unity/WrestlingSimulator)
+unity/WrestlingSimulator/[Ll]ibrary/
+unity/WrestlingSimulator/[Tt]emp/
+unity/WrestlingSimulator/[Oo]bj/
+unity/WrestlingSimulator/[Bb]uild/
+unity/WrestlingSimulator/[Bb]uilds/
+unity/WrestlingSimulator/[Ll]ogs/
+unity/WrestlingSimulator/[Uu]ser[Ss]ettings/
+unity/WrestlingSimulator/[Mm]emoryCaptures/
+unity/WrestlingSimulator/[Rr]ecordings/
+unity/WrestlingSimulator/*.csproj
+unity/WrestlingSimulator/*.sln
+unity/WrestlingSimulator/*.slnx
+unity/WrestlingSimulator/*.pidb
+unity/WrestlingSimulator/*.booproj
+unity/WrestlingSimulator/*.svd
+unity/WrestlingSimulator/*.pdb
+unity/WrestlingSimulator/*.mdb
+unity/WrestlingSimulator/*.opendb
+unity/WrestlingSimulator/*.VC.db
+unity/WrestlingSimulator/*.apk
+unity/WrestlingSimulator/*.aab
+unity/WrestlingSimulator/*.unitypackage
+unity/WrestlingSimulator/crashlytics-build.properties
+unity/WrestlingSimulator/Assets/[Ss]treamingAssets/aa/
+
+# Core assemblies are built from src/ and copied into Unity by the build
+unity/WrestlingSimulator/Assets/Plugins/Wrestling/*.dll
+unity/WrestlingSimulator/Assets/Plugins/Wrestling/*.pdb
+unity/WrestlingSimulator/Assets/Plugins/Wrestling/*.xml

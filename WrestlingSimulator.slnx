@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Wrestling.Core/Wrestling.Core.csproj" />
+    <Project Path="src/Wrestling.Data/Wrestling.Data.csproj" />
+    <Project Path="src/Wrestling.Sim/Wrestling.Sim.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Wrestling.Core.Tests/Wrestling.Core.Tests.csproj" />
+  </Folder>
+</Solution>
