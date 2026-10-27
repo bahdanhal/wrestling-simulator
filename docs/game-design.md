@@ -234,6 +234,12 @@ Restart **par terre** when: a technical superiority or risk stop during par terr
    - Both technical: the last scorer wins.
    - A caution held by the first scorer reverses the result (criterion 3 applies first).
 
+Implementation notes (`Wrestling.Core.Bouts.TieBreak`):
+- Criteria 1 and 2 compare every point award by its value, passivity and infringement points included. The rulebook settles "passivity point vs technical point" at criterion 4, which is only reachable if both count as 1-point actions earlier.
+- Technical points are holds and push-outs. Passivity, activity-clock, lost-challenge, infringement and injury-stoppage points are non-technical.
+- The 1–1 rules are applied to every level score: both wrestlers with technical points → last technical scorer; only one → that wrestler; none → first scorer.
+- "Loser scored" for classification (VPO1, VSU1) means the loser has any points on the sheet.
+
 **Classification points**
 
 | Code | Result | Winner : Loser |
