@@ -28,4 +28,8 @@
     <ProjectReference Include="..\..\src\Wrestling.Core\Wrestling.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\**\*.cs" LinkBase="Shared" />
+  </ItemGroup>
+
 </Project>

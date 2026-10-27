@@ -27,6 +27,8 @@ namespace Wrestling.Data.Json
             };
             settings.Converters.Add(new StringEnumConverter(new CamelCaseNamingStrategy(), allowIntegerValues: false));
             settings.Converters.Add(new Fix64JsonConverter());
+            settings.Converters.Add(new GameDateJsonConverter());
+            settings.Converters.Add(new AttributeSetJsonConverter());
             return settings;
         }
 

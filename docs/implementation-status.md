@@ -23,6 +23,10 @@ What is built, against [game-design.md](game-design.md). Updated with every chan
 | Shared round-robin scheduler | `RoundRobin` | 10.3, 10.6 |
 | Team dual meets and team groups (Art. 33) | `DualMeet`, `TeamGroup` | 10.6 |
 | Weigh-in: tolerance by event and day, category eligibility, moving up | `WeighIn` | 8.5, 10.2 |
+| Deterministic game calendar (dates, weeks, ages) | `Wrestling.Core.Calendar.GameDate` | 8.1 |
+| Wrestler model: identity, body, 34 attributes, hidden traits, repertoire, condition, validation | `Wrestling.Core.Wrestlers` | 4.1–4.4 |
+| Derived archetype label | `ArchetypeClassifier` | 4.6 |
+| Roster packs: strict JSON import/export | `Wrestling.Data.Rosters` | 13.7 |
 
 ## Known rule gaps
 
@@ -35,6 +39,8 @@ Rules from the rulebook that the competition code does not handle yet:
 
 In dependency order:
 
-1. Event scheduling (sessions, mats, 20-minute rest, two-day categories)
-2. Wrestler model (attributes, body, repertoire, condition)
-3. Match engine (body state, grips, techniques, officials, scoring evaluator)
+1. Match engine foundations: mat geometry, body state, grips, bout clock
+2. Technique content model and loader (phases, counter windows, end states)
+3. Scoring evaluator and officials
+4. Event scheduling (sessions, mats, 20-minute rest, two-day categories)
+5. Wrestler creation (backgrounds, point-buy), ageing and training

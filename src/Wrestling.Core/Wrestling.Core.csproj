@@ -13,4 +13,9 @@
     <InternalsVisibleTo Include="Wrestling.Core.Tests" />
   </ItemGroup>
 
+  <!-- C# 9 init-only setters on .NET Standard 2.1. -->
+  <ItemGroup>
+    <Compile Include="..\Shared\IsExternalInit.cs" Link="Shared\IsExternalInit.cs" />
+  </ItemGroup>
+
 </Project>
