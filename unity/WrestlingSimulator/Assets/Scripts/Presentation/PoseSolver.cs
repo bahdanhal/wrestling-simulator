@@ -266,7 +266,7 @@ namespace Wrestling.Presentation
         {
             var pose = new Pose { Left = left };
             float legLength = body.Thigh + body.Shin;
-            float hipHeight = Mathf.Min(AnkleHeight + (legLength * (0.62f + (0.36f * frame.Level))), AnkleHeight + (legLength * 0.985f));
+            float hipHeight = Mathf.Min(AnkleHeight + (legLength * (0.45f + (0.53f * frame.Level))), AnkleHeight + (legLength * 0.985f));
             float lean = Mathf.Lerp(72f, 6f, frame.Posture) + ((1f - frame.Level) * 18f) + ((1f - frame.Balance) * 12f);
             pose.Pelvis = WrestlerFrame.OnMat(frame.Position, hipHeight) - (forward * (Mathf.Sin(lean * Mathf.Deg2Rad) * 0.12f));
             pose.Spine = Tilt(forward, lean);

@@ -156,6 +156,7 @@ namespace Wrestling.Presentation
             Pose bluePose = PoseSolver.SolveBody(_shown[1], _blueFigure.Body, blueRole);
             PoseSolver.ApplyWholeBody(ref redPose, _shown[0], _redFigure.Body);
             PoseSolver.ApplyWholeBody(ref bluePose, _shown[1], _blueFigure.Body);
+            BodyContact.Separate(ref redPose, _redFigure.Body, _shown[0].Ground, ref bluePose, _blueFigure.Body, _shown[1].Ground);
             Pose redBody = redPose;
             Pose blueBody = bluePose;
             PoseSolver.SolveArms(ref redPose, _redFigure.Body, redRole, _shown[0], in blueBody, engine.Grips.Of(Corner.Red));

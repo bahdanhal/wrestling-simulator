@@ -38,9 +38,9 @@
         {
           "t": 0.6,
           "executor": {
-            "x": 0.35,
-            "z": 0.0,
-            "heading": 0.0,
+            "x": 0.13,
+            "z": 0.084,
+            "heading": -4.8,
             "level": 0.43,
             "posture": 0.5,
             "ground": "standing",
@@ -67,9 +67,9 @@
         {
           "t": 1,
           "executor": {
-            "x": 0.5,
-            "z": 0.0,
-            "heading": 0.0,
+            "x": 0.28,
+            "z": 0.14,
+            "heading": -8,
             "level": 0.35,
             "posture": 0.45,
             "ground": "standing",
@@ -102,9 +102,9 @@
         {
           "t": 0,
           "executor": {
-            "x": 0.5,
-            "z": 0.0,
-            "heading": 0.0,
+            "x": 0.28,
+            "z": 0.14,
+            "heading": -8,
             "level": 0.35,
             "posture": 0.45,
             "ground": "standing",
@@ -131,7 +131,7 @@
         {
           "t": 0.5,
           "executor": {
-            "x": 0.55,
+            "x": 0.33,
             "z": 0.0,
             "heading": 0.0,
             "level": 0.7,
@@ -160,7 +160,7 @@
         {
           "t": 1,
           "executor": {
-            "x": 0.6,
+            "x": 0.38,
             "z": 0.0,
             "heading": 0.0,
             "level": 0.85,
