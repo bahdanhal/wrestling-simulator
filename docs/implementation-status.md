@@ -49,7 +49,7 @@ What is built, against [game-design.md](game-design.md). Updated with every chan
 | Unity bout viewer (Watch mode): rulebook-sized mat and platform, broadcast camera, scoreboard and event feed; scene generated from code, stills renderer, data packaged into player builds | Unity `Wrestling.Presentation`, `Wrestling.Editor` | 7.1, 11, 12 |
 | Character models from MakeHuman (CC0) via Blender + MPFB2, built by `tools/characters/build_wrestlers.py`: male and female athletic bases with the Mixamo-named rig (fingers, jaw, eyes), skin textures (7 male, 6 female), eyes, brows, lashes, hair and shoes, and blend shapes for build (heavy, light, muscular, soft) and face (head shape, nose, broken nose, chin, jaw, cheekbones, ears) set per wrestler | `tools/characters`, `Assets/Characters`, `CharacterLibrary`, `WrestlerLook` | 4.2, 7 |
 | Character rendering: skin shader (MakeHuman textures, normal maps where provided, wrap-lighting subsurface approximation for phones) with the singlet drawn per pixel from bind-pose coordinates; rig retargeting from the pose solver with bind-pose-measured proportions and finger curl for grips | `WrestlerSkin.shader`, `CharacterImport`, `CharacterRig`, `WrestlerCharacter` | 7 |
-| Move animation: paired keyframe clips for all 80 phases of the 51 techniques as data (position, facing, level, posture, ground state, torso roll, whole-body lift, pitch and bank for both wrestlers), timed by the engine's phase progress, mirrored by side; landings come from the engine's end state | `data/animation/`, `Wrestling.Data.Animation`, `Choreographer` | 6.2, 7 |
+| Move animation: paired keyframe clips for all 80 phases of the 51 techniques as data (position, facing, level, posture, ground state, torso roll, whole-body lift, pitch and bank for both wrestlers), timed by the engine's phase progress, mirrored by side; throws, lifts and carries hold the thrown wrestler on a contact point of the thrower (hip, lower back, chest, shoulders) so the bodies turn over a real pivot and never separate; landings come from the engine's end state | `data/animation/`, `Wrestling.Data.Animation`, `Choreographer` | 6.2, 7 |
 
 ## Known rule gaps
 
@@ -67,7 +67,7 @@ In dependency order:
 3. Engine performance: about 11–12 ms per AI bout with the full catalogue on an Apple Silicon Mac (Release). The design budget is under 5 ms on a mid-range phone; remaining cost is mostly `Fix64` multiplication, so the next step is a fast path for small operands and fewer per-tick recomputations.
 4. Event scheduling (sessions, mats, 20-minute rest, two-day categories)
 5. Wrestler creation (backgrounds, point-buy), ageing and training
-6. Presentation polish: lying and par terre poses still twist the arms in places; skins without normal maps look smooth up close; clips are hand-keyed, so motion capture per phase (design 7) will replace them under the same clip ids, with motion matching between phases and active ragdoll for falls
+6. Presentation polish: a counter that interrupts a throw starts from its own first key rather than the throw's current pose (a visible jump); lying and par terre poses still twist the arms in places; skins without normal maps look smooth up close; clips are hand-keyed, so motion capture per phase (design 7) will replace them under the same clip ids, with motion matching between phases and active ragdoll for falls
 7. Play mode input (gestures and push direction) and Coach mode controls in the viewer
 
 ## Calibration snapshot

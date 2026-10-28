@@ -36,6 +36,9 @@ namespace Wrestling.Editor
             ParTerreTurn,
             Danger,
             Result,
+
+            /// <summary>Six frames across one throw, from its start, in a grid.</summary>
+            ThrowSequence,
         }
 
         [MenuItem("Wrestling/Render Bout Viewer Stills")]
@@ -94,9 +97,9 @@ namespace Wrestling.Editor
 
             var shots = new (WrestlingStyle Style, Moment[] Moments)[]
             {
-                (WrestlingStyle.Freestyle, new[] { Moment.HandFighting, Moment.Shot, Moment.Throw, Moment.Counter, Moment.ParTerreTurn, Moment.Danger, Moment.Result }),
-                (WrestlingStyle.GrecoRoman, new[] { Moment.HandFighting, Moment.Throw, Moment.ParTerre, Moment.ParTerreTurn }),
-                (WrestlingStyle.Womens, new[] { Moment.HandFighting, Moment.Shot, Moment.Throw, Moment.ParTerre }),
+                (WrestlingStyle.Freestyle, new[] { Moment.HandFighting, Moment.Shot, Moment.Throw, Moment.ThrowSequence, Moment.Counter, Moment.ParTerreTurn, Moment.Danger, Moment.Result }),
+                (WrestlingStyle.GrecoRoman, new[] { Moment.HandFighting, Moment.Throw, Moment.ThrowSequence, Moment.ParTerre, Moment.ParTerreTurn }),
+                (WrestlingStyle.Womens, new[] { Moment.HandFighting, Moment.Shot, Moment.Throw, Moment.ThrowSequence, Moment.ParTerre }),
             };
 
             foreach ((WrestlingStyle style, Moment[] moments) in shots)
@@ -125,9 +128,17 @@ namespace Wrestling.Editor
                     var build = System.Diagnostics.Stopwatch.StartNew();
                     viewer.StartBout(shot.Seed);
                     Debug.Log($"Built both wrestlers in {build.ElapsedMilliseconds} ms.");
+                    string file = Path.Combine(folder, $"bout-{Slug(style)}-{Slug(moment.ToString())}.png");
+                    if (moment == Moment.ThrowSequence)
+                    {
+                        viewer.FastForward(shot.Tick - 1);
+                        CaptureSequence(viewer, camera, file);
+                        Debug.Log($"Wrote {file} (seed {shot.Seed}, from tick {shot.Tick}).");
+                        continue;
+                    }
+
                     viewer.FastForward(shot.Tick);
                     camera.Render(); // Warm-up frame so shaders and fonts are ready.
-                    string file = Path.Combine(folder, $"bout-{Slug(style)}-{Slug(moment.ToString())}.png");
                     Capture(camera, file);
                     Debug.Log($"Wrote {file} (seed {shot.Seed}, tick {shot.Tick}).");
                     if (moment == Moment.HandFighting)
@@ -174,6 +185,7 @@ namespace Wrestling.Editor
                         && technique.Start.Positions.Contains(StartPosition.NeutralTied))
                     {
                         found[Moment.Throw] = tick;
+                        found[Moment.ThrowSequence] = active.StartTick;
                     }
 
                     if (!found.ContainsKey(Moment.Counter) && technique.Role != TechniqueRole.Attack && engine.Position == BoutPosition.Neutral && progress >= 0.6f)
@@ -248,6 +260,51 @@ namespace Wrestling.Editor
             {
                 camera.transform.SetPositionAndRotation(position, rotation);
                 camera.fieldOfView = fieldOfView;
+            }
+        }
+
+        /// <summary>Six frames, eight ticks apart, tiled 3 × 2 into one image.</summary>
+        private static void CaptureSequence(BoutViewer viewer, Camera camera, string file)
+        {
+            const int columns = 3;
+            const int rows = 2;
+            const int tileWidth = Width / columns;
+            const int tileHeight = Height / rows;
+            var sheet = new Texture2D(Width, Height, TextureFormat.RGB24, false);
+            var target = new RenderTexture(tileWidth, tileHeight, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            RenderTexture previousTarget = camera.targetTexture;
+            RenderTexture previousActive = RenderTexture.active;
+            // Several renders inside one editor frame: skinning must be recomputed for each.
+            foreach (SkinnedMeshRenderer skinned in UnityEngine.Object.FindObjectsByType<SkinnedMeshRenderer>(FindObjectsInactive.Exclude))
+            {
+                skinned.forceMatrixRecalculationPerRender = true;
+            }
+
+            try
+            {
+                for (int frame = 0; frame < columns * rows; frame++)
+                {
+                    viewer.FastForward(frame == 0 ? 1 : 8);
+                    camera.targetTexture = target;
+                    Canvas.ForceUpdateCanvases();
+                    camera.Render();
+                    camera.Render();
+                    RenderTexture.active = target;
+                    int x = (frame % columns) * tileWidth;
+                    int y = (rows - 1 - (frame / columns)) * tileHeight;
+                    sheet.ReadPixels(new Rect(0, 0, tileWidth, tileHeight), x, y);
+                }
+
+                sheet.Apply();
+                File.WriteAllBytes(file, sheet.EncodeToPNG());
+            }
+            finally
+            {
+                camera.targetTexture = previousTarget;
+                RenderTexture.active = previousActive;
+                target.Release();
+                UnityEngine.Object.DestroyImmediate(target);
+                UnityEngine.Object.DestroyImmediate(sheet);
             }
         }
 

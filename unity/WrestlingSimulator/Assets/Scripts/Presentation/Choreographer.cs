@@ -29,10 +29,15 @@ namespace Wrestling.Presentation
         /// <summary>The active clip's id, or null when no technique is running.</summary>
         public string CurrentClip { get; private set; }
 
+        /// <summary>This frame's contact anchor for each corner (indexed by <see cref="Corner"/>): which point of the other wrestler holds it, how strongly, and at what thickness.</summary>
+        public (AnchorPoint Point, float Weight, float Contact)[] Anchors { get; } = new (AnchorPoint, float, float)[2];
+
         /// <summary>Replaces both frames with the clip pose while a technique runs.</summary>
         public void Apply(BoutEngine engine, ref WrestlerFrame red, ref WrestlerFrame blue, float alpha)
         {
             TechniqueExecution active = engine.ActiveTechnique;
+            Anchors[0] = (AnchorPoint.None, 0f, 0f);
+            Anchors[1] = (AnchorPoint.None, 0f, 0f);
             if (active == null || engine.IsStopped)
             {
                 _anchored = null;
@@ -52,6 +57,8 @@ namespace Wrestling.Presentation
 
             float progress = active.PhaseLength > 0 ? (active.PhaseTick + alpha) / active.PhaseLength : 1f;
             (ActorKey executorKey, ActorKey opponentKey) = clip.Sample(progress);
+            Anchors[(int)executor] = (executorKey.Anchor, executorKey.AnchorWeight, executorKey.Contact);
+            Anchors[(int)executor.Opponent()] = (opponentKey.Anchor, opponentKey.AnchorWeight, opponentKey.Contact);
             WrestlerFrame placedExecutor = Place(executorKey, executorFrame);
             WrestlerFrame placedOpponent = Place(opponentKey, opponentFrame);
             if (executor == Corner.Red)

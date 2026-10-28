@@ -16,6 +16,24 @@ namespace Wrestling.Data.Animation
         Bottom,
     }
 
+    /// <summary>Point on the other wrestler's body that an anchored wrestler is held against.</summary>
+    public enum AnchorPoint
+    {
+        None,
+
+        /// <summary>The hip: the pivot of hip tosses and headlock throws.</summary>
+        Hips,
+
+        /// <summary>The lower back, where a thrown body lies across in a hip throw.</summary>
+        LowerBack,
+
+        /// <summary>Across the shoulders (fireman's carry).</summary>
+        Shoulders,
+
+        /// <summary>Chest to chest (body-lock throws, suplexes, lifts).</summary>
+        Chest,
+    }
+
     /// <summary>
     /// One wrestler's pose at a keyframe, in the clip's frame. Display data only: the simulation
     /// decides every outcome, and a technique's landing comes from the engine's end state.
@@ -53,6 +71,18 @@ namespace Wrestling.Data.Animation
 
         /// <summary>Whole-body rotation about the wrestler's forward axis; positive tips towards their left.</summary>
         public float Bank { get; init; }
+
+        /// <summary>
+        /// Point on the other wrestler that this wrestler's centre (waist) is held against. A held body
+        /// keeps contact: its position and lift follow the anchor, and only its orientation is keyed.
+        /// </summary>
+        public AnchorPoint Anchor { get; init; }
+
+        /// <summary>0 free (position and lift as keyed) to 1 fully held on the anchor; blends continuously.</summary>
+        public float AnchorWeight { get; init; }
+
+        /// <summary>Metres the held waist sits above the anchor point (the bodies' thickness at the contact).</summary>
+        public float Contact { get; init; }
     }
 
     public sealed class ClipKey
@@ -142,6 +172,9 @@ namespace Wrestling.Data.Animation
             Lift = Lerp(a.Lift, b.Lift, eased),
             Pitch = Lerp(a.Pitch, b.Pitch, eased),
             Bank = Lerp(a.Bank, b.Bank, eased),
+            Anchor = b.AnchorWeight > 0f ? b.Anchor : a.Anchor,
+            AnchorWeight = Lerp(a.AnchorWeight, b.AnchorWeight, eased),
+            Contact = Lerp(a.Contact, b.Contact, eased),
         };
 
         private static float Lerp(float a, float b, float t) => a + ((b - a) * t);
@@ -185,8 +218,14 @@ namespace Wrestling.Data.Animation
             Range(key.Posture, 0f, 1f, "posture");
             Range(key.Roll, 0f, 180f, "roll");
             Range(key.Lift, 0f, 1.5f, "lift");
-            Range(key.Pitch, -200f, 200f, "pitch");
-            Range(key.Bank, -200f, 200f, "bank");
+            Range(key.Pitch, -300f, 300f, "pitch");
+            Range(key.Bank, -300f, 300f, "bank");
+            Range(key.AnchorWeight, 0f, 1f, "anchorWeight");
+            Range(key.Contact, 0f, 0.4f, "contact");
+            if (key.AnchorWeight > 0f && key.Anchor == AnchorPoint.None)
+            {
+                errors.Add($"{path}: anchorWeight needs an anchor point.");
+            }
             if (key.RollSide != 1 && key.RollSide != -1)
             {
                 errors.Add($"{path}.rollSide must be 1 or -1.");

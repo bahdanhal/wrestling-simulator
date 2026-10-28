@@ -3,6 +3,7 @@ using UnityEngine;
 using Wrestling.Core.Match;
 using Wrestling.Core.Rules;
 using Wrestling.Data;
+using Wrestling.Data.Animation;
 
 namespace Wrestling.Presentation
 {
@@ -150,9 +151,32 @@ namespace Wrestling.Presentation
             PoseRole blueRole = Staging.RoleOf(Corner.Blue, engine.Position, engine.Top);
             Pose redPose = PoseSolver.SolveBody(_shown[0], _redFigure.Body, redRole);
             Pose bluePose = PoseSolver.SolveBody(_shown[1], _blueFigure.Body, blueRole);
-            PoseSolver.ApplyWholeBody(ref redPose, _shown[0], _redFigure.Body);
-            PoseSolver.ApplyWholeBody(ref bluePose, _shown[1], _blueFigure.Body);
-            BodyContact.Separate(ref redPose, _redFigure.Body, _shown[0].Ground, ref bluePose, _blueFigure.Body, _shown[1].Ground);
+            (AnchorPoint Point, float Weight, float Contact) redAnchor = _choreographer.Anchors[(int)Corner.Red];
+            (AnchorPoint Point, float Weight, float Contact) blueAnchor = _choreographer.Anchors[(int)Corner.Blue];
+            if (redAnchor.Weight > 0f)
+            {
+                // Blue carries red: pose blue first, then hold red on blue's contact point.
+                PoseSolver.ApplyWholeBody(ref bluePose, _shown[1], _blueFigure.Body);
+                Hold(ref redPose, _shown[0], in bluePose, _blueFigure.Body, redAnchor);
+                PoseSolver.ApplyWholeBody(ref redPose, _shown[0], _redFigure.Body);
+            }
+            else if (blueAnchor.Weight > 0f)
+            {
+                PoseSolver.ApplyWholeBody(ref redPose, _shown[0], _redFigure.Body);
+                Hold(ref bluePose, _shown[1], in redPose, _redFigure.Body, blueAnchor);
+                PoseSolver.ApplyWholeBody(ref bluePose, _shown[1], _blueFigure.Body);
+            }
+            else
+            {
+                PoseSolver.ApplyWholeBody(ref redPose, _shown[0], _redFigure.Body);
+                PoseSolver.ApplyWholeBody(ref bluePose, _shown[1], _blueFigure.Body);
+            }
+
+            if (redAnchor.Weight <= 0f && blueAnchor.Weight <= 0f)
+            {
+                // Held bodies are in contact by construction; only free bodies need separating.
+                BodyContact.Separate(ref redPose, _redFigure.Body, _shown[0].Ground, ref bluePose, _blueFigure.Body, _shown[1].Ground);
+            }
             Pose redBody = redPose;
             Pose blueBody = bluePose;
             PoseSolver.SolveArms(ref redPose, _redFigure.Body, redRole, _shown[0], in blueBody, engine.Grips.Of(Corner.Red));
@@ -172,6 +196,21 @@ namespace Wrestling.Presentation
             }
 
             _scoreboard.Refresh(_session);
+        }
+
+        /// <summary>
+        /// Moves a held body (before its whole-body rotation) so that, after the rotation and lift,
+        /// its waist sits the contact thickness behind the carrier's contact point. The keyed lift
+        /// is replaced by the hold in proportion to the anchor weight, so the bodies cannot separate.
+        /// </summary>
+        private static void Hold(ref Pose held, WrestlerFrame heldFrame, in Pose carrier, BodyProportions carrierBody, (AnchorPoint Point, float Weight, float Contact) anchor)
+        {
+            // The held body touches the anchor with its front, so its waist sits behind its own chest
+            // after this frame's rotation: as it turns over the anchor, the contact turns with it.
+            Vector3 front = PoseSolver.WholeBodyRotation(heldFrame) * held.ChestNormal;
+            Vector3 target = PoseSolver.AnchorOn(in carrier, carrierBody, anchor.Point) - (front.normalized * anchor.Contact);
+            Vector3 free = PoseSolver.WholeBodyPivot(in held) + (Vector3.up * heldFrame.Lift);
+            PoseSolver.Translate(ref held, (target - free) * Mathf.Clamp01(anchor.Weight));
         }
 
         /// <summary>1 when the hand is holding a grip, so the fingers close around it.</summary>

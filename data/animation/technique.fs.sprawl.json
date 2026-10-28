@@ -19,7 +19,10 @@
             "rollSide": 1,
             "lift": 0.0,
             "pitch": 0.0,
-            "bank": 0.0
+            "bank": 0.0,
+            "anchor": "none",
+            "anchorWeight": 0.0,
+            "contact": 0.0
           },
           "opponent": {
             "x": 0.5,
@@ -32,7 +35,10 @@
             "rollSide": 1,
             "lift": 0.0,
             "pitch": 0.0,
-            "bank": 0.0
+            "bank": 0.0,
+            "anchor": "none",
+            "anchorWeight": 0.0,
+            "contact": 0.0
           }
         },
         {
@@ -48,7 +54,10 @@
             "rollSide": 1,
             "lift": 0.18,
             "pitch": 0.0,
-            "bank": 0.0
+            "bank": 0.0,
+            "anchor": "none",
+            "anchorWeight": 0.0,
+            "contact": 0.0
           },
           "opponent": {
             "x": 0.55,
@@ -61,7 +70,10 @@
             "rollSide": 1,
             "lift": 0.0,
             "pitch": 0.0,
-            "bank": 0.0
+            "bank": 0.0,
+            "anchor": "none",
+            "anchorWeight": 0.0,
+            "contact": 0.0
           }
         },
         {
@@ -77,7 +89,10 @@
             "rollSide": 1,
             "lift": 0.1,
             "pitch": 0.0,
-            "bank": 0.0
+            "bank": 0.0,
+            "anchor": "none",
+            "anchorWeight": 0.0,
+            "contact": 0.0
           },
           "opponent": {
             "x": 0.6,
@@ -90,7 +105,10 @@
             "rollSide": 1,
             "lift": 0.0,
             "pitch": 0.0,
-            "bank": 0.0
+            "bank": 0.0,
+            "anchor": "none",
+            "anchorWeight": 0.0,
+            "contact": 0.0
           }
         }
       ]

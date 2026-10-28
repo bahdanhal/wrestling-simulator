@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Wrestling.Core.Match;
 using Wrestling.Core.Wrestlers;
+using Wrestling.Data.Animation;
 
 namespace Wrestling.Presentation
 {
@@ -473,10 +474,8 @@ namespace Wrestling.Presentation
                 return;
             }
 
-            Vector3 forward = WrestlerFrame.OnMat(frame.Facing).normalized;
-            Vector3 left = Vector3.Cross(forward, Vector3.up).normalized;
-            Quaternion rotation = Quaternion.AngleAxis(frame.Bank, forward) * Quaternion.AngleAxis(frame.Pitch, -left);
-            Vector3 pivot = Vector3.Lerp(pose.Pelvis, pose.Neck, 0.35f);
+            Quaternion rotation = WholeBodyRotation(frame);
+            Vector3 pivot = WholeBodyPivot(in pose);
             Vector3 lift = Vector3.up * frame.Lift;
 
             Vector3 Move(Vector3 point)
@@ -510,6 +509,58 @@ namespace Wrestling.Presentation
             pose.ChestNormal = rotation * pose.ChestNormal;
             pose.Spine = (pose.Neck - pose.Pelvis).normalized;
             pose.Left = rotation * pose.Left;
+        }
+
+        /// <summary>The frame's whole-body rotation: pitch about the left axis, then bank about the facing.</summary>
+        public static Quaternion WholeBodyRotation(WrestlerFrame frame)
+        {
+            Vector3 forward = WrestlerFrame.OnMat(frame.Facing).normalized;
+            Vector3 left = Vector3.Cross(forward, Vector3.up).normalized;
+            return Quaternion.AngleAxis(frame.Bank, forward) * Quaternion.AngleAxis(frame.Pitch, -left);
+        }
+
+        /// <summary>The waist point that a whole-body rotation turns about (see <see cref="ApplyWholeBody"/>).</summary>
+        public static Vector3 WholeBodyPivot(in Pose pose) => Vector3.Lerp(pose.Pelvis, pose.Neck, 0.35f);
+
+        /// <summary>A contact point on the surface of a posed body.</summary>
+        public static Vector3 AnchorOn(in Pose pose, BodyProportions body, AnchorPoint point)
+        {
+            switch (point)
+            {
+                case AnchorPoint.Hips:
+                    // The hip bone at the back, where a hip toss loads the opponent.
+                    return pose.Pelvis - (pose.ChestNormal * (body.TorsoHalfDepth * 0.8f));
+                case AnchorPoint.LowerBack:
+                    return Vector3.Lerp(pose.Pelvis, pose.Neck, 0.3f) - (pose.ChestNormal * body.TorsoHalfDepth);
+                case AnchorPoint.Shoulders:
+                    return pose.Neck - (pose.Spine * (body.Torso * 0.08f)) - (pose.ChestNormal * (body.TorsoHalfDepth * 0.4f));
+                case AnchorPoint.Chest:
+                    return Vector3.Lerp(pose.Pelvis, pose.Neck, 0.65f) + (pose.ChestNormal * body.TorsoHalfDepth);
+                default:
+                    return WholeBodyPivot(in pose);
+            }
+        }
+
+        /// <summary>Moves every joint of a pose by <paramref name="offset"/>.</summary>
+        public static void Translate(ref Pose pose, Vector3 offset)
+        {
+            pose.Pelvis += offset;
+            pose.Neck += offset;
+            pose.Head += offset;
+            pose.ShoulderL += offset;
+            pose.ShoulderR += offset;
+            pose.ElbowL += offset;
+            pose.ElbowR += offset;
+            pose.HandL += offset;
+            pose.HandR += offset;
+            pose.HipL += offset;
+            pose.HipR += offset;
+            pose.KneeL += offset;
+            pose.KneeR += offset;
+            pose.AnkleL += offset;
+            pose.AnkleR += offset;
+            pose.ToeL += offset;
+            pose.ToeR += offset;
         }
 
         /// <summary>The rest pose the body mesh is built in: upright at the origin facing +Z, arms angled down.</summary>
