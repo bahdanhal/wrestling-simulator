@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "technique": "technique.all.push_out",
+  "clips": [
+    {
+      "id": "anim.push_out.drive",
+      "frame": "executor",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.8,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 0.4,
+          "executor": {
+            "x": 0.4,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.65,
+            "posture": 0.65,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 10,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 1.2,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.7,
+            "posture": 0.7,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": -8,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": 1.4,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.65,
+            "posture": 0.65,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 12,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 2.2,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.7,
+            "posture": 0.75,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": -12,
+            "bank": 0.0
+          }
+        }
+      ]
+    }
+  ]
+}

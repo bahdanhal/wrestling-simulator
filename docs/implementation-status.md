@@ -46,7 +46,9 @@ What is built, against [game-design.md](game-design.md). Updated with every chan
 | Bout engine tick loop: intents, hand-fight, pressure and balance, techniques with phases and counters, par terre, danger and falls, scrambles, risk rule, step-outs and deliberate push-outs, zone calls, passivity in both styles, stoppages and restarts, fatigue, events | `Wrestling.Core.Match.BoutEngine` | 5.1–5.12 |
 | Wrestler generator for fictional opponents, name pools as data | `WrestlerGenerator`, `data/names/` | 4, 9 |
 | Shared play-by-play text and result lines (CLI and game) | `Wrestling.Data.Localization.BoutCommentary` | 12.5 |
-| Unity bout viewer (Watch mode): rulebook-sized mat and platform, procedural figures sized from each wrestler's body and posed from the engine state and grips, broadcast camera, scoreboard and event feed; scene generated from code, stills renderer, data packaged into player builds | Unity `Wrestling.Presentation`, `Wrestling.Editor` | 7.1, 11, 12 |
+| Unity bout viewer (Watch mode): rulebook-sized mat and platform, broadcast camera, scoreboard and event feed; scene generated from code, stills renderer, data packaged into player builds | Unity `Wrestling.Presentation`, `Wrestling.Editor` | 7.1, 11, 12 |
+| Character bodies: one smooth skinned mesh per wrestler generated from their height, leg length, wingspan, weight, frame and gender, on a 17-bone Humanoid-named rig, with singlet, shoes, hair and stable per-wrestler skin and hair colours | `BodyMeshBuilder`, `Skeleton`, `SkinnedFigure`, `Appearance` | 4.2, 7 |
+| Move animation: paired keyframe clips for all 80 phases of the 51 techniques as data (position, facing, level, posture, ground state, torso roll, whole-body lift, pitch and bank for both wrestlers), timed by the engine's phase progress, mirrored by side; landings come from the engine's end state | `data/animation/`, `Wrestling.Data.Animation`, `Choreographer` | 6.2, 7 |
 
 ## Known rule gaps
 
@@ -64,7 +66,7 @@ In dependency order:
 3. Engine performance: about 11–12 ms per AI bout with the full catalogue on an Apple Silicon Mac (Release). The design budget is under 5 ms on a mid-range phone; remaining cost is mostly `Fix64` multiplication, so the next step is a fast path for small operands and fewer per-tick recomputations.
 4. Event scheduling (sessions, mats, 20-minute rest, two-day categories)
 5. Wrestler creation (backgrounds, point-buy), ageing and training
-6. Presentation: technique motion. The figures follow body state, grips and ground positions, but techniques do not yet animate their phases (entry, lift, throw arc, landing); the next step is per-phase poses driven by the technique data, then character models and motion-matched animation (design 7)
+6. Presentation polish: material borders follow the mesh grid (slightly stepped at close range); hands are not articulated; clips are hand-keyed, so motion capture per phase (design 7) will replace them under the same clip ids, with motion matching between phases and active ragdoll for falls
 7. Play mode input (gestures and push direction) and Coach mode controls in the viewer
 
 ## Calibration snapshot

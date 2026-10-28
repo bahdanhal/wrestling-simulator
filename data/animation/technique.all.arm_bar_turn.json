@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "technique": "technique.all.arm_bar_turn",
+  "clips": [
+    {
+      "id": "anim.arm_bar_turn.bar",
+      "frame": "bottom",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": -0.18,
+            "z": 0.42,
+            "heading": -90,
+            "level": 0.4,
+            "posture": 0.3,
+            "ground": "bothKnees",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.2,
+            "posture": 1.0,
+            "ground": "prone",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": 0.1,
+            "z": 0.35,
+            "heading": -110,
+            "level": 0.45,
+            "posture": 0.25,
+            "ground": "bothKnees",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.2,
+            "posture": 1.0,
+            "ground": "prone",
+            "roll": 15,
+            "rollSide": -1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "anim.arm_bar_turn.turn",
+      "frame": "bottom",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": 0.1,
+            "z": 0.35,
+            "heading": -110,
+            "level": 0.45,
+            "posture": 0.25,
+            "ground": "bothKnees",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.2,
+            "posture": 1.0,
+            "ground": "prone",
+            "roll": 15,
+            "rollSide": -1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": 0.45,
+            "z": 0.2,
+            "heading": -150,
+            "level": 0.55,
+            "posture": 0.35,
+            "ground": "bothKnees",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.2,
+            "posture": 1.0,
+            "ground": "prone",
+            "roll": 85,
+            "rollSide": -1,
+            "lift": 0.05,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        }
+      ]
+    }
+  ]
+}

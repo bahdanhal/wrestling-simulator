@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "technique": "technique.fs.fireman_carry",
+  "clips": [
+    {
+      "id": "anim.fireman_carry.drop",
+      "frame": "executor",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.8,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 0.6,
+          "executor": {
+            "x": 0.35,
+            "z": 0.0,
+            "heading": -20,
+            "level": 0.35,
+            "posture": 0.4,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.72,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.72,
+            "posture": 0.7,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 30,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": 0.45,
+            "z": 0.0,
+            "heading": -30,
+            "level": 0.25,
+            "posture": 0.3,
+            "ground": "oneKnee",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.6,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.7,
+            "posture": 0.7,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.1,
+            "pitch": 55,
+            "bank": 0.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "anim.fireman_carry.throw",
+      "frame": "executor",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": 0.45,
+            "z": 0.0,
+            "heading": -30,
+            "level": 0.25,
+            "posture": 0.3,
+            "ground": "oneKnee",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.6,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.7,
+            "posture": 0.7,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.1,
+            "pitch": 55,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 0.5,
+          "executor": {
+            "x": 0.45,
+            "z": 0.0,
+            "heading": -35,
+            "level": 0.45,
+            "posture": 0.4,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.55,
+            "z": -0.25,
+            "heading": 180,
+            "level": 0.7,
+            "posture": 0.7,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.55,
+            "pitch": 40,
+            "bank": -80
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": 0.45,
+            "z": 0.0,
+            "heading": -40,
+            "level": 0.5,
+            "posture": 0.45,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.5,
+            "z": -0.55,
+            "heading": 180,
+            "level": 0.7,
+            "posture": 0.75,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.2,
+            "pitch": 20,
+            "bank": -150
+          }
+        }
+      ]
+    }
+  ]
+}

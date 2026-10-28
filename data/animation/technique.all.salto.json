@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "technique": "technique.all.salto",
+  "clips": [
+    {
+      "id": "anim.salto.lift",
+      "frame": "executor",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.8,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 0.5,
+          "executor": {
+            "x": 0.3,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.6,
+            "posture": 0.9,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.58,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": 0.35,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.8,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": -15,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.55,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.45,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "anim.salto.bridge",
+      "frame": "executor",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": 0.35,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.8,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": -15,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.55,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.45,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 0.5,
+          "executor": {
+            "x": 0.25,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.7,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.05,
+            "pitch": -70,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.2,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.75,
+            "pitch": 90,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": 0.1,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.6,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.05,
+            "pitch": -150,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": -0.4,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.7,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.3,
+            "pitch": 165,
+            "bank": 0.0
+          }
+        }
+      ]
+    }
+  ]
+}

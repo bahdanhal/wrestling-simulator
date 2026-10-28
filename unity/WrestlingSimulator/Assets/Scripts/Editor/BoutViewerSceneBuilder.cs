@@ -80,8 +80,8 @@ namespace Wrestling.Editor
                 Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"),
                 Lit("Singlet_Red", new Color(0.80f, 0.08f, 0.10f), 0.45f),
                 Lit("Singlet_Blue", new Color(0.07f, 0.22f, 0.75f), 0.45f),
-                Lit("Skin_A", new Color(0.86f, 0.66f, 0.52f), 0.35f),
-                Lit("Skin_B", new Color(0.70f, 0.50f, 0.37f), 0.35f),
+                Lit("Skin", new Color(0.86f, 0.66f, 0.52f), 0.42f),
+                Lit("Hair", new Color(0.1f, 0.08f, 0.06f), 0.2f),
                 Lit("Shoe", new Color(0.08f, 0.08f, 0.09f), 0.3f));
 
             EditorSceneManager.SaveScene(scene, ScenePath);

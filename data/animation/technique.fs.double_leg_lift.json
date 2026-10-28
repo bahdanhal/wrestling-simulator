@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "technique": "technique.fs.double_leg_lift",
+  "clips": [
+    {
+      "id": "anim.double_leg_lift.penetration",
+      "frame": "executor",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.8,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 0.6,
+          "executor": {
+            "x": 0.35,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.43,
+            "posture": 0.5,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.8,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.8,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": 0.5,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.35,
+            "posture": 0.45,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.8,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.72,
+            "posture": 0.7,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 10,
+            "bank": 0.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "anim.double_leg_lift.lift",
+      "frame": "executor",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": 0.5,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.35,
+            "posture": 0.45,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.8,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.72,
+            "posture": 0.7,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 10,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 0.5,
+          "executor": {
+            "x": 0.55,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.7,
+            "posture": 0.65,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.75,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.75,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.45,
+            "pitch": -45,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": 0.6,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.85,
+            "posture": 0.75,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": -5,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.7,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.8,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.7,
+            "pitch": -85,
+            "bank": 20
+          }
+        }
+      ]
+    }
+  ]
+}

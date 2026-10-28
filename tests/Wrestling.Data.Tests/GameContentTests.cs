@@ -11,6 +11,7 @@ public class GameContentTests
         Assert.True(content.Techniques.Count >= 50);
         Assert.Equal("en", content.English.Language);
         Assert.Equal(GameContent.DefaultNamePoolId, content.Names.Id);
+        Assert.Equal(content.Techniques.All.Sum(t => t.Phases.Count), content.Animations.Count);
     }
 
     [Fact]

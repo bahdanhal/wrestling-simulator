@@ -24,6 +24,15 @@ namespace Wrestling.Presentation
         /// <summary>Which side a lying wrestler rolls towards: +1 their left, -1 their right (display staging).</summary>
         public float RollSide;
 
+        /// <summary>Metres the whole body is raised (move animation: lifts and throws).</summary>
+        public float Lift;
+
+        /// <summary>Whole-body rotation about the left axis in degrees; positive tips the head forward.</summary>
+        public float Pitch;
+
+        /// <summary>Whole-body rotation about the forward axis in degrees; positive tips to the left.</summary>
+        public float Bank;
+
         public static WrestlerFrame Capture(BodyState body)
         {
             (FixVector2 left, FixVector2 right) = body.FootPositions();
@@ -60,6 +69,9 @@ namespace Wrestling.Presentation
                 Ground = t < 0.5f ? a.Ground : b.Ground,
                 Stance = t < 0.5f ? a.Stance : b.Stance,
                 RollSide = b.RollSide,
+                Lift = Mathf.Lerp(a.Lift, b.Lift, t),
+                Pitch = Mathf.Lerp(a.Pitch, b.Pitch, t),
+                Bank = Mathf.Lerp(a.Bank, b.Bank, t),
             };
         }
 

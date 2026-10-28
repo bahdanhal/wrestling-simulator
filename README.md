@@ -61,7 +61,9 @@ Styles are `fs` (Freestyle), `gr` (Greco-Roman) and `ww` (Women's). Run `help` f
 
 Stills of notable moments from real bouts are written to `docs/images/` by **Wrestling → Render Bout Viewer Stills** (or `-executeMethod Wrestling.Editor.BoutViewerStills.RenderFromCommandLine -stillsOutput DIR`, without `-nographics`).
 
-![Freestyle hand-fighting](docs/images/bout-freestyle-hand-fighting.png)
+![Freestyle fireman's carry](docs/images/bout-freestyle-throw.png)
+
+Each wrestler's body mesh is generated from their measurements at bout start; move animation comes from `data/animation/` (one file per technique, one clip per phase).
 
 Player builds copy `data/` into StreamingAssets automatically (`ContentBuildStep`).
 

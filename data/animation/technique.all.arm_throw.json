@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "technique": "technique.all.arm_throw",
+  "clips": [
+    {
+      "id": "anim.arm_throw.entry",
+      "frame": "executor",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.8,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 0.5,
+          "executor": {
+            "x": 0.3,
+            "z": 0.08,
+            "heading": 90,
+            "level": 0.65,
+            "posture": 0.8,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.8,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 8,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": 0.5,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.55,
+            "posture": 0.8,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.78,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.8,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 20,
+            "bank": 0.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "anim.arm_throw.flight",
+      "frame": "executor",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": 0.5,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.55,
+            "posture": 0.8,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.78,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.8,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 20,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 0.4,
+          "executor": {
+            "x": 0.5,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.45,
+            "posture": 0.55,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": -12
+          },
+          "opponent": {
+            "x": 0.5,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.8,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.45,
+            "pitch": 80,
+            "bank": 15.0
+          }
+        },
+        {
+          "t": 0.75,
+          "executor": {
+            "x": 0.45,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.38,
+            "posture": 0.45,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": -22
+          },
+          "opponent": {
+            "x": 0.15,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.8,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.55,
+            "pitch": 135,
+            "bank": 30
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": 0.4,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.35,
+            "posture": 0.4,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": -25
+          },
+          "opponent": {
+            "x": -0.15,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.7,
+            "posture": 0.8,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.25,
+            "pitch": 160,
+            "bank": 30
+          }
+        }
+      ]
+    }
+  ]
+}

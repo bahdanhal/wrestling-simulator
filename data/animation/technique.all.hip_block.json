@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "technique": "technique.all.hip_block",
+  "clips": [
+    {
+      "id": "anim.hip_block.block",
+      "frame": "executor",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.55,
+            "z": 0.0,
+            "heading": 0,
+            "level": 0.55,
+            "posture": 0.8,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": 0.1,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.55,
+            "posture": 0.9,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": -10,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.6,
+            "z": 0.0,
+            "heading": 0,
+            "level": 0.65,
+            "posture": 0.8,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": -10,
+            "bank": 0.0
+          }
+        }
+      ]
+    }
+  ]
+}

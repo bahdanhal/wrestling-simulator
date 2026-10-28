@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "technique": "technique.fs.sprawl",
+  "clips": [
+    {
+      "id": "anim.sprawl.sprawl",
+      "frame": "executor",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.5,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.3,
+            "posture": 0.45,
+            "ground": "oneKnee",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 0.5,
+          "executor": {
+            "x": -0.05,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.2,
+            "posture": 1.0,
+            "ground": "prone",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.18,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.55,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.28,
+            "posture": 0.25,
+            "ground": "bothKnees",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.2,
+            "posture": 1.0,
+            "ground": "prone",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.1,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.6,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.25,
+            "posture": 0.15,
+            "ground": "bothKnees",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        }
+      ]
+    }
+  ]
+}

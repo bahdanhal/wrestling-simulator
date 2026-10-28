@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "technique": "technique.all.reverse_body_lift",
+  "clips": [
+    {
+      "id": "anim.reverse_body_lift.lift",
+      "frame": "bottom",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": -0.18,
+            "z": 0.42,
+            "heading": -90,
+            "level": 0.4,
+            "posture": 0.3,
+            "ground": "bothKnees",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.2,
+            "posture": 1.0,
+            "ground": "prone",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 0.5,
+          "executor": {
+            "x": -0.1,
+            "z": 0.25,
+            "heading": -90,
+            "level": 0.55,
+            "posture": 0.5,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.2,
+            "posture": 1.0,
+            "ground": "prone",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.3,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": -0.05,
+            "z": 0.15,
+            "heading": -90,
+            "level": 0.75,
+            "posture": 0.75,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": -15,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.2,
+            "posture": 1.0,
+            "ground": "prone",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.65,
+            "pitch": 41.25,
+            "bank": 0.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "anim.reverse_body_lift.arch",
+      "frame": "bottom",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": -0.05,
+            "z": 0.15,
+            "heading": -90,
+            "level": 0.75,
+            "posture": 0.75,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": -15,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.2,
+            "posture": 1.0,
+            "ground": "prone",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.65,
+            "pitch": 41.25,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 0.5,
+          "executor": {
+            "x": -0.05,
+            "z": 0.2,
+            "heading": -90,
+            "level": 0.7,
+            "posture": 0.8,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.05,
+            "pitch": -66.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.0,
+            "z": 0.1,
+            "heading": 0.0,
+            "level": 0.2,
+            "posture": 1.0,
+            "ground": "prone",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.8,
+            "pitch": 0.0,
+            "bank": 90.75000000000001
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": -0.05,
+            "z": 0.25,
+            "heading": -90,
+            "level": 0.6,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.05,
+            "pitch": -110,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.0,
+            "z": 0.4,
+            "heading": 0.0,
+            "level": 0.2,
+            "posture": 1.0,
+            "ground": "prone",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.3,
+            "pitch": 0.0,
+            "bank": 165
+          }
+        }
+      ]
+    }
+  ]
+}

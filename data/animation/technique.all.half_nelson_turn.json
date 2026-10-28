@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "technique": "technique.all.half_nelson_turn",
+  "clips": [
+    {
+      "id": "anim.half_nelson_turn.turn",
+      "frame": "bottom",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": -0.18,
+            "z": 0.42,
+            "heading": -90,
+            "level": 0.4,
+            "posture": 0.3,
+            "ground": "bothKnees",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.2,
+            "posture": 1.0,
+            "ground": "prone",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 0.45,
+          "executor": {
+            "x": 0.15,
+            "z": 0.4,
+            "heading": -115,
+            "level": 0.45,
+            "posture": 0.3,
+            "ground": "bothKnees",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.2,
+            "posture": 1.0,
+            "ground": "prone",
+            "roll": 50,
+            "rollSide": -1,
+            "lift": 0.03,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": 0.35,
+            "z": 0.3,
+            "heading": -140,
+            "level": 0.5,
+            "posture": 0.3,
+            "ground": "bothKnees",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.2,
+            "posture": 1.0,
+            "ground": "prone",
+            "roll": 90,
+            "rollSide": -1,
+            "lift": 0.05,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        }
+      ]
+    }
+  ]
+}

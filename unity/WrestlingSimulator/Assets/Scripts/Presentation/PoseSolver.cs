@@ -420,6 +420,85 @@ namespace Wrestling.Presentation
             return pose;
         }
 
+        /// <summary>
+        /// Applies the frame's whole-body lift, pitch and bank (lifts and throws) about the body's
+        /// centre, keeping every joint above the mat.
+        /// </summary>
+        public static void ApplyWholeBody(ref Pose pose, WrestlerFrame frame, BodyProportions body)
+        {
+            if (frame.Lift <= 0f && Mathf.Approximately(frame.Pitch, 0f) && Mathf.Approximately(frame.Bank, 0f))
+            {
+                return;
+            }
+
+            Vector3 forward = WrestlerFrame.OnMat(frame.Facing).normalized;
+            Vector3 left = Vector3.Cross(forward, Vector3.up).normalized;
+            Quaternion rotation = Quaternion.AngleAxis(frame.Bank, forward) * Quaternion.AngleAxis(frame.Pitch, -left);
+            Vector3 pivot = Vector3.Lerp(pose.Pelvis, pose.Neck, 0.35f);
+            Vector3 lift = Vector3.up * frame.Lift;
+
+            Vector3 Move(Vector3 point)
+            {
+                Vector3 moved = pivot + (rotation * (point - pivot)) + lift;
+                if (moved.y < body.LimbRadius)
+                {
+                    moved.y = body.LimbRadius;
+                }
+
+                return moved;
+            }
+
+            pose.Pelvis = Move(pose.Pelvis);
+            pose.Neck = Move(pose.Neck);
+            pose.Head = Move(pose.Head);
+            pose.ShoulderL = Move(pose.ShoulderL);
+            pose.ShoulderR = Move(pose.ShoulderR);
+            pose.ElbowL = Move(pose.ElbowL);
+            pose.ElbowR = Move(pose.ElbowR);
+            pose.HandL = Move(pose.HandL);
+            pose.HandR = Move(pose.HandR);
+            pose.HipL = Move(pose.HipL);
+            pose.HipR = Move(pose.HipR);
+            pose.KneeL = Move(pose.KneeL);
+            pose.KneeR = Move(pose.KneeR);
+            pose.AnkleL = Move(pose.AnkleL);
+            pose.AnkleR = Move(pose.AnkleR);
+            pose.ToeL = Move(pose.ToeL);
+            pose.ToeR = Move(pose.ToeR);
+            pose.ChestNormal = rotation * pose.ChestNormal;
+            pose.Spine = (pose.Neck - pose.Pelvis).normalized;
+            pose.Left = rotation * pose.Left;
+        }
+
+        /// <summary>The rest pose the body mesh is built in: upright at the origin facing +Z, arms angled down.</summary>
+        public static Pose BindPose(BodyProportions body)
+        {
+            var pose = new Pose
+            {
+                Left = Vector3.left,
+                Spine = Vector3.up,
+                ChestNormal = Vector3.forward,
+            };
+            float legLength = body.Thigh + body.Shin;
+            pose.Pelvis = new Vector3(0f, AnkleHeight + legLength, 0f);
+            FinishUpperBody(ref pose, body);
+            pose.HipL = pose.Pelvis + (Vector3.left * body.HipHalfWidth);
+            pose.HipR = pose.Pelvis + (Vector3.right * body.HipHalfWidth);
+            pose.KneeL = pose.HipL + (Vector3.down * body.Thigh);
+            pose.KneeR = pose.HipR + (Vector3.down * body.Thigh);
+            pose.AnkleL = pose.KneeL + (Vector3.down * body.Shin);
+            pose.AnkleR = pose.KneeR + (Vector3.down * body.Shin);
+            pose.ToeL = Toe(pose.AnkleL, Vector3.forward, body);
+            pose.ToeR = Toe(pose.AnkleR, Vector3.forward, body);
+            Vector3 armL = Quaternion.AngleAxis(-40f, Vector3.forward) * Vector3.down;
+            Vector3 armR = Quaternion.AngleAxis(40f, Vector3.forward) * Vector3.down;
+            pose.ElbowL = pose.ShoulderL + (armL * body.UpperArm);
+            pose.ElbowR = pose.ShoulderR + (armR * body.UpperArm);
+            pose.HandL = pose.ElbowL + (armL * body.Forearm);
+            pose.HandR = pose.ElbowR + (armR * body.Forearm);
+            return pose;
+        }
+
         private static void FinishUpperBody(ref Pose pose, BodyProportions body)
         {
             pose.Neck = pose.Pelvis + (pose.Spine * body.Torso);

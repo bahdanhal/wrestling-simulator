@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "technique": "technique.fs.whizzer",
+  "clips": [
+    {
+      "id": "anim.whizzer.whizzer",
+      "frame": "executor",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": 0.5,
+            "z": -0.1,
+            "heading": 170,
+            "level": 0.4,
+            "posture": 0.5,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": -0.05,
+            "z": 0.0,
+            "heading": 15,
+            "level": 0.55,
+            "posture": 0.7,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 20
+          },
+          "opponent": {
+            "x": 0.5,
+            "z": -0.1,
+            "heading": 170,
+            "level": 0.35,
+            "posture": 0.4,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": -15
+          }
+        }
+      ]
+    }
+  ]
+}

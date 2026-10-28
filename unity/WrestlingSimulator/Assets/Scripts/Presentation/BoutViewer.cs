@@ -27,13 +27,18 @@ namespace Wrestling.Presentation
         [Header("Materials")]
         [SerializeField] private Material _redSinglet;
         [SerializeField] private Material _blueSinglet;
-        [SerializeField] private Material _skinRed;
-        [SerializeField] private Material _skinBlue;
+        [SerializeField] private Material _skin;
+        [SerializeField] private Material _hair;
         [SerializeField] private Material _shoe;
 
+        [Header("Body mesh")]
+        [SerializeField, Range(0.008f, 0.03f)] private float _bodyCellSize = 0.012f;
+        [SerializeField, Range(0.008f, 0.03f)] private float _mobileBodyCellSize = 0.018f;
+
         private readonly WrestlerFrame[] _shown = new WrestlerFrame[2];
-        private WrestlerFigure _redFigure;
-        private WrestlerFigure _blueFigure;
+        private SkinnedFigure _redFigure;
+        private SkinnedFigure _blueFigure;
+        private Choreographer _choreographer;
         private GameContent _content;
         private BoutSession _session;
         private ulong _seed;
@@ -73,6 +78,7 @@ namespace Wrestling.Presentation
         public void Initialise(GameContent content)
         {
             _content = content;
+            _choreographer = new Choreographer(content.Animations);
             _mat.Build(content.Rules.Mat);
             _scoreboard.Build(_font);
         }
@@ -81,8 +87,8 @@ namespace Wrestling.Presentation
         {
             _seed = seed;
             _session = new BoutSession(_content, _style, _level, seed);
-            _redFigure = Figure(_redFigure, "Red", Corner.Red, _redSinglet, _skinRed);
-            _blueFigure = Figure(_blueFigure, "Blue", Corner.Blue, _blueSinglet, _skinBlue);
+            _redFigure = Figure(_redFigure, "Red", Corner.Red, _redSinglet);
+            _blueFigure = Figure(_blueFigure, "Blue", Corner.Blue, _blueSinglet);
             _scoreboard.ResetFor(_session);
             _finishedFor = 0f;
             _snapNextFrame = true;
@@ -139,6 +145,7 @@ namespace Wrestling.Presentation
             WrestlerFrame blue = _session.Frame(Corner.Blue, alpha);
             Vector3 view = _camera.transform.forward;
             Staging.Arrange(ref red, ref blue, engine.Position, engine.Top, new Vector2(view.x, view.z).normalized);
+            _choreographer.Apply(engine, ref red, ref blue, alpha);
             Smooth(0, red, deltaTime);
             Smooth(1, blue, deltaTime);
             _snapNextFrame = false;
@@ -147,6 +154,8 @@ namespace Wrestling.Presentation
             PoseRole blueRole = Staging.RoleOf(Corner.Blue, engine.Position, engine.Top);
             Pose redPose = PoseSolver.SolveBody(_shown[0], _redFigure.Body, redRole);
             Pose bluePose = PoseSolver.SolveBody(_shown[1], _blueFigure.Body, blueRole);
+            PoseSolver.ApplyWholeBody(ref redPose, _shown[0], _redFigure.Body);
+            PoseSolver.ApplyWholeBody(ref bluePose, _shown[1], _blueFigure.Body);
             Pose redBody = redPose;
             Pose blueBody = bluePose;
             PoseSolver.SolveArms(ref redPose, _redFigure.Body, redRole, _shown[0], in blueBody, engine.Grips.Of(Corner.Red));
@@ -184,21 +193,37 @@ namespace Wrestling.Presentation
             _shown[index].RollSide = target.RollSide;
         }
 
-        private WrestlerFigure Figure(WrestlerFigure existing, string figureName, Corner corner, Material singlet, Material skin)
+        private SkinnedFigure Figure(SkinnedFigure existing, string figureName, Corner corner, Material singlet)
         {
-            WrestlerFigure figure = existing;
+            SkinnedFigure figure = existing;
             if (figure == null)
             {
                 var root = new GameObject(figureName + " wrestler");
-                root.transform.SetParent(transform, false);
-                figure = root.AddComponent<WrestlerFigure>();
+                figure = root.AddComponent<SkinnedFigure>();
             }
 
-            figure.Build(new BodyProportions(_session.WrestlerOf(corner).Body), singlet, skin, _shoe);
+            var wrestler = _session.WrestlerOf(corner);
+            var body = new BodyProportions(wrestler.Body);
+            var appearance = new Appearance(wrestler);
+            float cell = Application.isMobilePlatform ? _mobileBodyCellSize : _bodyCellSize;
+            BodyMesh mesh = BodyMeshBuilder.Build(body, new BodyShape(wrestler), cell);
+            var materials = new Material[4];
+            materials[BodyMeshBuilder.SkinSubmesh] = Tinted(_skin, appearance.Skin);
+            materials[BodyMeshBuilder.SingletSubmesh] = new Material(singlet);
+            materials[BodyMeshBuilder.ShoeSubmesh] = new Material(_shoe);
+            materials[BodyMeshBuilder.HairSubmesh] = Tinted(_hair, appearance.Hair);
+            figure.Build(body, mesh, materials);
             return figure;
         }
 
-        public void Configure(MatView mat, BroadcastCamera broadcastCamera, Scoreboard scoreboard, Font font, Material redSinglet, Material blueSinglet, Material skinRed, Material skinBlue, Material shoe)
+        private static Material Tinted(Material template, Color colour)
+        {
+            var material = new Material(template);
+            material.SetColor("_BaseColor", colour);
+            return material;
+        }
+
+        public void Configure(MatView mat, BroadcastCamera broadcastCamera, Scoreboard scoreboard, Font font, Material redSinglet, Material blueSinglet, Material skin, Material hair, Material shoe)
         {
             _mat = mat;
             _camera = broadcastCamera;
@@ -206,8 +231,8 @@ namespace Wrestling.Presentation
             _font = font;
             _redSinglet = redSinglet;
             _blueSinglet = blueSinglet;
-            _skinRed = skinRed;
-            _skinBlue = skinBlue;
+            _skin = skin;
+            _hair = hair;
             _shoe = shoe;
         }
     }

@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "technique": "technique.fs.sit_out",
+  "clips": [
+    {
+      "id": "anim.sit_out.sit",
+      "frame": "bottom",
+      "keys": [
+        {
+          "t": 0,
+          "executor": {
+            "x": 0.0,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.2,
+            "posture": 1.0,
+            "ground": "prone",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": -0.18,
+            "z": 0.42,
+            "heading": -90,
+            "level": 0.4,
+            "posture": 0.3,
+            "ground": "bothKnees",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 0.35,
+          "executor": {
+            "x": 0.1,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.4,
+            "posture": 0.4,
+            "ground": "bothKnees",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": -0.18,
+            "z": 0.42,
+            "heading": -90,
+            "level": 0.4,
+            "posture": 0.3,
+            "ground": "bothKnees",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          }
+        },
+        {
+          "t": 1,
+          "executor": {
+            "x": 0.25,
+            "z": -0.1,
+            "heading": -90,
+            "level": 0.2,
+            "posture": 0.75,
+            "ground": "seated",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 0.0,
+            "bank": 0.0
+          },
+          "opponent": {
+            "x": -0.1,
+            "z": 0.42,
+            "heading": -90,
+            "level": 0.4,
+            "posture": 0.3,
+            "ground": "bothKnees",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": 15,
+            "bank": 0.0
+          }
+        }
+      ]
+    }
+  ]
+}

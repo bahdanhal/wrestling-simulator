@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using Wrestling.Core.Match;
 using Wrestling.Core.Rules;
+using Wrestling.Core.Techniques;
+using Wrestling.Core.Wrestlers;
 using Wrestling.Data;
 using Wrestling.Presentation;
 
@@ -21,11 +24,16 @@ namespace Wrestling.Editor
         private const int Width = 1920;
         private const int Height = 1080;
 
+        private const ulong SeedsToSearch = 40;
+
         private enum Moment
         {
             HandFighting,
-            Attack,
+            Shot,
+            Throw,
+            Counter,
             ParTerre,
+            ParTerreTurn,
             Danger,
             Result,
         }
@@ -84,31 +92,42 @@ namespace Wrestling.Editor
         private static void RenderShots(string folder, BoutViewer viewer, Camera camera, GameContent content)
         {
 
-            var shots = new (WrestlingStyle Style, ulong Seed, Moment[] Moments)[]
+            var shots = new (WrestlingStyle Style, Moment[] Moments)[]
             {
-                (WrestlingStyle.Freestyle, 4, new[] { Moment.HandFighting, Moment.Attack, Moment.Danger, Moment.Result }),
-                (WrestlingStyle.GrecoRoman, 7, new[] { Moment.HandFighting, Moment.ParTerre, Moment.Attack }),
-                (WrestlingStyle.Womens, 3, new[] { Moment.HandFighting, Moment.Attack, Moment.ParTerre }),
+                (WrestlingStyle.Freestyle, new[] { Moment.HandFighting, Moment.Shot, Moment.Throw, Moment.Counter, Moment.ParTerreTurn, Moment.Danger, Moment.Result }),
+                (WrestlingStyle.GrecoRoman, new[] { Moment.HandFighting, Moment.Throw, Moment.ParTerre, Moment.ParTerreTurn }),
+                (WrestlingStyle.Womens, new[] { Moment.HandFighting, Moment.Shot, Moment.Throw, Moment.ParTerre }),
             };
 
-            foreach ((WrestlingStyle style, ulong seed, Moment[] moments) in shots)
+            foreach ((WrestlingStyle style, Moment[] moments) in shots)
             {
-                Dictionary<Moment, int> ticks = FindMoments(content, style, seed);
+                var found = new Dictionary<Moment, (ulong Seed, int Tick)>();
+                for (ulong seed = 1; seed <= SeedsToSearch && found.Count < moments.Length; seed++)
+                {
+                    foreach (KeyValuePair<Moment, int> moment in FindMoments(content, style, seed))
+                    {
+                        if (Array.IndexOf(moments, moment.Key) >= 0 && !found.ContainsKey(moment.Key))
+                        {
+                            found[moment.Key] = (seed, moment.Value);
+                        }
+                    }
+                }
+
                 foreach (Moment moment in moments)
                 {
-                    if (!ticks.TryGetValue(moment, out int tick))
+                    if (!found.TryGetValue(moment, out (ulong Seed, int Tick) shot))
                     {
-                        Debug.LogWarning($"{style} seed {seed}: no {moment} in this bout; skipped.");
+                        Debug.LogWarning($"{style}: no {moment} in the first {SeedsToSearch} bouts; skipped.");
                         continue;
                     }
 
                     viewer.Style = style;
-                    viewer.StartBout(seed);
-                    viewer.FastForward(tick);
+                    viewer.StartBout(shot.Seed);
+                    viewer.FastForward(shot.Tick);
                     camera.Render(); // Warm-up frame so shaders and fonts are ready.
                     string file = Path.Combine(folder, $"bout-{Slug(style)}-{Slug(moment.ToString())}.png");
                     Capture(camera, file);
-                    Debug.Log($"Wrote {file} (tick {tick}).");
+                    Debug.Log($"Wrote {file} (seed {shot.Seed}, tick {shot.Tick}).");
                 }
             }
         }
@@ -131,10 +150,30 @@ namespace Wrestling.Editor
                 }
 
                 TechniqueExecution active = engine.ActiveTechnique;
-                if (!found.ContainsKey(Moment.Attack) && active != null && active.Definition.Role == Core.Techniques.TechniqueRole.Attack
-                    && active.PhaseIndex >= Math.Min(2, active.Definition.Phases.Count - 1) && !engine.IsStopped)
+                if (active != null && !engine.IsStopped)
                 {
-                    found[Moment.Attack] = tick;
+                    float progress = active.PhaseLength > 0 ? (float)active.PhaseTick / active.PhaseLength : 1f;
+                    TechniqueDefinition technique = active.Definition;
+                    if (!found.ContainsKey(Moment.Shot) && technique.Family == TechniqueFamily.LegAttacks && active.PhaseIndex == 0 && progress >= 0.85f)
+                    {
+                        found[Moment.Shot] = tick;
+                    }
+
+                    if (!found.ContainsKey(Moment.Throw) && technique.Amplitude == Amplitude.GrandAmplitude && active.IsLastPhase && progress >= 0.45f
+                        && technique.Start.Positions.Contains(StartPosition.NeutralTied))
+                    {
+                        found[Moment.Throw] = tick;
+                    }
+
+                    if (!found.ContainsKey(Moment.Counter) && technique.Role != TechniqueRole.Attack && engine.Position == BoutPosition.Neutral && progress >= 0.6f)
+                    {
+                        found[Moment.Counter] = tick;
+                    }
+
+                    if (!found.ContainsKey(Moment.ParTerreTurn) && technique.Family == TechniqueFamily.ParTerreTurns && progress >= 0.7f)
+                    {
+                        found[Moment.ParTerreTurn] = tick;
+                    }
                 }
 
                 if (engine.Position == BoutPosition.ParTerre && !engine.IsStopped)
