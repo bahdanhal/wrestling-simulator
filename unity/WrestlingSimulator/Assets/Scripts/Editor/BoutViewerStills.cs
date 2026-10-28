@@ -39,6 +39,9 @@ namespace Wrestling.Editor
 
             /// <summary>Six frames across one throw, from its start, in a grid.</summary>
             ThrowSequence,
+
+            /// <summary>Six frames three ticks apart around the moment a counter interrupts an attack.</summary>
+            CounterSequence,
         }
 
         [MenuItem("Wrestling/Render Bout Viewer Stills")]
@@ -98,7 +101,7 @@ namespace Wrestling.Editor
             var shots = new (WrestlingStyle Style, Moment[] Moments)[]
             {
                 (WrestlingStyle.Freestyle, new[] { Moment.HandFighting, Moment.Shot, Moment.Throw, Moment.ThrowSequence, Moment.Counter, Moment.ParTerreTurn, Moment.Danger, Moment.Result }),
-                (WrestlingStyle.GrecoRoman, new[] { Moment.HandFighting, Moment.Throw, Moment.ThrowSequence, Moment.ParTerre, Moment.ParTerreTurn }),
+                (WrestlingStyle.GrecoRoman, new[] { Moment.HandFighting, Moment.Throw, Moment.ThrowSequence, Moment.CounterSequence, Moment.ParTerre, Moment.ParTerreTurn }),
                 (WrestlingStyle.Womens, new[] { Moment.HandFighting, Moment.Shot, Moment.Throw, Moment.ThrowSequence, Moment.ParTerre }),
             };
 
@@ -129,10 +132,10 @@ namespace Wrestling.Editor
                     viewer.StartBout(shot.Seed);
                     Debug.Log($"Built both wrestlers in {build.ElapsedMilliseconds} ms.");
                     string file = Path.Combine(folder, $"bout-{Slug(style)}-{Slug(moment.ToString())}.png");
-                    if (moment == Moment.ThrowSequence)
+                    if (moment == Moment.ThrowSequence || moment == Moment.CounterSequence)
                     {
                         viewer.FastForward(shot.Tick - 1);
-                        CaptureSequence(viewer, camera, file);
+                        CaptureSequence(viewer, camera, file, moment == Moment.CounterSequence ? 3 : 11);
                         Debug.Log($"Wrote {file} (seed {shot.Seed}, from tick {shot.Tick}).");
                         continue;
                     }
@@ -186,6 +189,11 @@ namespace Wrestling.Editor
                     {
                         found[Moment.Throw] = tick;
                         found[Moment.ThrowSequence] = active.StartTick;
+                    }
+
+                    if (!found.ContainsKey(Moment.CounterSequence) && technique.Role == TechniqueRole.Counter && active.StartTick > 8)
+                    {
+                        found[Moment.CounterSequence] = active.StartTick - 6;
                     }
 
                     if (!found.ContainsKey(Moment.Counter) && technique.Role != TechniqueRole.Attack && engine.Position == BoutPosition.Neutral && progress >= 0.6f)
@@ -263,8 +271,8 @@ namespace Wrestling.Editor
             }
         }
 
-        /// <summary>Six frames, eleven ticks apart (through the landing), tiled 3 × 2 into one image.</summary>
-        private static void CaptureSequence(BoutViewer viewer, Camera camera, string file)
+        /// <summary>Six frames <paramref name="spacing"/> ticks apart, tiled 3 × 2 into one image.</summary>
+        private static void CaptureSequence(BoutViewer viewer, Camera camera, string file, int spacing)
         {
             const int columns = 3;
             const int rows = 2;
@@ -284,7 +292,7 @@ namespace Wrestling.Editor
             {
                 for (int frame = 0; frame < columns * rows; frame++)
                 {
-                    viewer.FastForward(frame == 0 ? 1 : 11);
+                    viewer.FastForward(frame == 0 ? 1 : spacing);
                     camera.targetTexture = target;
                     Canvas.ForceUpdateCanvases();
                     camera.Render();

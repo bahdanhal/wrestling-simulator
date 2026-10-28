@@ -165,7 +165,7 @@ namespace Wrestling.Presentation
             WrestlerFrame blue = _session.Frame(Corner.Blue, alpha);
             Vector3 view = _camera.transform.forward;
             Staging.Arrange(ref red, ref blue, engine.Position, engine.Top, new Vector2(view.x, view.z).normalized);
-            _choreographer.Apply(engine, ref red, ref blue, alpha);
+            _choreographer.Apply(engine, ref red, ref blue, alpha, _shown);
             Smooth(0, red, deltaTime);
             Smooth(1, blue, deltaTime);
             bool snapped = _snapNextFrame;
