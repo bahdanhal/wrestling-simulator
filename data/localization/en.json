@@ -52,6 +52,19 @@
     "tech.switch.name": "Switch",
     "tech.two_on_one_throw.name": "Two-on-one arm spin",
     "tech.underhook_throw.name": "Underhook throw",
-    "tech.whizzer.name": "Whizzer"
+    "tech.whizzer.name": "Whizzer",
+    "result.victory.Fall": "Fall",
+    "result.victory.Injury": "Injury",
+    "result.victory.ThreeCautions": "Three cautions",
+    "result.victory.Forfeit": "Forfeit",
+    "result.victory.Disqualification": "Disqualification",
+    "result.victory.TechnicalSuperiority": "Technical superiority",
+    "result.victory.Points": "Points",
+    "result.tiebreak.HighestValueHold": "tie-break: highest-value hold",
+    "result.tiebreak.MostHighestValueHolds": "tie-break: most highest-value holds",
+    "result.tiebreak.FewestCautions": "tie-break: fewest cautions",
+    "result.tiebreak.LastTechnicalPoint": "tie-break: last technical point",
+    "result.tiebreak.OnlyTechnicalPoint": "tie-break: only technical point",
+    "result.tiebreak.FirstPoint": "tie-break: first point"
   }
 }

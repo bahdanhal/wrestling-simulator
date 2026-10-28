@@ -9,6 +9,7 @@ using Wrestling.Core.Numerics;
 using Wrestling.Core.Rules;
 using Wrestling.Core.Wrestlers;
 using Wrestling.Data;
+using Wrestling.Data.Localization;
 
 namespace Wrestling.Sim;
 
@@ -81,15 +82,15 @@ public static class Program
         options.EnsureAllUsed();
 
         var random = new Pcg32(seed, 17);
-        Wrestler red = SimWrestlers.Generate("red", style, 60, 12, content.Techniques, random);
-        Wrestler blue = SimWrestlers.Generate("blue", style, 60, 12, content.Techniques, random);
+        Wrestler red = WrestlerGenerator.Generate("red", style, 60, 12, content.Techniques, content.Names, random);
+        Wrestler blue = WrestlerGenerator.Generate("blue", style, 60, 12, content.Techniques, content.Names, random);
         BoutEngine engine = CreateEngine(content, style, red, blue, seed);
         BoutResult result = engine.RunToEnd();
 
         Console.WriteLine($"{style}: RED {red.Name} vs BLUE {blue.Name} (seed {seed})");
-        foreach (BoutEvent e in engine.Events.Where(Interesting))
+        foreach (BoutEvent e in engine.Events.Where(BoutCommentary.IsNotable))
         {
-            Console.WriteLine($"  {Clock(e.Time, engine.Clock)}  {Describe(e, content, red, blue)}");
+            Console.WriteLine($"  {BoutCommentary.Clock(e.Time, engine.Clock)}  {BoutCommentary.Describe(e, content, red, blue)}");
         }
 
         string winner = result.Winner == Corner.Red ? red.Name.Full : blue.Name.Full;
@@ -117,8 +118,8 @@ public static class Program
         {
             ulong boutSeed = seed + (ulong)i;
             var random = new Pcg32(boutSeed, 17);
-            Wrestler red = SimWrestlers.Generate("red", style, level, spread, content.Techniques, random);
-            Wrestler blue = SimWrestlers.Generate("blue", style, level, spread, content.Techniques, random);
+            Wrestler red = WrestlerGenerator.Generate("red", style, level, spread, content.Techniques, content.Names, random);
+            Wrestler blue = WrestlerGenerator.Generate("blue", style, level, spread, content.Techniques, content.Names, random);
             BoutEngine engine = CreateEngine(content, style, red, blue, boutSeed);
             BoutResult result = engine.RunToEnd();
             BoutStatistics statistics = BoutStatistics.From(engine);
@@ -164,7 +165,7 @@ public static class Program
         for (int i = 1; i <= count; i++)
         {
             string id = $"W{i:00}";
-            wrestlers[id] = SimWrestlers.Generate(id, style, 40 + random.NextInt(0, 40), 10, content.Techniques, random);
+            wrestlers[id] = WrestlerGenerator.Generate(id, style, 40 + random.NextInt(0, 40), 10, content.Techniques, content.Names, random);
             entrants.Add(new Entrant(id, i));
         }
 
@@ -210,31 +211,6 @@ public static class Program
         }
 
         return GameContent.Load(data);
-    }
-
-    private static bool Interesting(BoutEvent e) => e.Type is BoutEventType.TechniqueCompleted or BoutEventType.PointsAwarded or BoutEventType.CounterStarted
-        or BoutEventType.StepOut or BoutEventType.PassivityCall or BoutEventType.ActivityPeriodStarted or BoutEventType.Warning
-        or BoutEventType.Escape or BoutEventType.PeriodStarted or BoutEventType.PeriodEnded or BoutEventType.BoutEnded;
-
-    private static string Describe(BoutEvent e, GameContent content, Wrestler red, Wrestler blue)
-    {
-        string who = e.Wrestler == null ? string.Empty : (e.Wrestler == Corner.Red ? $"RED {red.Name.Family}" : $"BLUE {blue.Name.Family}");
-        string technique = e.TechniqueId == null ? string.Empty : content.English.Get(content.Techniques.Get(e.TechniqueId).NameKey);
-        return e.Type switch
-        {
-            BoutEventType.PointsAwarded => $"{who} +{e.Points} ({e.Detail})",
-            BoutEventType.TechniqueCompleted => $"{who} {technique} -> {e.Detail}",
-            BoutEventType.CounterStarted => content.Techniques.Get(e.TechniqueId!).Role == Wrestling.Core.Techniques.TechniqueRole.Defence
-                ? $"{who} defends: {technique}"
-                : $"{who} counters: {technique}",
-            _ => $"{e.Type} {who} {e.Detail}".Trim(),
-        };
-    }
-
-    private static string Clock(BoutTime time, BoutClock clock)
-    {
-        int seconds = ((time.Period - 1) * clock.PeriodTicks + time.TickInPeriod) / BoutClock.TicksPerSecond;
-        return $"P{time.Period} {seconds / 60}:{seconds % 60:00}";
     }
 
     private static string Label(Wrestler wrestler) => $"{wrestler.Id} {wrestler.Name.Family}";

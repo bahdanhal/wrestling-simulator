@@ -51,6 +51,20 @@ dotnet run --project src/Wrestling.Sim -c Release -- tournament --style ww --ent
 
 Styles are `fs` (Freestyle), `gr` (Greco-Roman) and `ww` (Women's). Run `help` for all options.
 
+## Bout viewer (Unity)
+
+`Assets/Scenes/BoutViewer.unity` plays AI bouts on the engine in 3D with a scoreboard and play-by-play. The scene and its materials are generated from code: menu **Wrestling → Build Bout Viewer Scene**, or in batch mode:
+
+```bash
+/Applications/Unity/Hub/Editor/6000.6.7f1/Unity.app/Contents/MacOS/Unity -batchmode -projectPath unity/WrestlingSimulator -executeMethod Wrestling.Editor.BoutViewerSceneBuilder.BuildFromCommandLine -logFile -
+```
+
+Stills of notable moments from real bouts are written to `docs/images/` by **Wrestling → Render Bout Viewer Stills** (or `-executeMethod Wrestling.Editor.BoutViewerStills.RenderFromCommandLine -stillsOutput DIR`, without `-nographics`).
+
+![Freestyle hand-fighting](docs/images/bout-freestyle-hand-fighting.png)
+
+Player builds copy `data/` into StreamingAssets automatically (`ContentBuildStep`).
+
 ## Determinism check
 
 The simulation must give identical results on every platform. A fixed workload produces a hash that every platform must reproduce:

@@ -2,7 +2,9 @@
     "name": "Wrestling.Editor",
     "rootNamespace": "Wrestling.Editor",
     "references": [
-        "Wrestling.Diagnostics"
+        "Wrestling.Diagnostics",
+        "Wrestling.Presentation",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [
         "Editor"
@@ -11,7 +13,9 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "Wrestling.Core.dll"
+        "Wrestling.Core.dll",
+        "Wrestling.Data.dll",
+        "Newtonsoft.Json.dll"
     ],
     "autoReferenced": false,
     "defineConstraints": [],

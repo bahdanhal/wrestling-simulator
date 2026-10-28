@@ -10,6 +10,7 @@ public class GameContentTests
         Assert.Empty(content.Tuning.Validate());
         Assert.True(content.Techniques.Count >= 50);
         Assert.Equal("en", content.English.Language);
+        Assert.Equal(GameContent.DefaultNamePoolId, content.Names.Id);
     }
 
     [Fact]

@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "id": "fictional",
+  "male": ["Arin", "Bekzat", "Dario", "Emil", "Farid", "Goran", "Hiro", "Ivo", "Jaro", "Kenan", "Levan", "Mato"],
+  "female": ["Aida", "Bela", "Dana", "Elin", "Fatma", "Gala", "Hana", "Ines", "Jana", "Kira", "Lea", "Mira"],
+  "family": ["Aras", "Borov", "Cerny", "Dalan", "Erdem", "Falk", "Gorin", "Holm", "Ivers", "Juric", "Kaya", "Lind"]
+}

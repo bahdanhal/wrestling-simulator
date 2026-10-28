@@ -44,6 +44,9 @@ What is built, against [game-design.md](game-design.md). Updated with every chan
 | Headless CLI: `bout`, `balance`, `tournament`, `determinism-probe` | `Wrestling.Sim` | 15.2 |
 | AI wrestler: expected-value attack choice with the engine's own formulas, pace/focus/pressure/risk tactics, openings, score and clock awareness, counters, par terre top and bottom, edge awareness | `Wrestling.Core.AI` | 5.13 |
 | Bout engine tick loop: intents, hand-fight, pressure and balance, techniques with phases and counters, par terre, danger and falls, scrambles, risk rule, step-outs and deliberate push-outs, zone calls, passivity in both styles, stoppages and restarts, fatigue, events | `Wrestling.Core.Match.BoutEngine` | 5.1–5.12 |
+| Wrestler generator for fictional opponents, name pools as data | `WrestlerGenerator`, `data/names/` | 4, 9 |
+| Shared play-by-play text and result lines (CLI and game) | `Wrestling.Data.Localization.BoutCommentary` | 12.5 |
+| Unity bout viewer (Watch mode): rulebook-sized mat and platform, procedural figures sized from each wrestler's body and posed from the engine state and grips, broadcast camera, scoreboard and event feed; scene generated from code, stills renderer, data packaged into player builds | Unity `Wrestling.Presentation`, `Wrestling.Editor` | 7.1, 11, 12 |
 
 ## Known rule gaps
 
@@ -61,6 +64,8 @@ In dependency order:
 3. Engine performance: about 11–12 ms per AI bout with the full catalogue on an Apple Silicon Mac (Release). The design budget is under 5 ms on a mid-range phone; remaining cost is mostly `Fix64` multiplication, so the next step is a fast path for small operands and fewer per-tick recomputations.
 4. Event scheduling (sessions, mats, 20-minute rest, two-day categories)
 5. Wrestler creation (backgrounds, point-buy), ageing and training
+6. Presentation: technique motion. The figures follow body state, grips and ground positions, but techniques do not yet animate their phases (entry, lift, throw arc, landing); the next step is per-phase poses driven by the technique data, then character models and motion-matched animation (design 7)
+7. Play mode input (gestures and push direction) and Coach mode controls in the viewer
 
 ## Calibration snapshot
 

@@ -2,8 +2,10 @@ using System.IO;
 using Wrestling.Core.Match;
 using Wrestling.Core.Rules;
 using Wrestling.Core.Techniques;
+using Wrestling.Core.Wrestlers;
 using Wrestling.Data.Engine;
 using Wrestling.Data.Localization;
+using Wrestling.Data.Names;
 using Wrestling.Data.Rulesets;
 using Wrestling.Data.Techniques;
 
@@ -14,12 +16,15 @@ namespace Wrestling.Data
     {
         public const string DefaultRulesetId = "uww-2026-01";
 
-        private GameContent(Ruleset rules, EngineTuning tuning, TechniqueCatalog techniques, LocalizationTable english)
+        public const string DefaultNamePoolId = "fictional";
+
+        private GameContent(Ruleset rules, EngineTuning tuning, TechniqueCatalog techniques, LocalizationTable english, NamePool names)
         {
             Rules = rules;
             Tuning = tuning;
             Techniques = techniques;
             English = english;
+            Names = names;
         }
 
         public Ruleset Rules { get; }
@@ -29,6 +34,9 @@ namespace Wrestling.Data
         public TechniqueCatalog Techniques { get; }
 
         public LocalizationTable English { get; }
+
+        /// <summary>Names for generated fictional wrestlers.</summary>
+        public NamePool Names { get; }
 
         public static GameContent Load(string dataDirectory, string rulesetId = DefaultRulesetId)
         {
@@ -41,7 +49,8 @@ namespace Wrestling.Data
                 RulesetLoader.FromFile(Path.Combine(dataDirectory, "rulesets", rulesetId + ".json")),
                 TuningLoader.FromFile(Path.Combine(dataDirectory, "engine", "tuning.json")),
                 TechniqueLoader.FromDirectory(Path.Combine(dataDirectory, "techniques")),
-                LocalizationTable.FromFile(Path.Combine(dataDirectory, "localization", "en.json")));
+                LocalizationTable.FromFile(Path.Combine(dataDirectory, "localization", "en.json")),
+                NamePoolLoader.FromFile(Path.Combine(dataDirectory, "names", DefaultNamePoolId + ".json")));
         }
 
         /// <summary>Finds the repository's <c>data/</c> folder from <paramref name="start"/> or its parents.</summary>

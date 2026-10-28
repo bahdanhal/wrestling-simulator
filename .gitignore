@@ -45,3 +45,5 @@ unity/WrestlingSimulator/Assets/[Ss]treamingAssets/aa/
 unity/WrestlingSimulator/Assets/Plugins/Wrestling/*.dll
 unity/WrestlingSimulator/Assets/Plugins/Wrestling/*.pdb
 unity/WrestlingSimulator/Assets/Plugins/Wrestling/*.xml
+unity/WrestlingSimulator/Assets/StreamingAssets/data/
+unity/WrestlingSimulator/Assets/StreamingAssets/data.meta
