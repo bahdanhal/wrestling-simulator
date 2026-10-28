@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &55300500
+--- !u!1 &850151416
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,10 +127,119 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 55300504}
-  - component: {fileID: 55300503}
-  - component: {fileID: 55300502}
-  - component: {fileID: 55300501}
+  - component: {fileID: 850151418}
+  - component: {fileID: 850151417}
+  m_Layer: 0
+  m_Name: Mat
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &850151417
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 850151416}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19f034866f7a5469b83b61248d935369, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Wrestling.Presentation::Wrestling.Presentation.MatView
+  _centralSurface: {fileID: 2100000, guid: 186f094139b0041c7b4e2d8822f7ed8a, type: 2}
+  _passivityZone: {fileID: 2100000, guid: 19dc82cf651674f2f9cfa7236cf236d9, type: 2}
+  _protectionArea: {fileID: 2100000, guid: 2a588487522994867b2c43ce05cb15b6, type: 2}
+  _redCorner: {fileID: 2100000, guid: 31428ed9d8a8348d1a269510a349b7a3, type: 2}
+  _blueCorner: {fileID: 2100000, guid: 82be2c0608aa04003b0ee4481b73e776, type: 2}
+  _platform: {fileID: 2100000, guid: 96e94aa4a988f40b3af3bc51da5b095f, type: 2}
+--- !u!4 &850151418
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 850151416}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1195903983
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1195903985}
+  - component: {fileID: 1195903984}
+  m_Layer: 0
+  m_Name: Bout Viewer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1195903984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1195903983}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: babb20958483f418fbad83338929eafa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Wrestling.Presentation::Wrestling.Presentation.BoutViewer
+  _style: 1
+  _level: 60
+  _firstSeed: 4
+  _playbackSpeed: 1
+  _pauseAfterResult: 5
+  _mat: {fileID: 850151417}
+  _camera: {fileID: 1441615604}
+  _scoreboard: {fileID: 1264472039}
+  _font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+  _bodyMaterial: {fileID: 2100000, guid: 7c435ee640fef44a08fd65beaad72515, type: 2}
+  _redSinglet: {r: 0.8, g: 0.08, b: 0.1, a: 1}
+  _blueSinglet: {r: 0.07, g: 0.22, b: 0.75, a: 1}
+  _shoe: {r: 0.08, g: 0.08, b: 0.09, a: 1}
+  _bodyCellSize: 0.007
+  _mobileBodyCellSize: 0.012
+--- !u!4 &1195903985
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1195903983}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1264472038
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1264472042}
+  - component: {fileID: 1264472041}
+  - component: {fileID: 1264472040}
+  - component: {fileID: 1264472039}
   m_Layer: 0
   m_Name: Scoreboard
   m_TagString: Untagged
@@ -138,25 +247,25 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &55300501
+--- !u!114 &1264472039
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 55300500}
+  m_GameObject: {fileID: 1264472038}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bacfdb2fc592e4ff780d0b4e9163e834, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Wrestling.Presentation::Wrestling.Presentation.Scoreboard
---- !u!114 &55300502
+--- !u!114 &1264472040
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 55300500}
+  m_GameObject: {fileID: 1264472038}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
@@ -173,17 +282,17 @@ MonoBehaviour:
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
   m_PresetInfoIsWorld: 0
---- !u!223 &55300503
+--- !u!223 &1264472041
 Canvas:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 55300500}
+  m_GameObject: {fileID: 1264472038}
   m_Enabled: 1
   serializedVersion: 3
   m_RenderMode: 1
-  m_Camera: {fileID: 1309884024}
+  m_Camera: {fileID: 1441615605}
   m_PlaneDistance: 1
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
@@ -197,13 +306,13 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
---- !u!224 &55300504
+--- !u!224 &1264472042
 RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 55300500}
+  m_GameObject: {fileID: 1264472038}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0, y: 0, z: 0}
@@ -216,7 +325,7 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!1 &143353708
+--- !u!1 &1441615603
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -224,8 +333,109 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 143353710}
-  - component: {fileID: 143353709}
+  - component: {fileID: 1441615606}
+  - component: {fileID: 1441615605}
+  - component: {fileID: 1441615604}
+  m_Layer: 0
+  m_Name: Broadcast Camera
+  m_TagString: MainCamera
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1441615604
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1441615603}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cfc0845fbeb149d1891b73f43ff27ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Wrestling.Presentation::Wrestling.Presentation.BroadcastCamera
+  _distance: 6.2
+  _height: 3.3
+  _lookHeight: 0.6
+  _followSharpness: 3
+  _groundedZoom: 0.82
+--- !u!20 &1441615605
+Camera:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1441615603}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0.035, g: 0.045, b: 0.06, a: 1}
+  m_projectionMatrixMode: 1
+  m_GateFitMode: 2
+  m_FOVAxisMode: 0
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_NormalizedViewPortRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  near clip plane: 0.1
+  far clip plane: 80
+  field of view: 34
+  orthographic: 0
+  orthographic size: 5
+  m_Depth: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022
+--- !u!4 &1441615606
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1441615603}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1810195460
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1810195462}
+  - component: {fileID: 1810195461}
   m_Layer: 0
   m_Name: Fill Light
   m_TagString: Untagged
@@ -233,13 +443,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!108 &143353709
+--- !u!108 &1810195461
 Light:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 143353708}
+  m_GameObject: {fileID: 1810195460}
   m_Enabled: 1
   serializedVersion: 13
   m_Type: 1
@@ -298,13 +508,13 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
---- !u!4 &143353710
+--- !u!4 &1810195462
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 143353708}
+  m_GameObject: {fileID: 1810195460}
   serializedVersion: 2
   m_LocalRotation: {x: 0.07782839, y: 0.9212198, z: -0.29045948, w: 0.24684013}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -313,7 +523,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &327781090
+--- !u!1 &1819610596
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -321,8 +531,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 327781092}
-  - component: {fileID: 327781091}
+  - component: {fileID: 1819610598}
+  - component: {fileID: 1819610597}
   m_Layer: 0
   m_Name: Arena Light
   m_TagString: Untagged
@@ -330,13 +540,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!108 &327781091
+--- !u!108 &1819610597
 Light:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 327781090}
+  m_GameObject: {fileID: 1819610596}
   m_Enabled: 1
   serializedVersion: 13
   m_Type: 1
@@ -395,225 +605,15 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
---- !u!4 &327781092
+--- !u!4 &1819610598
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 327781090}
+  m_GameObject: {fileID: 1819610596}
   serializedVersion: 2
   m_LocalRotation: {x: 0.47331768, y: -0.18930236, z: 0.10493201, w: 0.85388774}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &775337466
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 775337468}
-  - component: {fileID: 775337467}
-  m_Layer: 0
-  m_Name: Bout Viewer
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &775337467
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 775337466}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: babb20958483f418fbad83338929eafa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Wrestling.Presentation::Wrestling.Presentation.BoutViewer
-  _style: 1
-  _level: 60
-  _firstSeed: 4
-  _playbackSpeed: 1
-  _pauseAfterResult: 5
-  _mat: {fileID: 1375410442}
-  _camera: {fileID: 1309884023}
-  _scoreboard: {fileID: 55300501}
-  _font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-  _bodyMaterial: {fileID: 2100000, guid: 7c435ee640fef44a08fd65beaad72515, type: 2}
-  _redSinglet: {r: 0.8, g: 0.08, b: 0.1, a: 1}
-  _blueSinglet: {r: 0.07, g: 0.22, b: 0.75, a: 1}
-  _shoe: {r: 0.08, g: 0.08, b: 0.09, a: 1}
-  _bodyCellSize: 0.01
-  _mobileBodyCellSize: 0.016
---- !u!4 &775337468
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 775337466}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1309884022
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1309884025}
-  - component: {fileID: 1309884024}
-  - component: {fileID: 1309884023}
-  m_Layer: 0
-  m_Name: Broadcast Camera
-  m_TagString: MainCamera
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1309884023
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1309884022}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7cfc0845fbeb149d1891b73f43ff27ac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Wrestling.Presentation::Wrestling.Presentation.BroadcastCamera
-  _distance: 6.2
-  _height: 3.3
-  _lookHeight: 0.6
-  _followSharpness: 3
-  _groundedZoom: 0.82
---- !u!20 &1309884024
-Camera:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1309884022}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.035, g: 0.045, b: 0.06, a: 1}
-  m_projectionMatrixMode: 1
-  m_GateFitMode: 2
-  m_FOVAxisMode: 0
-  m_Iso: 200
-  m_ShutterSpeed: 0.005
-  m_Aperture: 16
-  m_FocusDistance: 10
-  m_FocalLength: 50
-  m_BladeCount: 5
-  m_Curvature: {x: 2, y: 11}
-  m_BarrelClipping: 0.25
-  m_Anamorphism: 0
-  m_SensorSize: {x: 36, y: 24}
-  m_LensShift: {x: 0, y: 0}
-  m_NormalizedViewPortRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 1
-    height: 1
-  near clip plane: 0.1
-  far clip plane: 80
-  field of view: 34
-  orthographic: 0
-  orthographic size: 5
-  m_Depth: 0
-  m_CullingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_RenderingPath: -1
-  m_TargetTexture: {fileID: 0}
-  m_TargetDisplay: 0
-  m_TargetEye: 3
-  m_HDR: 1
-  m_AllowMSAA: 1
-  m_AllowDynamicResolution: 0
-  m_ForceIntoRT: 0
-  m_OcclusionCulling: 1
-  m_StereoConvergence: 10
-  m_StereoSeparation: 0.022
---- !u!4 &1309884025
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1309884022}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1375410441
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1375410443}
-  - component: {fileID: 1375410442}
-  m_Layer: 0
-  m_Name: Mat
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1375410442
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1375410441}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 19f034866f7a5469b83b61248d935369, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Wrestling.Presentation::Wrestling.Presentation.MatView
-  _centralSurface: {fileID: 2100000, guid: 186f094139b0041c7b4e2d8822f7ed8a, type: 2}
-  _passivityZone: {fileID: 2100000, guid: 19dc82cf651674f2f9cfa7236cf236d9, type: 2}
-  _protectionArea: {fileID: 2100000, guid: 2a588487522994867b2c43ce05cb15b6, type: 2}
-  _redCorner: {fileID: 2100000, guid: 31428ed9d8a8348d1a269510a349b7a3, type: 2}
-  _blueCorner: {fileID: 2100000, guid: 82be2c0608aa04003b0ee4481b73e776, type: 2}
-  _platform: {fileID: 2100000, guid: 96e94aa4a988f40b3af3bc51da5b095f, type: 2}
---- !u!4 &1375410443
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1375410441}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -624,9 +624,9 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1309884025}
-  - {fileID: 327781092}
-  - {fileID: 143353710}
-  - {fileID: 1375410443}
-  - {fileID: 55300504}
-  - {fileID: 775337468}
+  - {fileID: 1441615606}
+  - {fileID: 1819610598}
+  - {fileID: 1810195462}
+  - {fileID: 850151418}
+  - {fileID: 1264472042}
+  - {fileID: 1195903985}

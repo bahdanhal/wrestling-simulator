@@ -18,7 +18,7 @@ namespace Wrestling.Presentation
         public BodyProportions Body { get; private set; }
 
         /// <summary>Builds the rig and renderer for a body. <paramref name="materials"/> are owned by the figure from now on.</summary>
-        public void Build(BodyProportions body, BodyMesh bodyMesh, Material[] materials)
+        public void Build(BodyProportions body, BodyMeshData bodyMesh, Material[] materials)
         {
             Release();
             Body = body;
@@ -35,7 +35,7 @@ namespace Wrestling.Presentation
             var meshObject = new GameObject("Body");
             meshObject.transform.SetParent(transform, false);
             _renderer = meshObject.AddComponent<SkinnedMeshRenderer>();
-            _mesh = bodyMesh.Mesh;
+            _mesh = bodyMesh.CreateMesh();
             _materials = materials;
             _renderer.sharedMesh = _mesh;
             _renderer.bones = _bones;

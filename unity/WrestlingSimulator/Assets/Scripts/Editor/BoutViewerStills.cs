@@ -122,7 +122,9 @@ namespace Wrestling.Editor
                     }
 
                     viewer.Style = style;
+                    var build = System.Diagnostics.Stopwatch.StartNew();
                     viewer.StartBout(shot.Seed);
+                    Debug.Log($"Built both wrestlers in {build.ElapsedMilliseconds} ms.");
                     viewer.FastForward(shot.Tick);
                     camera.Render(); // Warm-up frame so shaders and fonts are ready.
                     string file = Path.Combine(folder, $"bout-{Slug(style)}-{Slug(moment.ToString())}.png");
@@ -131,8 +133,11 @@ namespace Wrestling.Editor
                     if (moment == Moment.HandFighting)
                     {
                         string closeUp = Path.Combine(folder, $"bout-{Slug(style)}-close-up.png");
-                        CaptureCloseUp(camera, closeUp);
+                        CaptureCloseUp(camera, closeUp, "Hips/Spine/Chest/Neck/Head", 0.25f, 1.1f);
                         Debug.Log($"Wrote {closeUp}.");
+                        string hands = Path.Combine(folder, $"bout-{Slug(style)}-close-up-hands.png");
+                        CaptureCloseUp(camera, hands, "Hips/Spine/Chest/LeftUpperArm/LeftLowerArm/LeftHand", 0f, 0.45f);
+                        Debug.Log($"Wrote {hands}.");
                     }
                 }
             }
@@ -205,19 +210,33 @@ namespace Wrestling.Editor
             return found;
         }
 
-        /// <summary>Head-and-shoulders view of the red wrestler from in front and to the side, for checking faces, hands and joints.</summary>
-        private static void CaptureCloseUp(Camera camera, string file)
+        /// <summary>Close view of one bone of the red wrestler (the figure furthest left), from in front and to the side, for checking faces, hands and joints.</summary>
+        private static void CaptureCloseUp(Camera camera, string file, string bonePath, float drop, float distance)
         {
-            Transform head = UnityEngine.Object.FindObjectsByType<SkinnedFigure>(FindObjectsInactive.Exclude)
-                .Select(f => f.transform.Find("Hips/Spine/Chest/Neck/Head"))
+            Transform bone = UnityEngine.Object.FindObjectsByType<SkinnedFigure>(FindObjectsInactive.Exclude)
+                .Select(f => f.transform.Find(bonePath))
                 .Where(t => t != null)
                 .OrderBy(t => t.position.x)
                 .First();
-            Vector3 front = head.forward;
+            Transform chest = bone.root.Find("Hips/Spine/Chest");
+            Vector3 front = chest.forward;
             front.y = 0f;
             front = front.sqrMagnitude > 1e-6f ? front.normalized : Vector3.back;
-            Vector3 target = head.position - (Vector3.up * 0.25f);
-            Vector3 eye = target + (front * 1.1f) + (Vector3.Cross(Vector3.up, front) * 0.55f) + (Vector3.up * 0.15f);
+
+            // Look from the side away from the opponent so their body never blocks the view.
+            Vector3 opponent = UnityEngine.Object.FindObjectsByType<SkinnedFigure>(FindObjectsInactive.Exclude)
+                .Where(f => f.transform != bone.root)
+                .Select(f => f.transform.Find("Hips").position)
+                .First();
+            Vector3 side = Vector3.Cross(Vector3.up, front);
+            Vector3 away = bone.position - opponent;
+            if (Vector3.Dot(side, away) < 0f)
+            {
+                side = -side;
+            }
+
+            Vector3 target = bone.position - (Vector3.up * drop);
+            Vector3 eye = target + (front * (distance * 0.6f)) + (side * (distance * 0.8f)) + (Vector3.up * (distance * 0.3f));
             Vector3 position = camera.transform.position;
             Quaternion rotation = camera.transform.rotation;
             float fieldOfView = camera.fieldOfView;

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Wrestling.Core.Wrestlers;
@@ -28,18 +29,52 @@ namespace Wrestling.Presentation
         public bool Female { get; }
     }
 
-    /// <summary>A generated, skinned body mesh with its bind poses.</summary>
-    public sealed class BodyMesh
+    /// <summary>
+    /// A generated, skinned body as plain arrays. Built on any thread; <see cref="CreateMesh"/>
+    /// turns it into a Unity mesh on the main thread.
+    /// </summary>
+    public sealed class BodyMeshData
     {
-        public BodyMesh(Mesh mesh, Matrix4x4[] bindPoses)
+        internal BodyMeshData(Vector3[] vertices, Vector3[] normals, Color[] masks, Vector4[] head, BoneWeight[] weights, int[] triangles, Matrix4x4[] bindPoses)
         {
-            Mesh = mesh;
+            Vertices = vertices;
+            Normals = normals;
+            Masks = masks;
+            Head = head;
+            Weights = weights;
+            Triangles = triangles;
             BindPoses = bindPoses;
         }
 
-        public Mesh Mesh { get; }
+        public Vector3[] Vertices { get; }
+
+        public Vector3[] Normals { get; }
+
+        /// <summary>Singlet, shoe and hair masks (vertex colour).</summary>
+        public Color[] Masks { get; }
+
+        /// <summary>Head-space position normalised by height, and head weight (UV1).</summary>
+        public Vector4[] Head { get; }
+
+        public BoneWeight[] Weights { get; }
+
+        public int[] Triangles { get; }
 
         public Matrix4x4[] BindPoses { get; }
+
+        public Mesh CreateMesh()
+        {
+            var mesh = new Mesh { name = "Wrestler body", indexFormat = IndexFormat.UInt32 };
+            mesh.vertices = Vertices;
+            mesh.normals = Normals;
+            mesh.colors = Masks;
+            mesh.SetUVs(1, Head);
+            mesh.boneWeights = Weights;
+            mesh.triangles = Triangles;
+            mesh.bindposes = BindPoses;
+            mesh.RecalculateBounds();
+            return mesh;
+        }
     }
 
     /// <summary>
@@ -51,6 +86,9 @@ namespace Wrestling.Presentation
     /// </summary>
     public static class BodyMeshBuilder
     {
+        /// <summary>Volumes further than this from a vertex are ignored when weighting it.</summary>
+        private const float SkinReach = 0.12f;
+
         /// <summary>Signed distances in metres map to mask values 0.5 ± distance / this range.</summary>
         private const float MaskRange = 0.08f;
 
@@ -71,7 +109,14 @@ namespace Wrestling.Presentation
             public float R1;
             public float ScaleX;
             public float ScaleZ;
+
+            /// <summary>Smooth-union radius with the rest of the body: large for muscle, small for fingers and facial detail.</summary>
+            public float Blend;
             public Bounds Bounds;
+
+            /// <summary>Bounds corners expanded by the blend radius, cached for the sampling hot path.</summary>
+            public Vector3 Min;
+            public Vector3 Max;
 
             public float Distance(Vector3 world)
             {
@@ -86,7 +131,8 @@ namespace Wrestling.Presentation
             }
         }
 
-        public static BodyMesh Build(BodyProportions body, BodyShape shape, float cellSize)
+        /// <summary>Generates the body. Thread-safe: uses no Unity objects, so bodies can be built in the background.</summary>
+        public static BodyMeshData Build(BodyProportions body, BodyShape shape, float cellSize)
         {
             Pose bind = PoseSolver.BindPose(body);
             var positions = new Vector3[Skeleton.BoneCount];
@@ -102,7 +148,6 @@ namespace Wrestling.Presentation
             }
 
             List<Volume> volumes = Volumes(body, shape, lengths, bindPoses);
-            float blend = 0.02f * body.Height / 1.8f;
             Bounds bounds = volumes[0].Bounds;
             foreach (Volume volume in volumes)
             {
@@ -110,21 +155,33 @@ namespace Wrestling.Presentation
             }
 
             bounds.Expand(cellSize * 4f);
-            var field = new Field(volumes, blend);
-            Mesh mesh = Polygonise(field, bounds, cellSize, body, lengths, bindPoses);
-            mesh.bindposes = bindPoses;
-            return new BodyMesh(mesh, bindPoses);
+            var field = new Field(volumes);
+            return Polygonise(field, bounds, cellSize, body, lengths, bindPoses);
         }
 
+        /// <summary>
+        /// Anatomical volumes per bone, in bone space (+Y along the bone, +Z the front of the body),
+        /// sized from height and scaled by build. Muscle groups follow surface anatomy: pelvis and
+        /// glutes, a ribcage tapering to the waist, pectorals, lats and trapezius, deltoids, biceps,
+        /// triceps and forearms, hands with four fingers and a thumb, quadriceps, hamstrings,
+        /// adductors, kneecaps and calves, and a skull with forehead, cheekbones, jaw, chin, nose,
+        /// lips, ears and cropped hair.
+        /// </summary>
         private static List<Volume> Volumes(BodyProportions body, BodyShape shape, float[] lengths, Matrix4x4[] worldToBone)
         {
             float h = body.Height;
             float g = shape.Girth;
-            float hip = shape.Female ? 1.07f : 1f;
-            float chestWidth = shape.Female ? 1.22f : 1.36f;
+            bool female = shape.Female;
+            float muscle = female ? 0.9f : 1f;
+            float hip = female ? 1.08f : 1f;
+            float chestWidth = female ? 1.22f : 1.36f;
+            float softBlend = 0.011f * h;
+            float muscleBlend = 0.012f * h;
+            float detailBlend = 0.005f * h;
+            float fingerBlend = 0.0035f * h;
             var volumes = new List<Volume>();
 
-            void Add(Bone bone, Vector3 a, Vector3 b, float r0, float r1, float sx = 1f, float sz = 1f)
+            void Add(Bone bone, Vector3 a, Vector3 b, float r0, float r1, float sx = 1f, float sz = 1f, float blend = -1f)
             {
                 var volume = new Volume
                 {
@@ -136,6 +193,7 @@ namespace Wrestling.Presentation
                     R1 = r1,
                     ScaleX = sx,
                     ScaleZ = sz,
+                    Blend = blend > 0f ? blend : softBlend,
                 };
                 Matrix4x4 toWorld = volume.WorldToBone.inverse;
                 float r = Mathf.Max(r0, r1);
@@ -149,53 +207,97 @@ namespace Wrestling.Presentation
                 }
 
                 volume.Bounds = worldBounds;
+                volume.Min = worldBounds.min - (Vector3.one * volume.Blend);
+                volume.Max = worldBounds.max + (Vector3.one * volume.Blend);
                 volumes.Add(volume);
             }
 
-            Vector3 Y(float y, float z = 0f) => new Vector3(0f, y, z);
-
-            float hipsLength = lengths[(int)Bone.Hips];
-            Add(Bone.Hips, Y(-0.045f * h), Y(hipsLength), 0.075f * h * g * hip, 0.068f * h * g, 1.3f, 0.85f);
-            Add(Bone.Spine, Y(0f), Y(lengths[(int)Bone.Spine]), 0.068f * h * g, 0.075f * h * g, 1.3f, 0.85f);
-            Add(Bone.Chest, Y(0f), Y(lengths[(int)Bone.Chest] * 0.8f), 0.078f * h * g, 0.084f * h * g, chestWidth, 0.78f);
-            Add(Bone.Neck, Y(-0.03f * h), Y(lengths[(int)Bone.Neck]), 0.034f * h * g, 0.031f * h * g, 1.1f, 1f);
+            // Points in units of height.
             Vector3 H(float x, float y, float z) => new Vector3(x * h, y * h, z * h);
-            float chestLength = lengths[(int)Bone.Chest];
+            float L(Bone bone) => lengths[(int)bone] / h;
+
+            // ---- Torso ----------------------------------------------------------------------
+            Add(Bone.Hips, H(0f, -0.045f, -0.004f), H(0f, L(Bone.Hips), 0f), 0.072f * h * g * hip, 0.064f * h * g, 1.32f, 0.82f);
+            Add(Bone.Spine, H(0f, 0f, 0f), H(0f, L(Bone.Spine), -0.004f), 0.064f * h * g, 0.078f * h * g, 1.3f, 0.82f);
+            Add(Bone.Spine, H(0f, 0.005f, 0.034f), H(0f, L(Bone.Spine) * 0.85f, 0.04f), 0.03f * h * g, 0.03f * h * g, 1.6f, 0.5f, muscleBlend);
+            Add(Bone.Chest, H(0f, 0f, 0f), H(0f, L(Bone.Chest) * 0.8f, -0.004f), 0.082f * h * g, 0.086f * h * g, chestWidth, 0.76f);
+            Add(Bone.Neck, H(0f, -0.03f, -0.004f), H(0f, L(Bone.Neck), -0.006f), 0.037f * h * g * muscle, 0.03f * h * g, 1.12f, 1f, muscleBlend);
             foreach (float side in new[] { -1f, 1f })
             {
-                // Trapezius from the neck to the shoulder.
-                Add(Bone.Chest, new Vector3(side * 0.03f * h, chestLength * 0.92f, -0.008f * h), new Vector3(side * 0.085f * h, chestLength * 0.82f, -0.004f * h), 0.03f * h * g, 0.026f * h * g);
+                // Glutes, lats, pectorals (or bust), trapezius.
+                Add(Bone.Hips, H(side * 0.036f, -0.032f, -0.036f), H(side * 0.034f, 0.002f, -0.04f), 0.038f * h * g * hip, 0.034f * h * g, 1f, 1f, muscleBlend);
+                Add(Bone.Spine, H(side * 0.066f, L(Bone.Spine), -0.014f), H(side * 0.05f, 0.03f, -0.01f), 0.03f * h * g * muscle, 0.02f * h * g, 1f, 1f, muscleBlend);
+                if (female)
+                {
+                    Add(Bone.Chest, H(side * 0.04f, -0.01f, 0.044f), H(side * 0.04f, -0.004f, 0.046f), 0.026f * h * g, 0.024f * h * g, 1.1f, 0.85f, muscleBlend);
+                }
+                else
+                {
+                    Add(Bone.Chest, H(side * 0.04f, -0.006f, 0.04f), H(side * 0.052f, 0.02f, 0.034f), 0.031f * h * g, 0.027f * h * g, 1.25f, 0.62f, muscleBlend);
+                }
+
+                Add(Bone.Chest, H(side * 0.028f, L(Bone.Chest) * 0.95f, -0.012f), H(side * 0.085f, L(Bone.Chest) * 0.78f, -0.006f), 0.032f * h * g * muscle, 0.026f * h * g, 1f, 1f, muscleBlend);
             }
 
-            Add(Bone.Head, H(0f, -0.02f, 0f), H(0f, 0.02f, 0f), 0.058f * h, 0.058f * h, 0.95f, 1.1f);
-            Add(Bone.Head, H(0f, -0.03f, 0.01f), H(0f, -0.05f, 0.03f), 0.032f * h, 0.024f * h, 1.15f, 1f);
-            Add(Bone.Head, H(0f, -0.058f, 0.042f), H(0f, -0.058f, 0.042f), 0.013f * h, 0.013f * h);
-            Add(Bone.Head, H(-0.028f, 0.014f, 0.05f), H(0.028f, 0.014f, 0.05f), 0.01f * h, 0.01f * h);
-            Add(Bone.Head, H(0f, 0.006f, 0.06f), H(0f, -0.012f, 0.071f), 0.007f * h, 0.011f * h);
+            // ---- Head -----------------------------------------------------------------------
+            Add(Bone.Head, H(0f, -0.005f, -0.01f), H(0f, 0.025f, -0.012f), 0.056f * h, 0.056f * h, 0.93f, 1.08f);
+            Add(Bone.Head, H(0f, 0.012f, -0.012f), H(0f, 0.03f, -0.016f), 0.0585f * h, 0.0585f * h, 0.95f, 1.08f, detailBlend);
+            Add(Bone.Head, H(0f, 0.022f, 0.03f), H(0f, 0f, 0.045f), 0.035f * h, 0.035f * h, 1.2f, 1f, detailBlend);
+            Add(Bone.Head, H(0f, -0.005f, 0.035f), H(0f, -0.035f, 0.04f), 0.034f * h, 0.03f * h, 1.2f, 0.9f);
+            Add(Bone.Head, H(0f, -0.03f, 0f), H(0f, -0.052f, 0.03f), 0.033f * h, 0.022f * h, 1.25f, 1f, detailBlend);
+            Add(Bone.Head, H(0f, -0.058f, 0.04f), H(0f, -0.058f, 0.04f), 0.014f * h, 0.014f * h, 1.2f, 1f, detailBlend);
+            Add(Bone.Head, H(0f, 0.01f, 0.058f), H(0f, -0.016f, 0.073f), 0.006f * h, 0.01f * h, 1f, 1f, detailBlend);
+            Add(Bone.Head, H(-0.012f, -0.028f, 0.058f), H(0.012f, -0.028f, 0.058f), 0.0055f * h, 0.0055f * h, 1f, 1f, detailBlend);
+            Add(Bone.Head, H(-0.011f, -0.034f, 0.056f), H(0.011f, -0.034f, 0.056f), 0.006f * h, 0.006f * h, 1f, 1f, detailBlend);
             foreach (float side in new[] { -1f, 1f })
             {
-                Add(Bone.Head, H(side * 0.032f, -0.004f, 0.045f), H(side * 0.032f, -0.004f, 0.045f), 0.014f * h, 0.014f * h);
-                Add(Bone.Head, H(side * 0.054f, 0f, 0f), H(side * 0.054f, -0.012f, 0f), 0.016f * h, 0.013f * h, 0.6f, 1f);
+                Add(Bone.Head, H(side * 0.034f, -0.004f, 0.04f), H(side * 0.034f, -0.004f, 0.04f), 0.014f * h, 0.014f * h, 1f, 1f, detailBlend);
+                Add(Bone.Head, H(side * 0.012f, 0.016f, 0.054f), H(side * 0.03f, 0.016f, 0.05f), 0.009f * h, 0.009f * h, 1f, 1f, detailBlend);
+                Add(Bone.Head, H(side * 0.009f, -0.018f, 0.064f), H(side * 0.009f, -0.018f, 0.064f), 0.007f * h, 0.007f * h, 1f, 1f, detailBlend);
+                Add(Bone.Head, H(side * 0.054f, 0.002f, -0.005f), H(side * 0.054f, -0.016f, -0.008f), 0.016f * h, 0.012f * h, 0.45f, 1f, detailBlend);
+                Add(Bone.Head, H(side * 0.056f, 0f, -0.004f), H(side * 0.056f, 0f, -0.004f), 0.009f * h, 0.009f * h, 1f, 1f, detailBlend);
             }
 
-            foreach ((Bone upper, Bone lower, Bone hand) in new[] { (Bone.LeftUpperArm, Bone.LeftLowerArm, Bone.LeftHand), (Bone.RightUpperArm, Bone.RightLowerArm, Bone.RightHand) })
+            // ---- Arms (lateral is +X on the left arm, -X on the right) -------------------------
+            foreach ((Bone upper, Bone lower, Bone hand, float lateral) in new[] { (Bone.LeftUpperArm, Bone.LeftLowerArm, Bone.LeftHand, 1f), (Bone.RightUpperArm, Bone.RightLowerArm, Bone.RightHand, -1f) })
             {
-                Add(upper, Y(0.005f * h), Y(0.015f * h), 0.045f * h * g, 0.042f * h * g);
-                Add(upper, Y(0f), Y(lengths[(int)upper]), 0.038f * h * g, 0.03f * h * g);
-                Add(lower, Y(0f), Y(lengths[(int)lower]), 0.03f * h * g, 0.021f * h, 1.15f, 0.85f);
-                Add(hand, Y(0f), Y(0.055f * h), 0.022f * h, 0.02f * h, 1.35f, 0.55f);
-                Add(hand, Y(0.05f * h, 0.004f * h), Y(0.085f * h, 0.012f * h), 0.016f * h, 0.011f * h, 1.3f, 0.5f);
-                Add(hand, Y(0.01f * h, 0.015f * h), Y(0.045f * h, 0.022f * h), 0.009f * h, 0.008f * h);
+                float upperLength = L(upper);
+                float lowerLength = L(lower);
+                Add(upper, H(0f, 0f, 0f), H(0f, upperLength, 0f), 0.035f * h * g, 0.028f * h * g);
+                Add(upper, H(lateral * 0.006f, -0.012f, 0f), H(lateral * 0.01f, 0.06f, 0f), 0.046f * h * g * muscle, 0.034f * h * g, 1f, 1f, muscleBlend);
+                Add(upper, H(0f, 0.05f, 0.012f), H(0f, upperLength * 0.85f, 0.014f), 0.032f * h * g * muscle, 0.026f * h * g, 1f, 0.9f, muscleBlend);
+                Add(upper, H(0f, 0.03f, -0.012f), H(0f, upperLength * 0.75f, -0.014f), 0.034f * h * g * muscle, 0.026f * h * g, 1f, 1f, muscleBlend);
+                Add(lower, H(0f, 0f, 0f), H(0f, lowerLength, 0f), 0.03f * h * g, 0.02f * h, 1.15f, 0.85f);
+                Add(lower, H(0f, 0.01f, 0f), H(0f, lowerLength * 0.55f, 0f), 0.034f * h * g * muscle, 0.026f * h * g, 1.15f, 0.9f, muscleBlend);
+
+                Add(hand, H(0f, 0f, 0f), H(0f, 0.05f, 0.002f), 0.021f * h, 0.02f * h, 1.35f, 0.52f, detailBlend);
+                float[] fingerLengths = { 0.043f, 0.047f, 0.044f, 0.036f };
+                for (int f = 0; f < 4; f++)
+                {
+                    // From the thumb side (medial) outwards: index, middle, ring, little; slightly curled forward.
+                    float x = -lateral * (0.0165f - (f * 0.011f));
+                    float length = fingerLengths[f];
+                    Add(hand, H(x, 0.046f, 0.003f), H(x * 1.04f, 0.046f + length, 0.012f), 0.0062f * h, 0.005f * h, 1f, 1f, fingerBlend);
+                }
+
+                Add(hand, H(-lateral * 0.022f, 0.012f, 0.01f), H(-lateral * 0.03f, 0.045f, 0.02f), 0.0075f * h, 0.006f * h, 1f, 1f, fingerBlend);
             }
 
-            foreach ((Bone upper, Bone lower, Bone foot) in new[] { (Bone.LeftUpperLeg, Bone.LeftLowerLeg, Bone.LeftFoot), (Bone.RightUpperLeg, Bone.RightLowerLeg, Bone.RightFoot) })
+            // ---- Legs (lateral is +X on the left leg, -X on the right) -------------------------
+            foreach ((Bone upper, Bone lower, Bone foot, float lateral) in new[] { (Bone.LeftUpperLeg, Bone.LeftLowerLeg, Bone.LeftFoot, 1f), (Bone.RightUpperLeg, Bone.RightLowerLeg, Bone.RightFoot, -1f) })
             {
-                float thigh = lengths[(int)upper];
-                float shin = lengths[(int)lower];
-                Add(upper, Y(0f), Y(thigh), 0.066f * h * g, 0.042f * h * g);
-                Add(lower, Y(0f), Y(shin), 0.04f * h * g, 0.025f * h);
-                Add(lower, Y(0.15f * shin, -0.01f * h), Y(0.45f * shin, -0.012f * h), 0.043f * h * g, 0.04f * h * g);
-                Add(foot, Y(-0.035f * h, -0.022f * h), Y(lengths[(int)foot] * 0.95f, -0.025f * h), 0.028f * h, 0.024f * h, 1.25f, 0.7f);
+                float thigh = L(upper);
+                float shin = L(lower);
+                Add(upper, H(0f, 0f, 0f), H(0f, thigh, 0f), 0.062f * h * g, 0.04f * h * g);
+                Add(upper, H(0f, 0.03f, 0.022f), H(0f, thigh * 0.82f, 0.018f), 0.045f * h * g * muscle, 0.035f * h * g, 1f, 1f, muscleBlend);
+                Add(upper, H(-lateral * 0.018f, thigh * 0.78f, 0.02f), H(-lateral * 0.018f, thigh * 0.78f, 0.02f), 0.024f * h * g, 0.024f * h * g, 1f, 1f, muscleBlend);
+                Add(upper, H(0f, 0.05f, -0.02f), H(0f, thigh * 0.82f, -0.018f), 0.042f * h * g * muscle, 0.032f * h * g, 1f, 1f, muscleBlend);
+                Add(upper, H(-lateral * 0.02f, 0.02f, 0f), H(-lateral * 0.012f, thigh * 0.5f, 0f), 0.04f * h * g, 0.03f * h * g, 1f, 1f, muscleBlend);
+                Add(upper, H(0f, thigh * 0.98f, 0.028f), H(0f, thigh * 0.98f, 0.028f), 0.016f * h, 0.016f * h, 1f, 1f, detailBlend);
+                Add(lower, H(0f, 0f, 0f), H(0f, shin, 0f), 0.036f * h * g, 0.024f * h);
+                Add(lower, H(0f, 0.04f, -0.018f), H(0f, shin * 0.55f, -0.016f), 0.042f * h * g * muscle, 0.032f * h * g, 1f, 1f, muscleBlend);
+                Add(lower, H(-lateral * 0.008f, 0.06f, -0.015f), H(-lateral * 0.008f, 0.06f, -0.015f), 0.035f * h * g, 0.035f * h * g, 1f, 1f, muscleBlend);
+                Add(foot, H(0f, -0.035f, -0.022f), H(0f, L(foot) * 0.95f, -0.025f), 0.028f * h, 0.024f * h, 1.25f, 0.7f);
             }
 
             return volumes;
@@ -205,12 +307,10 @@ namespace Wrestling.Presentation
         private sealed class Field
         {
             private readonly List<Volume> _volumes;
-            private readonly float _blend;
 
-            public Field(List<Volume> volumes, float blend)
+            public Field(List<Volume> volumes)
             {
                 _volumes = volumes;
-                _blend = blend;
             }
 
             public IReadOnlyList<Volume> Volumes => _volumes;
@@ -221,15 +321,14 @@ namespace Wrestling.Presentation
                 for (int i = 0; i < _volumes.Count; i++)
                 {
                     Volume volume = _volumes[i];
-                    Bounds bounds = volume.Bounds;
-                    if (point.x < bounds.min.x - _blend || point.x > bounds.max.x + _blend
-                        || point.y < bounds.min.y - _blend || point.y > bounds.max.y + _blend
-                        || point.z < bounds.min.z - _blend || point.z > bounds.max.z + _blend)
+                    if (point.x < volume.Min.x || point.x > volume.Max.x
+                        || point.y < volume.Min.y || point.y > volume.Max.y
+                        || point.z < volume.Min.z || point.z > volume.Max.z)
                     {
                         continue;
                     }
 
-                    distance = SmoothMin(distance, volume.Distance(point), _blend);
+                    distance = SmoothMin(distance, volume.Distance(point), volume.Blend);
                 }
 
                 return distance;
@@ -251,7 +350,75 @@ namespace Wrestling.Presentation
             }
         }
 
-        private static Mesh Polygonise(Field field, Bounds bounds, float cell, BodyProportions body, float[] lengths, Matrix4x4[] worldToBone)
+        /// <summary>
+        /// Fills the fine grid: exact distances only within a band around the surface, found from a
+        /// grid four times coarser; elsewhere only the sign matters, so coarse values are interpolated.
+        /// </summary>
+        private static void SampleNearSurface(Field field, Vector3 origin, float cell, int nx, int ny, int nz, float[] values)
+        {
+            const int factor = 4;
+            float coarseCell = cell * factor;
+            int mx = ((nx - 1) / factor) + 2;
+            int my = ((ny - 1) / factor) + 2;
+            int mz = ((nz - 1) / factor) + 2;
+            var coarse = new float[mx * my * mz];
+            int CoarseIndex(int x, int y, int z) => x + (mx * (y + (my * z)));
+            Parallel.For(0, mz, z =>
+            {
+                for (int y = 0; y < my; y++)
+                {
+                    for (int x = 0; x < mx; x++)
+                    {
+                        coarse[CoarseIndex(x, y, z)] = field.Sample(origin + (new Vector3(x, y, z) * coarseCell));
+                    }
+                }
+            });
+
+            // A distance field changes by at most the distance travelled, so a coarse cell whose
+            // corners are all further than its diagonal from the surface cannot contain it.
+            float band = coarseCell * 1.8f;
+            Parallel.For(0, nz, z =>
+            {
+                int cz = z / factor;
+                float tz = (float)(z % factor) / factor;
+                for (int y = 0; y < ny; y++)
+                {
+                    int cy = y / factor;
+                    float ty = (float)(y % factor) / factor;
+                    for (int x = 0; x < nx; x++)
+                    {
+                        int cx = x / factor;
+                        float tx = (float)(x % factor) / factor;
+                        float c000 = coarse[CoarseIndex(cx, cy, cz)];
+                        float c100 = coarse[CoarseIndex(cx + 1, cy, cz)];
+                        float c010 = coarse[CoarseIndex(cx, cy + 1, cz)];
+                        float c110 = coarse[CoarseIndex(cx + 1, cy + 1, cz)];
+                        float c001 = coarse[CoarseIndex(cx, cy, cz + 1)];
+                        float c101 = coarse[CoarseIndex(cx + 1, cy, cz + 1)];
+                        float c011 = coarse[CoarseIndex(cx, cy + 1, cz + 1)];
+                        float c111 = coarse[CoarseIndex(cx + 1, cy + 1, cz + 1)];
+                        float nearest = Mathf.Min(
+                            Mathf.Min(Mathf.Min(Mathf.Abs(c000), Mathf.Abs(c100)), Mathf.Min(Mathf.Abs(c010), Mathf.Abs(c110))),
+                            Mathf.Min(Mathf.Min(Mathf.Abs(c001), Mathf.Abs(c101)), Mathf.Min(Mathf.Abs(c011), Mathf.Abs(c111))));
+                        int index = x + (nx * (y + (ny * z)));
+                        if (nearest < band)
+                        {
+                            values[index] = field.Sample(origin + (new Vector3(x, y, z) * cell));
+                        }
+                        else
+                        {
+                            float x00 = Mathf.Lerp(c000, c100, tx);
+                            float x10 = Mathf.Lerp(c010, c110, tx);
+                            float x01 = Mathf.Lerp(c001, c101, tx);
+                            float x11 = Mathf.Lerp(c011, c111, tx);
+                            values[index] = Mathf.Lerp(Mathf.Lerp(x00, x10, ty), Mathf.Lerp(x01, x11, ty), tz);
+                        }
+                    }
+                }
+            });
+        }
+
+        private static BodyMeshData Polygonise(Field field, Bounds bounds, float cell, BodyProportions body, float[] lengths, Matrix4x4[] worldToBone)
         {
             int nx = Mathf.CeilToInt(bounds.size.x / cell) + 1;
             int ny = Mathf.CeilToInt(bounds.size.y / cell) + 1;
@@ -259,16 +426,7 @@ namespace Wrestling.Presentation
             Vector3 origin = bounds.min;
             var values = new float[nx * ny * nz];
             int Index(int x, int y, int z) => x + (nx * (y + (ny * z)));
-            for (int z = 0; z < nz; z++)
-            {
-                for (int y = 0; y < ny; y++)
-                {
-                    for (int x = 0; x < nx; x++)
-                    {
-                        values[Index(x, y, z)] = field.Sample(origin + new Vector3(x * cell, y * cell, z * cell));
-                    }
-                }
-            }
+            SampleNearSurface(field, origin, cell, nx, ny, nz, values);
 
             int cx = nx - 1;
             int cy = ny - 1;
@@ -324,14 +482,15 @@ namespace Wrestling.Presentation
 
             var normals = new Vector3[vertices.Count];
             var weights = new BoneWeight[vertices.Count];
-            var masks = new List<Color>(vertices.Count);
-            var head = new List<Vector4>(vertices.Count);
-            for (int i = 0; i < vertices.Count; i++)
+            var masks = new Color[vertices.Count];
+            var head = new Vector4[vertices.Count];
+            Parallel.For(0, vertices.Count, i =>
             {
-                normals[i] = field.Normal(vertices[i], cell * 0.5f);
-                (BoneWeight weight, List<(int Bone, float Weight)> influences) = Skin(field, vertices[i]);
+                Vector3 vertex = vertices[i];
+                normals[i] = field.Normal(vertex, cell * 0.5f);
+                (BoneWeight weight, List<(int Bone, float Weight)> influences) = Skin(field, vertex);
                 weights[i] = weight;
-                masks.Add(Masks(vertices[i], influences, body, lengths, worldToBone));
+                masks[i] = Masks(vertex, influences, body, lengths, worldToBone);
                 float headWeight = 0f;
                 foreach ((int bone, float w) in influences)
                 {
@@ -341,9 +500,9 @@ namespace Wrestling.Presentation
                     }
                 }
 
-                Vector3 local = worldToBone[(int)Bone.Head].MultiplyPoint3x4(vertices[i]) / body.Height;
-                head.Add(new Vector4(local.x, local.y, local.z, headWeight));
-            }
+                Vector3 local = worldToBone[(int)Bone.Head].MultiplyPoint3x4(vertex) / body.Height;
+                head[i] = new Vector4(local.x, local.y, local.z, headWeight);
+            });
 
             var triangles = new List<int>();
             int CellAt(int x, int y, int z) => (x < 0 || y < 0 || z < 0 || x >= cx || y >= cy || z >= nz - 1) ? -1 : cellVertex[x + (cx * (y + (cy * z)))];
@@ -395,15 +554,7 @@ namespace Wrestling.Presentation
                 }
             }
 
-            var mesh = new Mesh { name = "Wrestler body", indexFormat = IndexFormat.UInt32 };
-            mesh.SetVertices(vertices);
-            mesh.SetNormals(normals);
-            mesh.SetColors(masks);
-            mesh.SetUVs(1, head);
-            mesh.boneWeights = weights;
-            mesh.SetTriangles(triangles, 0);
-            mesh.RecalculateBounds();
-            return mesh;
+            return new BodyMeshData(vertices.ToArray(), normals, masks, head, weights, triangles.ToArray(), worldToBone);
         }
 
         /// <summary>Up to four bone weights from distance to each bone's volumes (softened so joints bend smoothly).</summary>
@@ -417,6 +568,12 @@ namespace Wrestling.Presentation
 
             foreach (Volume volume in field.Volumes)
             {
+                // Volumes far beyond the weight falloff cannot influence this vertex.
+                if (volume.Bounds.SqrDistance(point) > SkinReach * SkinReach)
+                {
+                    continue;
+                }
+
                 float distance = volume.Distance(point);
                 if (distance < best[volume.Bone])
                 {
@@ -521,14 +678,20 @@ namespace Wrestling.Presentation
             float halfWidth = 0.084f * body.Height * 1.3f;
             float x = Mathf.Abs(local.x);
             float bodyLine = (0.72f * length) + (0.08f * length * (1f - Mathf.Clamp01(x / halfWidth))) - local.y;
-            return Mathf.Max(bodyLine, StrapBand(x, halfWidth));
+            return SmoothMax(bodyLine, StrapBand(x, halfWidth), 0.03f * body.Height);
         }
 
-        /// <summary>The strap band only, above shoulder height, for neck and upper-arm skin (chest-bone space).</summary>
+        /// <summary>The strap band only, for neck and upper-arm skin over the shoulders (chest-bone space).</summary>
         private static float ShoulderStrap(Vector3 local, float length, BodyProportions body)
         {
             float halfWidth = 0.084f * body.Height * 1.3f;
-            return Mathf.Min(StrapBand(Mathf.Abs(local.x), halfWidth), local.y - (0.85f * length));
+            return StrapBand(Mathf.Abs(local.x), halfWidth);
+        }
+
+        private static float SmoothMax(float a, float b, float k)
+        {
+            float h = Mathf.Max(k - Mathf.Abs(a - b), 0f) / k;
+            return Mathf.Max(a, b) + (h * h * k * 0.25f);
         }
 
         private static float StrapBand(float x, float halfWidth) => Mathf.Min(x - (0.28f * halfWidth), (0.6f * halfWidth) - x);
