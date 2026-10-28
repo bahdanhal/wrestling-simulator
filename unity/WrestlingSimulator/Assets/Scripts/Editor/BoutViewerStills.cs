@@ -133,10 +133,10 @@ namespace Wrestling.Editor
                     if (moment == Moment.HandFighting)
                     {
                         string closeUp = Path.Combine(folder, $"bout-{Slug(style)}-close-up.png");
-                        CaptureCloseUp(camera, closeUp, "Hips/Spine/Chest/Neck/Head", 0.25f, 1.1f);
+                        CaptureCloseUp(camera, closeUp, "Head", 0.25f, 1.1f);
                         Debug.Log($"Wrote {closeUp}.");
                         string hands = Path.Combine(folder, $"bout-{Slug(style)}-close-up-hands.png");
-                        CaptureCloseUp(camera, hands, "Hips/Spine/Chest/LeftUpperArm/LeftLowerArm/LeftHand", 0f, 0.45f);
+                        CaptureCloseUp(camera, hands, "LeftHand", 0f, 0.45f);
                         Debug.Log($"Wrote {hands}.");
                     }
                 }
@@ -211,23 +211,20 @@ namespace Wrestling.Editor
         }
 
         /// <summary>Close view of one bone of the red wrestler (the figure furthest left), from in front and to the side, for checking faces, hands and joints.</summary>
-        private static void CaptureCloseUp(Camera camera, string file, string bonePath, float drop, float distance)
+        private static void CaptureCloseUp(Camera camera, string file, string boneName, float drop, float distance)
         {
-            Transform bone = UnityEngine.Object.FindObjectsByType<SkinnedFigure>(FindObjectsInactive.Exclude)
-                .Select(f => f.transform.Find(bonePath))
-                .Where(t => t != null)
-                .OrderBy(t => t.position.x)
-                .First();
-            Transform chest = bone.root.Find("Hips/Spine/Chest");
-            Vector3 front = chest.forward;
-            front.y = 0f;
+            Transform Find(WrestlerCharacter figure, string name) =>
+                figure.GetComponentsInChildren<Transform>().First(t => t.name == name || t.name.EndsWith(":" + name));
+
+            WrestlerCharacter[] figures = UnityEngine.Object.FindObjectsByType<WrestlerCharacter>(FindObjectsInactive.Exclude)
+                .OrderBy(f => Find(f, "Hips").position.x)
+                .ToArray();
+            Transform bone = Find(figures[0], boneName);
+            Transform hips = Find(figures[0], "Hips");
+            Vector3 opponent = Find(figures[1], "Hips").position;
+            Vector3 front = Vector3.ProjectOnPlane(opponent - hips.position, Vector3.up);
             front = front.sqrMagnitude > 1e-6f ? front.normalized : Vector3.back;
 
-            // Look from the side away from the opponent so their body never blocks the view.
-            Vector3 opponent = UnityEngine.Object.FindObjectsByType<SkinnedFigure>(FindObjectsInactive.Exclude)
-                .Where(f => f.transform != bone.root)
-                .Select(f => f.transform.Find("Hips").position)
-                .First();
             Vector3 side = Vector3.Cross(Vector3.up, front);
             Vector3 away = bone.position - opponent;
             if (Vector3.Dot(side, away) < 0f)

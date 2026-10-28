@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Threading.Tasks;
 using UnityEngine;
 using Wrestling.Core.Match;
 using Wrestling.Core.Rules;
@@ -26,34 +25,21 @@ namespace Wrestling.Presentation
         [SerializeField] private Font _font;
 
         [Header("Wrestlers")]
-        [SerializeField] private Material _bodyMaterial;
+        [SerializeField] private CharacterLibrary _characters;
         [SerializeField] private Color _redSinglet = new Color(0.80f, 0.08f, 0.10f);
         [SerializeField] private Color _blueSinglet = new Color(0.07f, 0.22f, 0.75f);
         [SerializeField] private Color _shoe = new Color(0.08f, 0.08f, 0.09f);
 
-        [Header("Body mesh")]
-        [SerializeField, Range(0.005f, 0.03f)] private float _bodyCellSize = 0.007f;
-        [SerializeField, Range(0.005f, 0.03f)] private float _mobileBodyCellSize = 0.012f;
 
         private readonly WrestlerFrame[] _shown = new WrestlerFrame[2];
-        private SkinnedFigure _redFigure;
-        private SkinnedFigure _blueFigure;
+        private WrestlerCharacter _redFigure;
+        private WrestlerCharacter _blueFigure;
         private Choreographer _choreographer;
         private GameContent _content;
         private BoutSession _session;
         private ulong _seed;
         private float _finishedFor;
         private bool _snapNextFrame;
-        private PreparedBout _next;
-
-        /// <summary>A bout set up ahead of time, with both bodies generating in the background.</summary>
-        private sealed class PreparedBout
-        {
-            public ulong Seed;
-            public BoutSession Session;
-            public Task<BodyMeshData> Red;
-            public Task<BodyMeshData> Blue;
-        }
 
         public BoutSession Session => _session;
 
@@ -95,37 +81,14 @@ namespace Wrestling.Presentation
 
         public void StartBout(ulong seed)
         {
-            if (_next == null || _next.Seed != seed)
-            {
-                PrepareBout(seed);
-            }
-
-            PreparedBout bout = _next;
-            _next = null;
             _seed = seed;
-            _session = bout.Session;
-            _redFigure = Figure(_redFigure, "Red", Corner.Red, _redSinglet, bout.Red.Result);
-            _blueFigure = Figure(_blueFigure, "Blue", Corner.Blue, _blueSinglet, bout.Blue.Result);
+            _session = new BoutSession(_content, _style, _level, seed);
+            _redFigure = Figure(_redFigure, "Red", Corner.Red, _redSinglet);
+            _blueFigure = Figure(_blueFigure, "Blue", Corner.Blue, _blueSinglet);
             _scoreboard.ResetFor(_session);
             _finishedFor = 0f;
             _snapNextFrame = true;
             Present(1f, 0f);
-        }
-
-        /// <summary>Sets up the next bout and starts generating both wrestlers' bodies on worker threads.</summary>
-        private void PrepareBout(ulong seed)
-        {
-            var session = new BoutSession(_content, _style, _level, seed);
-            float cell = Application.isMobilePlatform ? _mobileBodyCellSize : _bodyCellSize;
-            Task<BodyMeshData> Body(Corner corner)
-            {
-                var wrestler = session.WrestlerOf(corner);
-                var proportions = new BodyProportions(wrestler.Body);
-                var shape = new BodyShape(wrestler);
-                return Task.Run(() => BodyMeshBuilder.Build(proportions, shape, cell));
-            }
-
-            _next = new PreparedBout { Seed = seed, Session = session, Red = Body(Corner.Red), Blue = Body(Corner.Blue) };
         }
 
         /// <summary>Runs the bout forward without real time, then shows the result (used for stills and skipping).</summary>
@@ -150,11 +113,6 @@ namespace Wrestling.Presentation
 
             if (_session.Engine.IsFinished)
             {
-                if (_next == null)
-                {
-                    PrepareBout(_seed + 1);
-                }
-
                 _finishedFor += Time.deltaTime;
                 if (_finishedFor >= _pauseAfterResult)
                 {
@@ -199,8 +157,8 @@ namespace Wrestling.Presentation
             Pose blueBody = bluePose;
             PoseSolver.SolveArms(ref redPose, _redFigure.Body, redRole, _shown[0], in blueBody, engine.Grips.Of(Corner.Red));
             PoseSolver.SolveArms(ref bluePose, _blueFigure.Body, blueRole, _shown[1], in redBody, engine.Grips.Of(Corner.Blue));
-            _redFigure.Apply(in redPose);
-            _blueFigure.Apply(in bluePose);
+            _redFigure.Apply(in redPose, GripOn(engine, Corner.Red, GripSide.Left), GripOn(engine, Corner.Red, GripSide.Right));
+            _blueFigure.Apply(in bluePose, GripOn(engine, Corner.Blue, GripSide.Left), GripOn(engine, Corner.Blue, GripSide.Right));
 
             Vector3 focus = WrestlerFrame.OnMat((_shown[0].Position + _shown[1].Position) * 0.5f);
             bool grounded = engine.Position != BoutPosition.Neutral;
@@ -215,6 +173,9 @@ namespace Wrestling.Presentation
 
             _scoreboard.Refresh(_session);
         }
+
+        /// <summary>1 when the hand is holding a grip, so the fingers close around it.</summary>
+        private static float GripOn(BoutEngine engine, Corner corner, GripSide hand) => engine.Grips.IsHandFree(corner, hand) ? 0f : 1f;
 
         /// <summary>Eases the displayed frame towards the engine's so staging changes do not jump.</summary>
         private void Smooth(int index, WrestlerFrame target, float deltaTime)
@@ -232,34 +193,27 @@ namespace Wrestling.Presentation
             _shown[index].RollSide = target.RollSide;
         }
 
-        private SkinnedFigure Figure(SkinnedFigure existing, string figureName, Corner corner, Color singlet, BodyMeshData mesh)
+        private WrestlerCharacter Figure(WrestlerCharacter existing, string figureName, Corner corner, Color singlet)
         {
-            SkinnedFigure figure = existing;
+            WrestlerCharacter figure = existing;
             if (figure == null)
             {
-                var root = new GameObject(figureName + " wrestler");
-                figure = root.AddComponent<SkinnedFigure>();
+                figure = new GameObject(figureName + " wrestler").AddComponent<WrestlerCharacter>();
             }
 
             var wrestler = _session.WrestlerOf(corner);
-            var body = new BodyProportions(wrestler.Body);
-            var appearance = new Appearance(wrestler);
-            var material = new Material(_bodyMaterial) { name = figureName + " body" };
-            material.SetColor("_SkinColor", appearance.Skin);
-            material.SetColor("_HairColor", appearance.Hair);
-            material.SetColor("_SingletColor", singlet);
-            material.SetColor("_ShoeColor", _shoe);
-            figure.Build(body, mesh, new[] { material });
+            CharacterLibrary.CharacterBase characterBase = _characters.For(wrestler.Gender == Wrestling.Core.Wrestlers.Gender.Female);
+            figure.Build(characterBase, new WrestlerLook(wrestler, characterBase.Skins.Length), singlet);
             return figure;
         }
 
-        public void Configure(MatView mat, BroadcastCamera broadcastCamera, Scoreboard scoreboard, Font font, Material bodyMaterial)
+        public void Configure(MatView mat, BroadcastCamera broadcastCamera, Scoreboard scoreboard, Font font, CharacterLibrary characters)
         {
             _mat = mat;
             _camera = broadcastCamera;
             _scoreboard = scoreboard;
             _font = font;
-            _bodyMaterial = bodyMaterial;
+            _characters = characters;
         }
     }
 }

@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "base": "male",
+  "rig": "mixamo_unity",
+  "model": "Models/wrestler_male.fbx",
+  "shapeKeys": [
+    "Build_Heavy",
+    "Build_Light",
+    "Build_Muscular",
+    "Build_Soft",
+    "Face_Square",
+    "Face_Round",
+    "Face_Oval",
+    "Nose_Large",
+    "Nose_Hump",
+    "Nose_Broken",
+    "Chin_Prominent",
+    "Jaw_Wide",
+    "Cheekbones_High",
+    "Ears_Out"
+  ],
+  "body": "Human.001",
+  "skins": {
+    "young_caucasian_male": {
+      "diffuseTexture": "young_lightskinned_male_diffuse.png"
+    },
+    "young_african_male": {
+      "diffuseTexture": "young_darkskinned_male_diffuse.png"
+    },
+    "young_asian_male": {
+      "diffuseTexture": "young_lightskinned_male_diffuse3.png"
+    },
+    "middleage_caucasian_male": {
+      "diffuseTexture": "middleage_lightskinned_male_diffuse.png"
+    },
+    "mindfront_skin_male_african_middleage": {
+      "diffuseTexture": "skin_male_african_middleage.png",
+      "normalmapTexture": "skin_male_african_middleage_NRM.png",
+      "specularTexture": "skin_male_african_middleage_SPEC.png"
+    },
+    "mindfront_aksel_skin": {
+      "diffuseTexture": "Aksel_Skin_diffuse.png",
+      "normalmapTexture": "Aksel_Skin_NRM.png",
+      "specularTexture": "Aksel_Skin_SPEC.png"
+    },
+    "toigo_light_skin_male_bronze": {
+      "diffuseTexture": "young_lightskinned_male_diffuse_Bronze.png"
+    }
+  },
+  "parts": [
+    {
+      "object": "Human.eyebrow001.001",
+      "kind": "Eyebrows",
+      "textures": {
+        "baseColor": "eyebrow001.png",
+        "alpha": "eyebrow001.png"
+      }
+    },
+    {
+      "object": "Human.eyelashes01.001",
+      "kind": "Eyelashes",
+      "textures": {
+        "baseColor": "eyelashes01.png",
+        "alpha": "eyelashes01.png"
+      }
+    },
+    {
+      "object": "Human.low-poly.001",
+      "kind": "Eyes",
+      "textures": {
+        "baseColor": "brown_eye.png",
+        "alpha": "brown_eye.png"
+      }
+    },
+    {
+      "object": "Human.shoes05.001",
+      "kind": "Clothes",
+      "textures": {
+        "baseColor": "shoes05_diffuse.png",
+        "alpha": "shoes05_diffuse.png"
+      }
+    },
+    {
+      "object": "Human.short01.001",
+      "kind": "Hair",
+      "textures": {
+        "baseColor": "short01_diffuse.png",
+        "alpha": "short01_diffuse.png"
+      }
+    }
+  ],
+  "source": "MakeHuman / MPFB2 makehuman_system_assets (CC0)"
+}

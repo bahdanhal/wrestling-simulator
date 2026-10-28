@@ -78,7 +78,7 @@ namespace Wrestling.Editor
                 broadcast,
                 scoreboard,
                 Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"),
-                BodyMaterial());
+                CharacterLibraryBuilder.Build());
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
@@ -90,20 +90,6 @@ namespace Wrestling.Editor
         {
             Build();
             EditorApplication.Exit(0);
-        }
-
-        private static Material BodyMaterial()
-        {
-            const string path = MaterialFolder + "/WrestlerBody.mat";
-            Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
-            if (material == null)
-            {
-                EnsureFolders();
-                material = new Material(Shader.Find("Wrestling/Wrestler Body"));
-                AssetDatabase.CreateAsset(material, path);
-            }
-
-            return material;
         }
 
         private static void EnsureFolders()

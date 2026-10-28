@@ -27,9 +27,51 @@ namespace Wrestling.Presentation
             LimbRadius = Height * 0.032f;
             TorsoHalfWidth = Height * 0.095f;
             TorsoHalfDepth = Height * 0.065f;
+            ShoulderDrop = Height * 0.03f;
+        }
+
+        private BodyProportions(float height, float thigh, float shin, float torso, float neck, float shoulderHalfWidth, float shoulderDrop,
+            float hipHalfWidth, float upperArm, float forearm, float foot)
+        {
+            Height = height;
+            Thigh = thigh;
+            Shin = shin;
+            Torso = torso;
+            Neck = neck;
+            HeadRadius = height * 0.065f;
+            ShoulderHalfWidth = shoulderHalfWidth;
+            ShoulderDrop = shoulderDrop;
+            HipHalfWidth = hipHalfWidth;
+            UpperArm = upperArm;
+            Forearm = forearm;
+            Foot = foot;
+            LimbRadius = height * 0.032f;
+            TorsoHalfWidth = height * 0.095f;
+            TorsoHalfDepth = height * 0.065f;
+        }
+
+        /// <summary>Proportions measured from a character model's bind pose, so poses fit that model's limbs exactly.</summary>
+        public static BodyProportions FromBindPose(in Pose bind, float height)
+        {
+            Vector3 shoulderMid = (bind.ShoulderL + bind.ShoulderR) * 0.5f;
+            return new BodyProportions(
+                height,
+                thigh: Vector3.Distance(bind.HipL, bind.KneeL),
+                shin: Vector3.Distance(bind.KneeL, bind.AnkleL),
+                torso: Vector3.Distance(bind.Pelvis, bind.Neck),
+                neck: Vector3.Distance(bind.Neck, bind.Head) * 0.4f,
+                shoulderHalfWidth: Vector3.Distance(bind.ShoulderL, bind.ShoulderR) * 0.5f,
+                shoulderDrop: Mathf.Max(0f, Vector3.Dot(bind.Neck - shoulderMid, bind.Spine)),
+                hipHalfWidth: Vector3.Distance(bind.HipL, bind.HipR) * 0.5f,
+                upperArm: Vector3.Distance(bind.ShoulderL, bind.ElbowL),
+                forearm: Vector3.Distance(bind.ElbowL, bind.HandL),
+                foot: Vector3.Distance(bind.AnkleL, bind.ToeL) / 0.75f);
         }
 
         public float Height { get; }
+
+        /// <summary>How far the shoulder joints sit below the neck along the spine.</summary>
+        public float ShoulderDrop { get; }
 
         public float Thigh { get; }
 
@@ -384,7 +426,7 @@ namespace Wrestling.Presentation
             pose.Spine = (pose.Neck - pose.Pelvis).normalized;
             pose.Head = pose.Neck + (pose.Spine * (body.Neck + body.HeadRadius)) - (Vector3.up * (bridge ? 0.18f : 0f));
             KeepAboveMat(ref pose.Head, body.HeadRadius);
-            Vector3 shoulderBase = pose.Neck - (pose.Spine * (body.Height * 0.03f));
+            Vector3 shoulderBase = pose.Neck - (pose.Spine * body.ShoulderDrop);
             pose.ShoulderL = shoulderBase + (pose.Left * body.ShoulderHalfWidth);
             pose.ShoulderR = shoulderBase - (pose.Left * body.ShoulderHalfWidth);
             KeepAboveMat(ref pose.ShoulderL, body.LimbRadius);
@@ -504,7 +546,7 @@ namespace Wrestling.Presentation
             pose.Neck = pose.Pelvis + (pose.Spine * body.Torso);
             Vector3 headDirection = (pose.Spine + (Vector3.up * 0.6f)).normalized;
             pose.Head = pose.Neck + (headDirection * (body.Neck + body.HeadRadius));
-            Vector3 shoulderBase = pose.Neck - (pose.Spine * (body.Height * 0.03f));
+            Vector3 shoulderBase = pose.Neck - (pose.Spine * body.ShoulderDrop);
             pose.ShoulderL = shoulderBase + (pose.Left * body.ShoulderHalfWidth);
             pose.ShoulderR = shoulderBase - (pose.Left * body.ShoulderHalfWidth);
         }

@@ -63,9 +63,19 @@ Stills of notable moments from real bouts are written to `docs/images/` by **Wre
 
 ![Freestyle fireman's carry](docs/images/bout-freestyle-throw.png)
 
-Each wrestler's body mesh is generated from their measurements at bout start; move animation comes from `data/animation/` (one file per technique, one clip per phase).
+Wrestlers are MakeHuman (CC0) characters, scaled and shaped per wrestler with blend shapes; move animation comes from `data/animation/` (one file per technique, one clip per phase).
 
 Player builds copy `data/` into StreamingAssets automatically (`ContentBuildStep`).
+
+## Character models
+
+The wrestler models in `unity/WrestlingSimulator/Assets/Characters` are built from MakeHuman CC0 assets with Blender and the MPFB2 extension. To rebuild them, install Blender 4.2+ and MPFB2, install the `makehuman_system_assets`, `skins01` and `skins02` asset packs (`tools/characters/install_assets.py`), then:
+
+```bash
+/Applications/Blender.app/Contents/MacOS/Blender --background --python tools/characters/build_wrestlers.py -- unity/WrestlingSimulator/Assets/Characters
+```
+
+Then run **Wrestling → Build Character Library** in Unity (the scene builder does this too).
 
 ## Determinism check
 

@@ -46,7 +46,7 @@ The full game design document is [docs/game-design.md](docs/game-design.md). It 
 - **Active ragdoll** (physics muscles following the animation) for balance loss, landings and scrambles.
 - Motion capture is recorded per phase, including counters and transitions.
 - Gesture input gives the defending player reactive windows during the opponent's entry and flight.
-- Current implementation: bodies are generated per wrestler (`BodyMeshBuilder`, Humanoid-named rig) and each technique phase has a keyframed paired clip in `data/animation/` under the phase's `animation` id. Motion capture replaces clips under the same ids; every phase must keep a clip (the content loader enforces it).
+- Characters: MakeHuman (CC0) models built by `tools/characters/build_wrestlers.py` in Blender with MPFB2, exported to `unity/WrestlingSimulator/Assets/Characters` (Mixamo-named rig, build and face blend shapes). Rebuild them with the script, never by hand. Each technique phase has a keyframed paired clip in `data/animation/` under the phase's `animation` id. Motion capture replaces clips under the same ids; every phase must keep a clip (the content loader enforces it).
 
 ## Tech stack (decided)
 

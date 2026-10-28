@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95801f5b7584f467881f0882cb9b3d73, type: 3}
+  m_Name: CharacterLibrary
+  m_EditorClassIdentifier: Wrestling.Presentation::Wrestling.Presentation.CharacterLibrary
+  Male:
+    Name: male
+    Model: {fileID: 919132149155446097, guid: f9f5870bcf30d4663894046572ab8c5e, type: 3}
+    Body: {fileID: 2100000, guid: c7ca9abbe77ba4266ba053fd30e019c2, type: 2}
+    PartNames:
+    - Human.eyebrow001.001
+    - Human.eyelashes01.001
+    - Human.low-poly.001
+    - Human.shoes05.001
+    - Human.short01.001
+    PartMaterials:
+    - {fileID: 2100000, guid: 8708e7ba0dcf84c3ca3cc73b60ae74d0, type: 2}
+    - {fileID: 2100000, guid: 700512ba092194dbeab2efb2a89820de, type: 2}
+    - {fileID: 2100000, guid: 31ea63c600b1d49eea11c556541413b4, type: 2}
+    - {fileID: 2100000, guid: 8e190fa322216446f8aa660f3b5a01be, type: 2}
+    - {fileID: 2100000, guid: 21c25366eab1a401d828cc5704e70c2b, type: 2}
+    Skins:
+    - Name: young_caucasian_male
+      Albedo: {fileID: 2800000, guid: 61344fdec0afb40aab5950db3d36e355, type: 3}
+      Normal: {fileID: 0}
+    - Name: young_african_male
+      Albedo: {fileID: 2800000, guid: 3b1bb45d5eb90446a84456e197f5af36, type: 3}
+      Normal: {fileID: 0}
+    - Name: young_asian_male
+      Albedo: {fileID: 2800000, guid: ea624251f16a44a9d9c9f8ee3685712d, type: 3}
+      Normal: {fileID: 0}
+    - Name: middleage_caucasian_male
+      Albedo: {fileID: 2800000, guid: 40824500e04614f58bbd3218190a087a, type: 3}
+      Normal: {fileID: 0}
+    - Name: mindfront_skin_male_african_middleage
+      Albedo: {fileID: 2800000, guid: c6ba023ec196d4da4b809f1de5f60f58, type: 3}
+      Normal: {fileID: 2800000, guid: 26f229910c60c44e996919a75402806d, type: 3}
+    - Name: mindfront_aksel_skin
+      Albedo: {fileID: 2800000, guid: 85f3bd2bd7ca4413782cd50ca69b8184, type: 3}
+      Normal: {fileID: 2800000, guid: 8c9d8d2d4b9154c9093c10cd01527721, type: 3}
+    - Name: toigo_light_skin_male_bronze
+      Albedo: {fileID: 2800000, guid: da7ec06be0eb543188a2b0fbb6561371, type: 3}
+      Normal: {fileID: 0}
+  Female:
+    Name: female
+    Model: {fileID: 919132149155446097, guid: 7e3c9e37279234e07be470fbd3fa06db, type: 3}
+    Body: {fileID: 2100000, guid: d9feb4e72f9c2442abcf24f248e04ab9, type: 2}
+    PartNames:
+    - Human.eyebrow010.001
+    - Human.eyelashes01.001
+    - Human.low-poly.001
+    - Human.ponytail01.001
+    - Human.shoes05.001
+    PartMaterials:
+    - {fileID: 2100000, guid: 83a9f612120414ba89d02f4293c7ea3d, type: 2}
+    - {fileID: 2100000, guid: d64f5f22ad7b94052ba40bf850614fee, type: 2}
+    - {fileID: 2100000, guid: a384704c4edf1414bbf86598a54f5b94, type: 2}
+    - {fileID: 2100000, guid: 5912315b6a9f947af88a1b596c030878, type: 2}
+    - {fileID: 2100000, guid: b23618f9b77d042d99d2c8e1dea99d00, type: 2}
+    Skins:
+    - Name: young_caucasian_female
+      Albedo: {fileID: 2800000, guid: c1ba0204dcc804047bd860ed0c17874e, type: 3}
+      Normal: {fileID: 0}
+    - Name: young_african_female
+      Albedo: {fileID: 2800000, guid: 9358fe7981e3b4b5d91e22a41a76a0fe, type: 3}
+      Normal: {fileID: 0}
+    - Name: young_asian_female
+      Albedo: {fileID: 2800000, guid: 99d23fd3a791b4137a3e01d3f340fcc8, type: 3}
+      Normal: {fileID: 0}
+    - Name: middleage_caucasian_female
+      Albedo: {fileID: 2800000, guid: c44f59f4b4003423aae26316b8170e6d, type: 3}
+      Normal: {fileID: 0}
+    - Name: callharvey3d_midtoned_female
+      Albedo: {fileID: 2800000, guid: 6f78089fdaa814369ba925122ccfc782, type: 3}
+      Normal: {fileID: 0}
+    - Name: toigo_light_skin_female_bronze
+      Albedo: {fileID: 2800000, guid: 993f3bee6fc994475a8140b57be39ba0, type: 3}
+      Normal: {fileID: 0}
