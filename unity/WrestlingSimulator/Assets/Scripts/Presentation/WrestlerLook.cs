@@ -24,6 +24,7 @@ namespace Wrestling.Presentation
             Female = wrestler.Gender == Gender.Female;
             Skin = skinCount > 0 ? (int)(hash % (uint)skinCount) : 0;
             HeightMetres = wrestler.Body.HeightCm / 100f;
+            MassKg = wrestler.Body.NaturalWeightKg.ToFloat();
 
             var weights = new Dictionary<string, float>();
             float height = HeightMetres;
@@ -51,6 +52,8 @@ namespace Wrestling.Presentation
         public int Skin { get; }
 
         public float HeightMetres { get; }
+
+        public float MassKg { get; }
 
         /// <summary>Blend-shape weights 0–1 by shape-key name.</summary>
         public IReadOnlyDictionary<string, float> ShapeWeights { get; }

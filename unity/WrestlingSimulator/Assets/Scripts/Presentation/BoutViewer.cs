@@ -41,6 +41,14 @@ namespace Wrestling.Presentation
         private ulong _seed;
         private float _finishedFor;
         private bool _snapNextFrame;
+        private readonly float[] _previousAnchor = new float[2];
+        private readonly GroundState[] _previousGround = new GroundState[2];
+
+        /// <summary>Physics substep for the ragdolls (display only).</summary>
+        private const float PhysicsStep = 1f / 120f;
+
+        /// <summary>Ticks of real-time presentation run before a fast-forwarded frame, so falls are in motion.</summary>
+        private const int FastForwardWarmUp = 45;
 
         public BoutSession Session => _session;
 
@@ -76,6 +84,7 @@ namespace Wrestling.Presentation
         {
             _content = content;
             _choreographer = new Choreographer(content.Animations);
+            Physics.simulationMode = SimulationMode.Script;
             _mat.Build(content.Rules.Mat);
             _scoreboard.Build(_font);
         }
@@ -95,7 +104,8 @@ namespace Wrestling.Presentation
         /// <summary>Runs the bout forward without real time, then shows the result (used for stills and skipping).</summary>
         public void FastForward(int ticks)
         {
-            _session.StepTicks(ticks);
+            int warmUp = Mathf.Min(FastForwardWarmUp, ticks);
+            _session.StepTicks(ticks - warmUp);
             foreach (BoutEvent e in _session.TakeNewEvents())
             {
                 _scoreboard.Push(e, _session);
@@ -103,6 +113,19 @@ namespace Wrestling.Presentation
 
             _snapNextFrame = true;
             Present(1f, 0f);
+
+            // The last ticks play as they would live, so ragdoll falls have their motion.
+            const float tickSeconds = 1f / BoutClock.TicksPerSecond;
+            for (int i = 0; i < warmUp; i++)
+            {
+                _session.StepTicks(1);
+                foreach (BoutEvent e in _session.TakeNewEvents())
+                {
+                    _scoreboard.Push(e, _session);
+                }
+
+                Present(1f, tickSeconds);
+            }
         }
 
         private void Update()
@@ -145,6 +168,7 @@ namespace Wrestling.Presentation
             _choreographer.Apply(engine, ref red, ref blue, alpha);
             Smooth(0, red, deltaTime);
             Smooth(1, blue, deltaTime);
+            bool snapped = _snapNextFrame;
             _snapNextFrame = false;
 
             PoseRole redRole = Staging.RoleOf(Corner.Red, engine.Position, engine.Top);
@@ -183,6 +207,7 @@ namespace Wrestling.Presentation
             PoseSolver.SolveArms(ref bluePose, _blueFigure.Body, blueRole, _shown[1], in redBody, engine.Grips.Of(Corner.Blue));
             _redFigure.Apply(in redPose, GripOn(engine, Corner.Red, GripSide.Left), GripOn(engine, Corner.Red, GripSide.Right));
             _blueFigure.Apply(in bluePose, GripOn(engine, Corner.Blue, GripSide.Left), GripOn(engine, Corner.Blue, GripSide.Right));
+            SimulateFalls(deltaTime, snapped);
 
             Vector3 focus = WrestlerFrame.OnMat((_shown[0].Position + _shown[1].Position) * 0.5f);
             bool grounded = engine.Position != BoutPosition.Neutral;
@@ -196,6 +221,52 @@ namespace Wrestling.Presentation
             }
 
             _scoreboard.Refresh(_session);
+        }
+
+        /// <summary>
+        /// Starts a ragdoll fall when a thrown wrestler is let go (the clip's hold weakens) or when a
+        /// wrestler goes from their feet to lying on the mat; then steps the physics and blends the
+        /// bones. With no elapsed time (snapshots) the bodies just follow the animation.
+        /// </summary>
+        private void SimulateFalls(float deltaTime, bool snapped)
+        {
+            WrestlerCharacter[] figures = { _redFigure, _blueFigure };
+            for (int i = 0; i < 2; i++)
+            {
+                float anchor = _choreographer.Anchors[i].Weight;
+                GroundState ground = _shown[i].Ground;
+                bool released = _previousAnchor[i] >= 0.95f && anchor < 0.95f;
+                bool wasUp = _previousGround[i] == GroundState.Standing || _previousGround[i] == GroundState.OneKnee;
+                bool landedLying = ground == GroundState.Prone || ground == GroundState.Supine || ground == GroundState.Bridge;
+                if (deltaTime > 0f && !snapped)
+                {
+                    if (released)
+                    {
+                        figures[i].Ragdoll.Fall(0.9f, deltaTime, figures[1 - i].Ragdoll);
+                    }
+                    else if (wasUp && landedLying)
+                    {
+                        figures[i].Ragdoll.Fall(0.6f, deltaTime);
+                    }
+                }
+
+                _previousAnchor[i] = anchor;
+                _previousGround[i] = ground;
+            }
+
+            _redFigure.Ragdoll.BeforeStep(deltaTime);
+            _blueFigure.Ragdoll.BeforeStep(deltaTime);
+            if (deltaTime > 0f && (_redFigure.Ragdoll.Weight > 0f || _blueFigure.Ragdoll.Weight > 0f))
+            {
+                int steps = Mathf.Clamp(Mathf.RoundToInt(deltaTime / PhysicsStep), 1, 8);
+                for (int s = 0; s < steps; s++)
+                {
+                    Physics.Simulate(deltaTime / steps);
+                }
+            }
+
+            _redFigure.Ragdoll.AfterStep();
+            _blueFigure.Ragdoll.AfterStep();
         }
 
         /// <summary>

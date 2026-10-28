@@ -7,7 +7,8 @@ namespace Wrestling.Presentation
     /// <summary>
     /// Arranges the two figures for ground positions. The engine tracks who is on top and each
     /// body's state but not the exact relative placement on the ground, so the display puts the top
-    /// wrestler at the bottom wrestler's side (par terre) or across the chest (danger position).
+    /// wrestler at the bottom wrestler's side (par terre) or across the chest (danger position), and
+    /// scrambles on the mat.
     /// Display only: nothing here feeds back into the simulation.
     /// </summary>
     public static class Staging
@@ -33,6 +34,14 @@ namespace Wrestling.Presentation
         /// </summary>
         public static void Arrange(ref WrestlerFrame red, ref WrestlerFrame blue, BoutPosition position, Corner? top, Vector2 viewDirection)
         {
+            if (position == BoutPosition.Scramble)
+            {
+                // A scramble is fought on the mat: both on hands and knees, fighting for position.
+                Scramble(ref red);
+                Scramble(ref blue);
+                return;
+            }
+
             if (top == null || (position != BoutPosition.ParTerre && position != BoutPosition.Danger))
             {
                 return;
@@ -46,6 +55,17 @@ namespace Wrestling.Presentation
             {
                 Arrange(ref blue, ref red, position, viewDirection);
             }
+        }
+
+        private static void Scramble(ref WrestlerFrame frame)
+        {
+            if (frame.Ground == GroundState.Standing)
+            {
+                frame.Ground = GroundState.BothKnees;
+            }
+
+            frame.Level = Mathf.Min(frame.Level, 0.35f);
+            frame.Posture = Mathf.Min(frame.Posture, 0.3f);
         }
 
         private static void Arrange(ref WrestlerFrame upper, ref WrestlerFrame bottom, BoutPosition position, Vector2 viewDirection)

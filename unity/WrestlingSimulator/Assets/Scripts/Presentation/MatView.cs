@@ -20,6 +20,17 @@ namespace Wrestling.Presentation
 
         public const float MatThickness = 0.06f;
 
+        private static PhysicsMaterial _matSurface;
+
+        private static PhysicsMaterial MatSurface => _matSurface != null ? _matSurface : (_matSurface = new PhysicsMaterial("Mat")
+        {
+            dynamicFriction = 0.8f,
+            staticFriction = 0.9f,
+            bounciness = 0.05f,
+            frictionCombine = PhysicsMaterialCombine.Maximum,
+            bounceCombine = PhysicsMaterialCombine.Minimum,
+        });
+
         [SerializeField] private Material _centralSurface;
         [SerializeField] private Material _passivityZone;
         [SerializeField] private Material _protectionArea;
@@ -78,7 +89,8 @@ namespace Wrestling.Presentation
         {
             GameObject part = GameObject.CreatePrimitive(PrimitiveType.Cube);
             part.name = partName;
-            DestroyImmediateOrLater(part.GetComponent<Collider>());
+            // The mat and platform are solid for falling bodies: grippy, with almost no bounce.
+            part.GetComponent<Collider>().sharedMaterial = MatSurface;
             part.transform.SetParent(transform, false);
             part.transform.localPosition = centre;
             part.transform.localScale = size;

@@ -12,6 +12,9 @@ namespace Wrestling.Presentation
         private GameObject _model;
         private Material _body;
         private CharacterRig _rig;
+        private ActiveRagdoll _ragdoll;
+
+        public ActiveRagdoll Ragdoll => _ragdoll;
 
         public BodyProportions Body => _rig.Body;
 
@@ -74,6 +77,7 @@ namespace Wrestling.Presentation
             }
 
             _rig = new CharacterRig(transform);
+            _ragdoll = new ActiveRagdoll(_rig.Find, look.HeightMetres, look.MassKg, name);
         }
 
         public void Apply(in Pose pose, float leftGrip, float rightGrip) => _rig.Apply(in pose, leftGrip, rightGrip);
@@ -88,6 +92,8 @@ namespace Wrestling.Presentation
                 _model = null;
             }
 
+            _ragdoll?.Destroy();
+            _ragdoll = null;
             if (_body != null)
             {
                 DestroyNow(_body);

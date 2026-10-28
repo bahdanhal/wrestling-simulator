@@ -263,7 +263,7 @@ namespace Wrestling.Editor
             }
         }
 
-        /// <summary>Six frames, eight ticks apart, tiled 3 × 2 into one image.</summary>
+        /// <summary>Six frames, eleven ticks apart (through the landing), tiled 3 × 2 into one image.</summary>
         private static void CaptureSequence(BoutViewer viewer, Camera camera, string file)
         {
             const int columns = 3;
@@ -284,7 +284,7 @@ namespace Wrestling.Editor
             {
                 for (int frame = 0; frame < columns * rows; frame++)
                 {
-                    viewer.FastForward(frame == 0 ? 1 : 8);
+                    viewer.FastForward(frame == 0 ? 1 : 11);
                     camera.targetTexture = target;
                     Canvas.ForceUpdateCanvases();
                     camera.Render();

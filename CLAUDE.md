@@ -43,7 +43,7 @@ The full game design document is [docs/game-design.md](docs/game-design.md). It 
 
 - Short paired segments per phase (about 0.3–1 s), not full-move clips, stitched with **motion matching** so any phase can flow into any valid next phase from the current pose.
 - **IK contact constraints** keep hands on real grip points and bodies in contact.
-- **Active ragdoll** (physics muscles following the animation) for balance loss, landings and scrambles.
+- **Active ragdoll** (physics muscles following the animation) for balance loss, landings and scrambles. Implemented in `ActiveRagdoll` (Unity PhysX, scripted stepping); it is presentation only and must never feed back into the simulation.
 - Motion capture is recorded per phase, including counters and transitions.
 - Gesture input gives the defending player reactive windows during the opponent's entry and flight.
 - Characters: MakeHuman (CC0) models built by `tools/characters/build_wrestlers.py` in Blender with MPFB2, exported to `unity/WrestlingSimulator/Assets/Characters` (Mixamo-named rig, build and face blend shapes). Rebuild them with the script, never by hand. Each technique phase has a keyframed paired clip in `data/animation/` under the phase's `animation` id. Motion capture replaces clips under the same ids; every phase must keep a clip (the content loader enforces it).

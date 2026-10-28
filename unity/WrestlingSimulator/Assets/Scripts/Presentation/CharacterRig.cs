@@ -42,6 +42,7 @@ namespace Wrestling.Presentation
         private readonly Vector3[] _positions = new Vector3[Skeleton.BoneCount];
         private readonly Quaternion[] _rotations = new Quaternion[Skeleton.BoneCount];
         private readonly Transform _spine1;
+        private readonly Dictionary<string, Transform> _byName = new Dictionary<string, Transform>(StringComparer.Ordinal);
         private readonly Vector3 _pelvisToHips;
         private readonly List<(Transform Bone, Quaternion Bind, Vector3 Axis, float Scale)> _leftFingers = new List<(Transform, Quaternion, Vector3, float)>();
         private readonly List<(Transform Bone, Quaternion Bind, Vector3 Axis, float Scale)> _rightFingers = new List<(Transform, Quaternion, Vector3, float)>();
@@ -49,7 +50,7 @@ namespace Wrestling.Presentation
         /// <param name="root">The character's root (scaled to the wrestler's height, in its bind pose).</param>
         public CharacterRig(Transform root)
         {
-            var byName = new Dictionary<string, Transform>(StringComparer.Ordinal);
+            var byName = _byName;
             foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
             {
                 byName[t.name.StartsWith(Prefix, StringComparison.Ordinal) ? t.name.Substring(Prefix.Length) : t.name] = t;
@@ -82,6 +83,10 @@ namespace Wrestling.Presentation
             CollectFingers(byName, "Left", _leftFingers, _bones[(int)Bone.LeftHand]);
             CollectFingers(byName, "Right", _rightFingers, _bones[(int)Bone.RightHand]);
         }
+
+        /// <summary>A rig bone by its Mixamo name without the prefix (for example "LeftForeArm").</summary>
+        public Transform Find(string name) =>
+            _byName.TryGetValue(name, out Transform bone) ? bone : throw new InvalidOperationException($"Character rig has no bone '{name}'.");
 
         /// <summary>The model's bind pose as joint positions (world space at build time).</summary>
         public Pose Bind { get; }
