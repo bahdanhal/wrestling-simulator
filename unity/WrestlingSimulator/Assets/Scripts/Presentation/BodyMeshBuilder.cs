@@ -43,18 +43,16 @@ namespace Wrestling.Presentation
     }
 
     /// <summary>
-    /// Generates a wrestler's body as one smooth skinned mesh: anatomical volumes on each bone,
-    /// blended into a signed distance field, polygonised with surface nets, skinned to the
-    /// <see cref="Skeleton"/> and split into skin, singlet, shoe and hair materials. Every body is
-    /// built from the wrestler's own measurements.
+    /// Generates a wrestler's body as one smooth skinned mesh: anatomical volumes on each bone
+    /// blended into a signed distance field, polygonised with surface
+    /// nets and skinned to the <see cref="Skeleton"/>. Vertex colours hold smooth singlet, shoe and
+    /// hair masks and UV1 holds the head-space position for the face, both read by the
+    /// "Wrestling/Wrestler Body" shader. Every body is built from the wrestler's own measurements.
     /// </summary>
     public static class BodyMeshBuilder
     {
-        public const int SkinSubmesh = 0;
-        public const int SingletSubmesh = 1;
-        public const int ShoeSubmesh = 2;
-        public const int HairSubmesh = 3;
-        private const int SubmeshCount = 4;
+        /// <summary>Signed distances in metres map to mask values 0.5 ± distance / this range.</summary>
+        private const float MaskRange = 0.08f;
 
         private static readonly int[,] CubeEdges =
         {
@@ -161,18 +159,33 @@ namespace Wrestling.Presentation
             Add(Bone.Spine, Y(0f), Y(lengths[(int)Bone.Spine]), 0.068f * h * g, 0.075f * h * g, 1.3f, 0.85f);
             Add(Bone.Chest, Y(0f), Y(lengths[(int)Bone.Chest] * 0.8f), 0.078f * h * g, 0.084f * h * g, chestWidth, 0.78f);
             Add(Bone.Neck, Y(-0.03f * h), Y(lengths[(int)Bone.Neck]), 0.034f * h * g, 0.031f * h * g, 1.1f, 1f);
-            Add(Bone.Head, Y(-0.02f * h), Y(0.02f * h), 0.058f * h, 0.058f * h, 0.95f, 1.1f);
-            Add(Bone.Head, Y(-0.03f * h, 0.018f * h), Y(-0.048f * h, 0.035f * h), 0.03f * h, 0.026f * h);
-            Add(Bone.Head, Y(-0.002f * h, 0.062f * h), Y(-0.012f * h, 0.068f * h), 0.009f * h, 0.008f * h);
-            Add(Bone.Head, new Vector3(0.054f * h, 0f, 0f), new Vector3(0.054f * h, -0.012f * h, 0f), 0.016f * h, 0.013f * h, 0.6f, 1f);
-            Add(Bone.Head, new Vector3(-0.054f * h, 0f, 0f), new Vector3(-0.054f * h, -0.012f * h, 0f), 0.016f * h, 0.013f * h, 0.6f, 1f);
+            Vector3 H(float x, float y, float z) => new Vector3(x * h, y * h, z * h);
+            float chestLength = lengths[(int)Bone.Chest];
+            foreach (float side in new[] { -1f, 1f })
+            {
+                // Trapezius from the neck to the shoulder.
+                Add(Bone.Chest, new Vector3(side * 0.03f * h, chestLength * 0.92f, -0.008f * h), new Vector3(side * 0.085f * h, chestLength * 0.82f, -0.004f * h), 0.03f * h * g, 0.026f * h * g);
+            }
+
+            Add(Bone.Head, H(0f, -0.02f, 0f), H(0f, 0.02f, 0f), 0.058f * h, 0.058f * h, 0.95f, 1.1f);
+            Add(Bone.Head, H(0f, -0.03f, 0.01f), H(0f, -0.05f, 0.03f), 0.032f * h, 0.024f * h, 1.15f, 1f);
+            Add(Bone.Head, H(0f, -0.058f, 0.042f), H(0f, -0.058f, 0.042f), 0.013f * h, 0.013f * h);
+            Add(Bone.Head, H(-0.028f, 0.014f, 0.05f), H(0.028f, 0.014f, 0.05f), 0.01f * h, 0.01f * h);
+            Add(Bone.Head, H(0f, 0.006f, 0.06f), H(0f, -0.012f, 0.071f), 0.007f * h, 0.011f * h);
+            foreach (float side in new[] { -1f, 1f })
+            {
+                Add(Bone.Head, H(side * 0.032f, -0.004f, 0.045f), H(side * 0.032f, -0.004f, 0.045f), 0.014f * h, 0.014f * h);
+                Add(Bone.Head, H(side * 0.054f, 0f, 0f), H(side * 0.054f, -0.012f, 0f), 0.016f * h, 0.013f * h, 0.6f, 1f);
+            }
 
             foreach ((Bone upper, Bone lower, Bone hand) in new[] { (Bone.LeftUpperArm, Bone.LeftLowerArm, Bone.LeftHand), (Bone.RightUpperArm, Bone.RightLowerArm, Bone.RightHand) })
             {
                 Add(upper, Y(0.005f * h), Y(0.015f * h), 0.045f * h * g, 0.042f * h * g);
                 Add(upper, Y(0f), Y(lengths[(int)upper]), 0.038f * h * g, 0.03f * h * g);
                 Add(lower, Y(0f), Y(lengths[(int)lower]), 0.03f * h * g, 0.021f * h, 1.15f, 0.85f);
-                Add(hand, Y(0f), Y(0.07f * h), 0.022f * h, 0.017f * h, 1.4f, 0.6f);
+                Add(hand, Y(0f), Y(0.055f * h), 0.022f * h, 0.02f * h, 1.35f, 0.55f);
+                Add(hand, Y(0.05f * h, 0.004f * h), Y(0.085f * h, 0.012f * h), 0.016f * h, 0.011f * h, 1.3f, 0.5f);
+                Add(hand, Y(0.01f * h, 0.015f * h), Y(0.045f * h, 0.022f * h), 0.009f * h, 0.008f * h);
             }
 
             foreach ((Bone upper, Bone lower, Bone foot) in new[] { (Bone.LeftUpperLeg, Bone.LeftLowerLeg, Bone.LeftFoot), (Bone.RightUpperLeg, Bone.RightLowerLeg, Bone.RightFoot) })
@@ -311,19 +324,28 @@ namespace Wrestling.Presentation
 
             var normals = new Vector3[vertices.Count];
             var weights = new BoneWeight[vertices.Count];
-            var regions = new int[vertices.Count];
+            var masks = new List<Color>(vertices.Count);
+            var head = new List<Vector4>(vertices.Count);
             for (int i = 0; i < vertices.Count; i++)
             {
                 normals[i] = field.Normal(vertices[i], cell * 0.5f);
-                (weights[i], regions[i]) = Skin(field, vertices[i], body, lengths, worldToBone);
+                (BoneWeight weight, List<(int Bone, float Weight)> influences) = Skin(field, vertices[i]);
+                weights[i] = weight;
+                masks.Add(Masks(vertices[i], influences, body, lengths, worldToBone));
+                float headWeight = 0f;
+                foreach ((int bone, float w) in influences)
+                {
+                    if (bone == (int)Bone.Head)
+                    {
+                        headWeight = w;
+                    }
+                }
+
+                Vector3 local = worldToBone[(int)Bone.Head].MultiplyPoint3x4(vertices[i]) / body.Height;
+                head.Add(new Vector4(local.x, local.y, local.z, headWeight));
             }
 
-            var submeshes = new List<int>[SubmeshCount];
-            for (int i = 0; i < SubmeshCount; i++)
-            {
-                submeshes[i] = new List<int>();
-            }
-
+            var triangles = new List<int>();
             int CellAt(int x, int y, int z) => (x < 0 || y < 0 || z < 0 || x >= cx || y >= cy || z >= nz - 1) ? -1 : cellVertex[x + (cx * (y + (cy * z)))];
 
             void Quad(int a, int b, int c, int d)
@@ -340,20 +362,12 @@ namespace Wrestling.Presentation
                     (b, d) = (d, b);
                 }
 
-                Triangle(a, b, c);
-                Triangle(a, c, d);
-            }
-
-            // Each triangle takes the material of its centre, so region borders follow the surface at half-cell detail.
-            void Triangle(int a, int b, int c)
-            {
-                int region = regions[a] == regions[b] && regions[b] == regions[c]
-                    ? regions[a]
-                    : Skin(field, (vertices[a] + vertices[b] + vertices[c]) / 3f, body, lengths, worldToBone).Region;
-                List<int> target = submeshes[region];
-                target.Add(a);
-                target.Add(b);
-                target.Add(c);
+                triangles.Add(a);
+                triangles.Add(b);
+                triangles.Add(c);
+                triangles.Add(a);
+                triangles.Add(c);
+                triangles.Add(d);
             }
 
             for (int z = 0; z < nz; z++)
@@ -384,19 +398,16 @@ namespace Wrestling.Presentation
             var mesh = new Mesh { name = "Wrestler body", indexFormat = IndexFormat.UInt32 };
             mesh.SetVertices(vertices);
             mesh.SetNormals(normals);
+            mesh.SetColors(masks);
+            mesh.SetUVs(1, head);
             mesh.boneWeights = weights;
-            mesh.subMeshCount = SubmeshCount;
-            for (int i = 0; i < SubmeshCount; i++)
-            {
-                mesh.SetTriangles(submeshes[i], i);
-            }
-
+            mesh.SetTriangles(triangles, 0);
             mesh.RecalculateBounds();
             return mesh;
         }
 
-        /// <summary>Up to four bone weights from distance to each bone's volumes, and the material region.</summary>
-        private static (BoneWeight Weight, int Region) Skin(Field field, Vector3 point, BodyProportions body, float[] lengths, Matrix4x4[] worldToBone)
+        /// <summary>Up to four bone weights from distance to each bone's volumes (softened so joints bend smoothly).</summary>
+        private static (BoneWeight Weight, List<(int Bone, float Weight)> Influences) Skin(Field field, Vector3 point)
         {
             var best = new float[Skeleton.BoneCount];
             for (int i = 0; i < best.Length; i++)
@@ -422,11 +433,11 @@ namespace Wrestling.Presentation
                 }
             }
 
-            const float falloff = 0.012f;
+            const float falloff = 0.022f;
             var chosen = new List<(int Bone, float Weight)>();
             for (int i = 0; i < best.Length; i++)
             {
-                if (best[i] - best[closest] < falloff * 5f)
+                if (best[i] - best[closest] < falloff * 4f)
                 {
                     chosen.Add((i, Mathf.Exp(-(best[i] - best[closest]) / falloff)));
                 }
@@ -447,73 +458,115 @@ namespace Wrestling.Presentation
             var weight = new BoneWeight();
             for (int i = 0; i < chosen.Count; i++)
             {
-                float w = chosen[i].Weight / total;
+                chosen[i] = (chosen[i].Bone, chosen[i].Weight / total);
                 switch (i)
                 {
                     case 0:
                         weight.boneIndex0 = chosen[i].Bone;
-                        weight.weight0 = w;
+                        weight.weight0 = chosen[i].Weight;
                         break;
                     case 1:
                         weight.boneIndex1 = chosen[i].Bone;
-                        weight.weight1 = w;
+                        weight.weight1 = chosen[i].Weight;
                         break;
                     case 2:
                         weight.boneIndex2 = chosen[i].Bone;
-                        weight.weight2 = w;
+                        weight.weight2 = chosen[i].Weight;
                         break;
                     default:
                         weight.boneIndex3 = chosen[i].Bone;
-                        weight.weight3 = w;
+                        weight.weight3 = chosen[i].Weight;
                         break;
                 }
             }
 
-            return (weight, Region((Bone)closest, worldToBone[closest].MultiplyPoint3x4(point), lengths[closest], body));
+            return (weight, chosen);
         }
 
-        /// <summary>Material region from the dominant bone and the point in that bone's space.</summary>
-        private static int Region(Bone bone, Vector3 local, float length, BodyProportions body)
+        /// <summary>
+        /// Singlet, shoe and hair masks: each bone's signed distance to the region border (metres,
+        /// positive inside), blended by skin weight so borders run smoothly across joints.
+        /// </summary>
+        private static Color Masks(Vector3 point, List<(int Bone, float Weight)> influences, BodyProportions body, float[] lengths, Matrix4x4[] worldToBone)
         {
+            float singlet = 0f;
+            float shoe = 0f;
+            float hair = 0f;
+            foreach ((int bone, float weight) in influences)
+            {
+                Vector3 local = worldToBone[bone].MultiplyPoint3x4(point);
+                (float s, float f, float h) = RegionDistances((Bone)bone, local, lengths[bone], body);
+                if ((Bone)bone == Bone.Neck || (Bone)bone == Bone.LeftUpperArm || (Bone)bone == Bone.RightUpperArm)
+                {
+                    // Straps continue over the top of the shoulders, where neck and upper-arm skinning takes over.
+                    int chest = (int)Bone.Chest;
+                    s = ShoulderStrap(worldToBone[chest].MultiplyPoint3x4(point), lengths[chest], body);
+                }
+                singlet += s * weight;
+                shoe += f * weight;
+                hair += h * weight;
+            }
+
+            return new Color(Encode(singlet), Encode(shoe), Encode(hair), 1f);
+        }
+
+        private static float Encode(float distance) => Mathf.Clamp01(0.5f + (distance / MaskRange));
+
+        /// <summary>
+        /// Singlet over the chest in chest-bone space: the body up to a line that rises towards the
+        /// centre, plus a strap band over each shoulder (beside the neck, inside the arm).
+        /// </summary>
+        private static float ChestSinglet(Vector3 local, float length, BodyProportions body)
+        {
+            float halfWidth = 0.084f * body.Height * 1.3f;
+            float x = Mathf.Abs(local.x);
+            float bodyLine = (0.72f * length) + (0.08f * length * (1f - Mathf.Clamp01(x / halfWidth))) - local.y;
+            return Mathf.Max(bodyLine, StrapBand(x, halfWidth));
+        }
+
+        /// <summary>The strap band only, above shoulder height, for neck and upper-arm skin (chest-bone space).</summary>
+        private static float ShoulderStrap(Vector3 local, float length, BodyProportions body)
+        {
+            float halfWidth = 0.084f * body.Height * 1.3f;
+            return Mathf.Min(StrapBand(Mathf.Abs(local.x), halfWidth), local.y - (0.85f * length));
+        }
+
+        private static float StrapBand(float x, float halfWidth) => Mathf.Min(x - (0.28f * halfWidth), (0.6f * halfWidth) - x);
+
+        private static (float Singlet, float Shoe, float Hair) RegionDistances(Bone bone, Vector3 local, float length, BodyProportions body)
+        {
+            const float inside = MaskRange;
+            const float outside = -MaskRange;
             float h = body.Height;
             switch (bone)
             {
                 case Bone.Hips:
                 case Bone.Spine:
-                    return SingletSubmesh;
+                    return (inside, outside, outside);
                 case Bone.Chest:
-                {
-                    if (local.y < length * 0.7f)
-                    {
-                        return SingletSubmesh;
-                    }
-
-                    // Straps over the shoulders; neckline and armholes show skin.
-                    float side = Mathf.Abs(local.x) / (0.084f * h * 1.3f);
-                    bool strap = side > 0.3f && side < 0.62f;
-                    bool scoop = local.z > 0f && local.y > length * 0.78f;
-                    return strap && !scoop ? SingletSubmesh : SkinSubmesh;
-                }
+                    return (ChestSinglet(local, length, body), outside, outside);
 
                 case Bone.LeftUpperLeg:
                 case Bone.RightUpperLeg:
-                    return local.y < length * 0.42f ? SingletSubmesh : SkinSubmesh;
+                    return ((0.42f * length) - local.y, outside, outside);
                 case Bone.LeftLowerLeg:
                 case Bone.RightLowerLeg:
-                    return local.y > length * 0.68f ? ShoeSubmesh : SkinSubmesh;
+                    return (outside, local.y - (0.68f * length), outside);
                 case Bone.LeftFoot:
                 case Bone.RightFoot:
-                    return ShoeSubmesh;
+                    return (outside, inside, outside);
                 case Bone.Head:
                 {
-                    float top = local.y / (0.058f * h);
-                    float front = local.z / (0.058f * h * 1.1f);
-                    bool ear = Mathf.Abs(local.x) > 0.05f * h && top < 0.3f;
-                    return !ear && (top > 0.55f || (top > 0.05f && front < -0.2f)) ? HairSubmesh : SkinSubmesh;
+                    float radiusY = 0.058f * h;
+                    float radiusZ = 0.058f * h * 1.1f;
+                    float top = local.y - (0.55f * radiusY);
+                    float back = Mathf.Min(local.y - (0.05f * radiusY), (-0.2f * radiusZ) - local.z);
+                    float ear = Mathf.Min(Mathf.Abs(local.x) - (0.05f * h), (0.3f * radiusY) - local.y);
+                    return (outside, outside, Mathf.Min(-ear, Mathf.Max(top, back)));
                 }
 
                 default:
-                    return SkinSubmesh;
+                    return (outside, outside, outside);
             }
         }
     }

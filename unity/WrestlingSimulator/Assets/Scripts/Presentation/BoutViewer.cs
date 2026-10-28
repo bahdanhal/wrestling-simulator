@@ -24,16 +24,15 @@ namespace Wrestling.Presentation
         [SerializeField] private Scoreboard _scoreboard;
         [SerializeField] private Font _font;
 
-        [Header("Materials")]
-        [SerializeField] private Material _redSinglet;
-        [SerializeField] private Material _blueSinglet;
-        [SerializeField] private Material _skin;
-        [SerializeField] private Material _hair;
-        [SerializeField] private Material _shoe;
+        [Header("Wrestlers")]
+        [SerializeField] private Material _bodyMaterial;
+        [SerializeField] private Color _redSinglet = new Color(0.80f, 0.08f, 0.10f);
+        [SerializeField] private Color _blueSinglet = new Color(0.07f, 0.22f, 0.75f);
+        [SerializeField] private Color _shoe = new Color(0.08f, 0.08f, 0.09f);
 
         [Header("Body mesh")]
-        [SerializeField, Range(0.008f, 0.03f)] private float _bodyCellSize = 0.012f;
-        [SerializeField, Range(0.008f, 0.03f)] private float _mobileBodyCellSize = 0.018f;
+        [SerializeField, Range(0.008f, 0.03f)] private float _bodyCellSize = 0.010f;
+        [SerializeField, Range(0.008f, 0.03f)] private float _mobileBodyCellSize = 0.016f;
 
         private readonly WrestlerFrame[] _shown = new WrestlerFrame[2];
         private SkinnedFigure _redFigure;
@@ -194,7 +193,7 @@ namespace Wrestling.Presentation
             _shown[index].RollSide = target.RollSide;
         }
 
-        private SkinnedFigure Figure(SkinnedFigure existing, string figureName, Corner corner, Material singlet)
+        private SkinnedFigure Figure(SkinnedFigure existing, string figureName, Corner corner, Color singlet)
         {
             SkinnedFigure figure = existing;
             if (figure == null)
@@ -208,33 +207,22 @@ namespace Wrestling.Presentation
             var appearance = new Appearance(wrestler);
             float cell = Application.isMobilePlatform ? _mobileBodyCellSize : _bodyCellSize;
             BodyMesh mesh = BodyMeshBuilder.Build(body, new BodyShape(wrestler), cell);
-            var materials = new Material[4];
-            materials[BodyMeshBuilder.SkinSubmesh] = Tinted(_skin, appearance.Skin);
-            materials[BodyMeshBuilder.SingletSubmesh] = new Material(singlet);
-            materials[BodyMeshBuilder.ShoeSubmesh] = new Material(_shoe);
-            materials[BodyMeshBuilder.HairSubmesh] = Tinted(_hair, appearance.Hair);
-            figure.Build(body, mesh, materials);
+            var material = new Material(_bodyMaterial) { name = figureName + " body" };
+            material.SetColor("_SkinColor", appearance.Skin);
+            material.SetColor("_HairColor", appearance.Hair);
+            material.SetColor("_SingletColor", singlet);
+            material.SetColor("_ShoeColor", _shoe);
+            figure.Build(body, mesh, new[] { material });
             return figure;
         }
 
-        private static Material Tinted(Material template, Color colour)
-        {
-            var material = new Material(template);
-            material.SetColor("_BaseColor", colour);
-            return material;
-        }
-
-        public void Configure(MatView mat, BroadcastCamera broadcastCamera, Scoreboard scoreboard, Font font, Material redSinglet, Material blueSinglet, Material skin, Material hair, Material shoe)
+        public void Configure(MatView mat, BroadcastCamera broadcastCamera, Scoreboard scoreboard, Font font, Material bodyMaterial)
         {
             _mat = mat;
             _camera = broadcastCamera;
             _scoreboard = scoreboard;
             _font = font;
-            _redSinglet = redSinglet;
-            _blueSinglet = blueSinglet;
-            _skin = skin;
-            _hair = hair;
-            _shoe = shoe;
+            _bodyMaterial = bodyMaterial;
         }
     }
 }

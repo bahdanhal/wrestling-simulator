@@ -78,11 +78,7 @@ namespace Wrestling.Editor
                 broadcast,
                 scoreboard,
                 Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"),
-                Lit("Singlet_Red", new Color(0.80f, 0.08f, 0.10f), 0.45f),
-                Lit("Singlet_Blue", new Color(0.07f, 0.22f, 0.75f), 0.45f),
-                Lit("Skin", new Color(0.86f, 0.66f, 0.52f), 0.42f),
-                Lit("Hair", new Color(0.1f, 0.08f, 0.06f), 0.2f),
-                Lit("Shoe", new Color(0.08f, 0.08f, 0.09f), 0.3f));
+                BodyMaterial());
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
@@ -96,7 +92,21 @@ namespace Wrestling.Editor
             EditorApplication.Exit(0);
         }
 
-        private static Material Lit(string materialName, Color colour, float smoothness)
+        private static Material BodyMaterial()
+        {
+            const string path = MaterialFolder + "/WrestlerBody.mat";
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                EnsureFolders();
+                material = new Material(Shader.Find("Wrestling/Wrestler Body"));
+                AssetDatabase.CreateAsset(material, path);
+            }
+
+            return material;
+        }
+
+        private static void EnsureFolders()
         {
             if (!AssetDatabase.IsValidFolder("Assets/Presentation"))
             {
@@ -107,7 +117,11 @@ namespace Wrestling.Editor
             {
                 AssetDatabase.CreateFolder("Assets/Presentation", "Materials");
             }
+        }
 
+        private static Material Lit(string materialName, Color colour, float smoothness)
+        {
+            EnsureFolders();
             string path = $"{MaterialFolder}/{materialName}.mat";
             Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material == null)

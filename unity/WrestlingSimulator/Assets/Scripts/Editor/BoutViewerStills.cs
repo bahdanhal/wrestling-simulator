@@ -128,6 +128,12 @@ namespace Wrestling.Editor
                     string file = Path.Combine(folder, $"bout-{Slug(style)}-{Slug(moment.ToString())}.png");
                     Capture(camera, file);
                     Debug.Log($"Wrote {file} (seed {shot.Seed}, tick {shot.Tick}).");
+                    if (moment == Moment.HandFighting)
+                    {
+                        string closeUp = Path.Combine(folder, $"bout-{Slug(style)}-close-up.png");
+                        CaptureCloseUp(camera, closeUp);
+                        Debug.Log($"Wrote {closeUp}.");
+                    }
                 }
             }
         }
@@ -197,6 +203,36 @@ namespace Wrestling.Editor
 
             found[Moment.Result] = engine.Tick + 1;
             return found;
+        }
+
+        /// <summary>Head-and-shoulders view of the red wrestler from in front and to the side, for checking faces, hands and joints.</summary>
+        private static void CaptureCloseUp(Camera camera, string file)
+        {
+            Transform head = UnityEngine.Object.FindObjectsByType<SkinnedFigure>(FindObjectsInactive.Exclude)
+                .Select(f => f.transform.Find("Hips/Spine/Chest/Neck/Head"))
+                .Where(t => t != null)
+                .OrderBy(t => t.position.x)
+                .First();
+            Vector3 front = head.forward;
+            front.y = 0f;
+            front = front.sqrMagnitude > 1e-6f ? front.normalized : Vector3.back;
+            Vector3 target = head.position - (Vector3.up * 0.25f);
+            Vector3 eye = target + (front * 1.1f) + (Vector3.Cross(Vector3.up, front) * 0.55f) + (Vector3.up * 0.15f);
+            Vector3 position = camera.transform.position;
+            Quaternion rotation = camera.transform.rotation;
+            float fieldOfView = camera.fieldOfView;
+            try
+            {
+                camera.transform.SetPositionAndRotation(eye, Quaternion.LookRotation(target - eye, Vector3.up));
+                camera.fieldOfView = 30f;
+                camera.Render();
+                Capture(camera, file);
+            }
+            finally
+            {
+                camera.transform.SetPositionAndRotation(position, rotation);
+                camera.fieldOfView = fieldOfView;
+            }
         }
 
         private static void Capture(Camera camera, string file)
