@@ -52,6 +52,11 @@ namespace Wrestling.Presentation
 
 
         private readonly GroundState[] _previousGround = new GroundState[2];
+        private readonly HandGrips _handGrips = new HandGrips();
+        private Corner? _lastExecutor;
+
+        /// <summary>The physical holds of the engine's grips (diagnostics).</summary>
+        public HandGrips HandGrips => _handGrips;
 
         /// <summary>Physics substep for the ragdolls (display only).</summary>
         private const float PhysicsStep = 1f / 240f;
@@ -60,6 +65,15 @@ namespace Wrestling.Presentation
         private const int FastForwardWarmUp = 45;
 
         public BoutSession Session => _session;
+
+        /// <summary>Called after every presented frame (tools: diagnostics and recording).</summary>
+        public static System.Action<BoutViewer> Presented;
+
+        /// <summary>The move clip playing (diagnostics).</summary>
+        public string CurrentClip => _choreographer?.CurrentClip;
+
+        /// <summary>The body state shown for a corner this frame (diagnostics).</summary>
+        public WrestlerFrame Shown(Corner corner) => _shown[(int)corner];
 
         public WrestlerCharacter RedFigure => _redFigure;
 
@@ -106,6 +120,13 @@ namespace Wrestling.Presentation
         {
             _seed = seed;
             _session = new BoutSession(_content, _style, _level, seed);
+            // Holds and throws belong to the bodies of the bout before; the figures are rebuilt.
+            _handGrips.Clear();
+            _throwTechnique = null;
+            _throwPhase = -1;
+            _throwGrips = new List<(string, string)>();
+            _turning = false;
+            _lastExecutor = null;
             _redFigure = Figure(_redFigure, "Red", Corner.Red, _redSinglet);
             _blueFigure = Figure(_blueFigure, "Blue", Corner.Blue, _blueSinglet);
             _scoreboard.ResetFor(_session);
@@ -237,6 +258,14 @@ namespace Wrestling.Presentation
                 PoseSolver.SolveArms(ref bluePose, _blueFigure.Body, blueRole, _shown[1], in redBody, engine.Grips.Of(Corner.Blue));
             }
 
+            if (!recorded)
+            {
+                // A hand that holds aims where it physically holds, so the arm's muscles carry the
+                // grip with the opponent instead of hauling them towards where the clip put the hand.
+                ReachHeldPoints(ref redPose, _redFigure.Body, Corner.Red);
+                ReachHeldPoints(ref bluePose, _blueFigure.Body, Corner.Blue);
+            }
+
             if (_throwTechnique != null)
             {
                 // Throughout a throw the thrower's hands stay on the grip points of the opponent's actual body.
@@ -244,13 +273,19 @@ namespace Wrestling.Presentation
                 if (thrower == Corner.Red)
                 {
                     TrapLimbs(ref bluePose, _blueFigure.Body, in redPose, _redFigure.Body);
-                    HoldGrips(ref redPose, _redFigure.Body, _blueFigure.Ragdoll);
+                    HoldGrips(ref redPose, _redFigure.Body, _blueFigure.Physical);
                 }
                 else
                 {
                     TrapLimbs(ref redPose, _redFigure.Body, in bluePose, _blueFigure.Body);
-                    HoldGrips(ref bluePose, _blueFigure.Body, _redFigure.Ragdoll);
+                    HoldGrips(ref bluePose, _blueFigure.Body, _redFigure.Physical);
                 }
+            }
+
+            if (!snapped && deltaTime > 0f)
+            {
+                PlantFeet(ref redPose, _redFigure);
+                PlantFeet(ref bluePose, _blueFigure);
             }
 
             _lastPoses[0] = redPose;
@@ -271,6 +306,7 @@ namespace Wrestling.Presentation
             }
 
             _scoreboard.Refresh(_session);
+            Presented?.Invoke(this);
         }
 
         /// <summary>
@@ -285,14 +321,23 @@ namespace Wrestling.Presentation
             if (snapped || deltaTime <= 0f)
             {
                 // Snapshots, bout starts and restarts: the bodies sit exactly on the animated pose.
+                _handGrips.Clear();
                 for (int i = 0; i < 2; i++)
                 {
-                    figures[i].Ragdoll.Reset();
+                    figures[i].Physical.Reset();
                     _previousAnchor[i] = _choreographer.Anchors[i].Weight;
                     _previousGround[i] = _shown[i].Ground;
                 }
 
+                PhysicalBody.Settle();
+
                 return;
+            }
+
+            TechniqueExecution technique = _session.Engine.ActiveTechnique;
+            if (technique != null)
+            {
+                _lastExecutor = technique.Executor;
             }
 
             for (int i = 0; i < 2; i++)
@@ -302,13 +347,21 @@ namespace Wrestling.Presentation
                 bool released = _previousAnchor[i] >= 0.95f && anchor < 0.95f;
                 bool wasUp = _previousGround[i] == GroundState.Standing || _previousGround[i] == GroundState.OneKnee;
                 bool landedLying = ground == GroundState.Prone || ground == GroundState.Supine || ground == GroundState.Bridge;
-                if (released && !figures[i].Ragdoll.IsThrown)
+                // Only the wrestler a move is done to loses control; the one doing it (a sprawl, a
+                // dive, a lift set down) goes down on purpose, under their own muscles and balance.
+                if (_lastExecutor == (Corner)i)
                 {
-                    figures[i].Ragdoll.Fall(0.9f);
+                    released = false;
+                    landedLying = false;
+                }
+
+                if (released && !figures[i].Physical.IsThrown)
+                {
+                    figures[i].Physical.Fall(0.9f);
                 }
                 else if (wasUp && landedLying)
                 {
-                    figures[i].Ragdoll.Fall(0.6f);
+                    figures[i].Physical.Fall(0.6f);
                 }
 
                 _previousAnchor[i] = anchor;
@@ -319,16 +372,29 @@ namespace Wrestling.Presentation
             var throwing = _choreographer.Recorded != null ? null : _choreographer.Throw;
             UpdateThrow(throwing, figures);
 
-            _redFigure.Ragdoll.BeforeStep(deltaTime);
-            _blueFigure.Ragdoll.BeforeStep(deltaTime);
+            // The engine's grips hold physically, except while a throw's own holds or recorded motion are in charge.
+            _handGrips.Update(_session.Engine, _redFigure.Physical, _blueFigure.Physical, _throwTechnique != null || _choreographer.Recorded != null);
+            for (int i = 0; i < 2; i++)
+            {
+                // A wrestler the clip holds on the other's body (a lift, a carry) is held up by them.
+                float held = _choreographer.Recorded == null ? _choreographer.Anchors[i].Weight : 0f;
+                figures[i].Physical.SetCarrier(held > 0f ? figures[1 - i].Physical : null, held);
+            }
+
+            _redFigure.Physical.SetBalance(_shown[0].Balance);
+            _blueFigure.Physical.SetBalance(_shown[1].Balance);
+            _redFigure.Physical.BeforeStep(deltaTime);
+            _blueFigure.Physical.BeforeStep(deltaTime);
             int steps = Mathf.Clamp(Mathf.CeilToInt(deltaTime / PhysicsStep), 1, 8);
+            float substep = deltaTime / steps;
             for (int s = 0; s < steps; s++)
             {
-                _redFigure.Ragdoll.Drive();
-                _blueFigure.Ragdoll.Drive();
+                _redFigure.Physical.Drive(substep);
+                _blueFigure.Physical.Drive(substep);
+                _handGrips.Apply(substep);
                 if (throwing != null && _throwTechnique != null && !_turning)
                 {
-                    figures[(int)_thrown].Ragdoll.DriveLoad();
+                    figures[(int)_thrown].Physical.DriveLoad();
                 }
 
                 if (throwing != null && _throwTechnique != null && _turning)
@@ -336,14 +402,14 @@ namespace Wrestling.Presentation
                     var t = throwing.Value;
                     float progress = t.Progress + ((s + 0.5f) / steps * deltaTime / Mathf.Max(t.PhaseSeconds, 1e-3f));
                     (float angle, float rate) = ThrowPlan(t.Spec, progress, t.PhaseSeconds);
-                    figures[(int)_thrown].Ragdoll.DriveThrow(angle, rate, deltaTime / steps);
+                    figures[(int)_thrown].Physical.DriveThrow(angle, rate, substep);
                 }
 
-                Physics.Simulate(deltaTime / steps);
+                Physics.Simulate(substep);
             }
 
-            _redFigure.Ragdoll.AfterStep();
-            _blueFigure.Ragdoll.AfterStep();
+            _redFigure.Physical.AfterStep();
+            _blueFigure.Physical.AfterStep();
         }
 
         /// <summary>
@@ -366,10 +432,11 @@ namespace Wrestling.Presentation
                 {
                     // Countered: the thrown wrestler is acting now, so they are loose only for a
                     // moment as they twist out, then carry out their counter. Otherwise they land.
-                    bool countered = throwing != null && throwing.Value.Thrower == _thrown;
+                    TechniqueExecution current = _session.Engine.ActiveTechnique;
+                    bool countered = (throwing != null && throwing.Value.Thrower == _thrown) || (current != null && current.Executor == _thrown);
 
-                    figures[(int)_thrown].Ragdoll.EndThrow(countered ? CounterReleaseSeconds : LandingSeconds);
-                    figures[1 - (int)_thrown].Ragdoll.SetCarrying(false);
+                    figures[(int)_thrown].Physical.EndThrow(countered ? CounterReleaseSeconds : LandingSeconds);
+                    figures[1 - (int)_thrown].Physical.SetCarrying(false);
                     _throwGrips = new List<(string, string)>();
                     _throwTechnique = null;
                     _throwPhase = -1;
@@ -392,7 +459,7 @@ namespace Wrestling.Presentation
             if (_throwTechnique == null)
             {
                 _thrown = t.Thrower.Opponent();
-                figures[(int)t.Thrower].Ragdoll.SetCarrying(true);
+                figures[(int)t.Thrower].Physical.SetCarrying(true);
                 _throwGrips = grips;
                 _throwTechnique = t.Technique;
                 _turning = false;
@@ -400,7 +467,7 @@ namespace Wrestling.Presentation
                 {
                     // Facing the opponent (chest or shoulders): the grips and squeeze draw them in
                     // physically from the start of the load.
-                    figures[(int)_thrown].Ragdoll.BeginThrow(figures[(int)t.Thrower].Ragdoll, Mirror(t.Spec.Pivot, t.Mirrored), grips, ThrowStrength(_session.WrestlerOf(t.Thrower)), t.Spec.SeatUp);
+                    figures[(int)_thrown].Physical.BeginThrow(figures[(int)t.Thrower].Physical, Mirror(t.Spec.Pivot, t.Mirrored), grips, ThrowStrength(_session.WrestlerOf(t.Thrower)), t.Spec.SeatUp);
                 }
 
                 // Turning the back in under them (hip fulcrum): the opponent keeps following their
@@ -411,13 +478,13 @@ namespace Wrestling.Presentation
 
             if (t.Spec.Kind == ThrowKind.Throw && !_turning)
             {
-                if (!figures[(int)_thrown].Ragdoll.IsThrown)
+                if (!figures[(int)_thrown].Physical.IsThrown)
                 {
-                    figures[(int)_thrown].Ragdoll.BeginThrow(figures[(int)t.Thrower].Ragdoll, Mirror(t.Spec.Pivot, t.Mirrored), grips, ThrowStrength(_session.WrestlerOf(t.Thrower)), t.Spec.SeatUp);
+                    figures[(int)_thrown].Physical.BeginThrow(figures[(int)t.Thrower].Physical, Mirror(t.Spec.Pivot, t.Mirrored), grips, ThrowStrength(_session.WrestlerOf(t.Thrower)), t.Spec.SeatUp);
                 }
 
-                figures[(int)_thrown].Ragdoll.StartTurn(ThrowAxisFor(t, figures));
-                ActiveRagdoll.Trace?.Invoke(System.FormattableString.Invariant($"turn start: keyed thrower {_shown[(int)t.Thrower].Position} heading {_shown[(int)t.Thrower].Facing}, keyed thrown {_shown[(int)_thrown].Position}; bodies: thrower hips {figures[(int)t.Thrower].Ragdoll.HipPosition}, thrown hips {figures[(int)_thrown].Ragdoll.HipPosition}; animated pelvis thrower {_lastPoses[(int)t.Thrower].Pelvis} thrown {_lastPoses[(int)_thrown].Pelvis}, thrower chest normal {_lastPoses[(int)t.Thrower].ChestNormal}, anchor weight {_choreographer.Anchors[(int)_thrown].Weight:F2}"));
+                figures[(int)_thrown].Physical.StartTurn(ThrowAxisFor(t, figures));
+                PhysicalBody.Trace?.Invoke(System.FormattableString.Invariant($"turn start: keyed thrower {_shown[(int)t.Thrower].Position} heading {_shown[(int)t.Thrower].Facing}, keyed thrown {_shown[(int)_thrown].Position}; bodies: thrower hips {figures[(int)t.Thrower].Physical.HipPosition}, thrown hips {figures[(int)_thrown].Physical.HipPosition}; animated pelvis thrower {_lastPoses[(int)t.Thrower].Pelvis} thrown {_lastPoses[(int)_thrown].Pelvis}, thrower chest normal {_lastPoses[(int)t.Thrower].ChestNormal}, anchor weight {_choreographer.Anchors[(int)_thrown].Weight:F2}"));
                 _throwGrips = grips;
                 _turning = true;
             }
@@ -439,7 +506,7 @@ namespace Wrestling.Presentation
 
         private Vector3 ThrowAxisFor((TechniqueExecution Technique, Corner Thrower, ThrowSpec Spec, float Progress, float PhaseSeconds, bool Mirrored) t, WrestlerCharacter[] figures)
         {
-            Vector3 offset = figures[(int)t.Thrower.Opponent()].Ragdoll.OffsetFromFulcrum;
+            Vector3 offset = figures[(int)t.Thrower.Opponent()].Physical.OffsetFromFulcrum;
             if (t.Spec.Axis == ThrowAxis.Over && offset.magnitude > FulcrumOffsetForAxis)
             {
                 // Over the top of the fulcrum, away from the side the body is loaded on, whichever
@@ -468,8 +535,80 @@ namespace Wrestling.Presentation
             return 2000f + (30f * strength);
         }
 
+        /// <summary>An animated ankle lower than this (m) is a foot meant to be planted on the mat.</summary>
+        private const float PlantedAnkle = 0.16f;
+
+        /// <summary>Hips further than this (m) from their animated place are not corrected for (the body has lost the motion).</summary>
+        private const float PlantReach = 1.5f;
+
+        /// <summary>
+        /// Foot planting: where the physical hips are not where the animation has them (they cannot drop
+        /// faster than gravity, or are held up or pushed), each planted leg is re-aimed so that, from
+        /// the hips as they physically are, the foot still lands where the animation puts it. The legs
+        /// fold or reach to keep the base instead of lifting the feet off the mat.
+        /// </summary>
+        private static void PlantFeet(ref Pose pose, WrestlerCharacter figure)
+        {
+            PhysicalBody body = figure.Physical;
+            if (body.Weight <= 0f || body.IsThrown || body.IsFalling)
+            {
+                return;
+            }
+
+            BodyProportions proportions = figure.Body;
+            bool hipsHigh = body.HipHeight > body.PelvisTarget.y + HighHips;
+            PlantLeg(ref pose.HipL, ref pose.KneeL, ref pose.AnkleL, ref pose.ToeL, body.Link("LeftUpLeg").transform.position, body.Link("LeftFoot").transform.position, proportions, hipsHigh);
+            PlantLeg(ref pose.HipR, ref pose.KneeR, ref pose.AnkleR, ref pose.ToeR, body.Link("RightUpLeg").transform.position, body.Link("RightFoot").transform.position, proportions, hipsHigh);
+        }
+
+        /// <summary>Hips this much (m) above their animated height are still coming down.</summary>
+        private const float HighHips = 0.05f;
+
+        private static void PlantLeg(ref Vector3 hip, ref Vector3 knee, ref Vector3 ankle, ref Vector3 toe, Vector3 physicalHip, Vector3 physicalAnkle, BodyProportions proportions, bool hipsHigh)
+        {
+            Vector3 offset = hip - physicalHip;
+            if (ankle.y >= PlantedAnkle || offset.magnitude >= PlantReach)
+            {
+                return;
+            }
+
+            // From the hip as it physically is to where the foot should be.
+            Vector3 reach = ankle - physicalHip;
+            if (hipsHigh)
+            {
+                // Coming down: the leg may fold or swing, but not lengthen, or it would push the body
+                // back up (a jump the wrestler is not making).
+                float length = (physicalAnkle - physicalHip).magnitude;
+                if (reach.magnitude > length)
+                {
+                    reach = reach.normalized * length;
+                }
+            }
+
+            Vector3 pole = knee - Vector3.Lerp(hip, ankle, 0.5f);
+            knee = PoseSolver.TwoBone(hip, hip + reach, proportions.Thigh, proportions.Shin, pole, out Vector3 reached);
+            toe += reached - ankle;
+            ankle = reached;
+        }
+
+        /// <summary>Re-solves each holding arm so its hand reaches the point it holds on the opponent's physical body.</summary>
+        private void ReachHeldPoints(ref Pose pose, BodyProportions body, Corner corner)
+        {
+            Vector3? left = _handGrips.HeldPoint(corner, GripSide.Left);
+            if (left.HasValue)
+            {
+                pose.ElbowL = PoseSolver.TwoBone(pose.ShoulderL, left.Value, body.UpperArm, body.Forearm, pose.ElbowL - pose.ShoulderL, out pose.HandL);
+            }
+
+            Vector3? right = _handGrips.HeldPoint(corner, GripSide.Right);
+            if (right.HasValue)
+            {
+                pose.ElbowR = PoseSolver.TwoBone(pose.ShoulderR, right.Value, body.UpperArm, body.Forearm, pose.ElbowR - pose.ShoulderR, out pose.HandR);
+            }
+        }
+
         /// <summary>Puts the thrower's hands on the grip points of the opponent's actual (physics) body.</summary>
-        private void HoldGrips(ref Pose pose, BodyProportions body, ActiveRagdoll held)
+        private void HoldGrips(ref Pose pose, BodyProportions body, PhysicalBody held)
         {
             foreach ((string holder, string point) in _throwGrips)
             {
@@ -633,6 +772,9 @@ namespace Wrestling.Presentation
             var wrestler = _session.WrestlerOf(corner);
             CharacterLibrary.CharacterBase characterBase = _characters.For(wrestler.Gender == Wrestling.Core.Wrestlers.Gender.Female);
             figure.Build(characterBase, new WrestlerLook(wrestler, characterBase.Skins.Length), singlet);
+            figure.Physical.SetStrength(
+                wrestler.Attributes[Wrestling.Core.Wrestlers.WrestlerAttribute.UpperBodyStrength],
+                wrestler.Attributes[Wrestling.Core.Wrestlers.WrestlerAttribute.LowerBodyStrength]);
             return figure;
         }
 

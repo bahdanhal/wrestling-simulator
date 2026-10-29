@@ -91,6 +91,22 @@ dotnet run --project src/Wrestling.Sim -c Release -- motion-assign --clip anim.h
 
 Every take records its source and licence. See `docs/research/footage-sources.md`.
 
+## Physics lab
+
+The wrestlers' bodies are physically simulated (display only). The lab plays real bouts live and measures how the bodies follow the motion, overlap, keep their footing and hold grips, and what they cost per frame:
+
+```bash
+/Applications/Unity/Hub/Editor/6000.6.7f1/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath unity/WrestlingSimulator -executeMethod Wrestling.Editor.PhysicsLab.RunFromCommandLine -labSeconds 60 -labBouts 3 -logFile -
+```
+
+Any stretch of a bout can be rendered as video, with the animation's pelvis targets marked (add `-clipLog` for a line per frame):
+
+```bash
+/Applications/Unity/Hub/Editor/6000.6.7f1/Unity.app/Contents/MacOS/Unity -batchmode -projectPath unity/WrestlingSimulator -executeMethod Wrestling.Editor.PhysicsLab.ClipFromCommandLine -clipStyle gr -clipSeed 6 -clipFrom 2380 -clipTicks 150 -clipOutput clip.mp4 -logFile -
+```
+
+Latest lab run (9 bouts × 60 s, all styles): pelvis 15 cm from its animated place on average, a body off its motion (over 25 cm) in 14% of frames (mostly recovering from scrambles and throws), standing collapses 1.7%, mean overlap 0.1 cm, joints within 2–11°, about 1 ms per frame for both wrestlers on an Apple Silicon Mac.
+
 ## Determinism check
 
 The simulation must give identical results on every platform. A fixed workload produces a hash that every platform must reproduce:

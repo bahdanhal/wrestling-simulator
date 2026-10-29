@@ -12,9 +12,10 @@ namespace Wrestling.Presentation
         private GameObject _model;
         private Material _body;
         private CharacterRig _rig;
-        private ActiveRagdoll _ragdoll;
+        private PhysicalBody _physical;
 
-        public ActiveRagdoll Ragdoll => _ragdoll;
+        /// <summary>The wrestler's physically simulated body.</summary>
+        public PhysicalBody Physical => _physical;
 
         public BodyProportions Body => _rig.Body;
 
@@ -81,7 +82,37 @@ namespace Wrestling.Presentation
             }
 
             _rig = new CharacterRig(transform);
-            _ragdoll = new ActiveRagdoll(_rig.Find, look.HeightMetres, look.MassKg, name);
+            // The physical joints are built in a wrestling stance, so their zero sits in the middle of
+            // the range the wrestler works in (bent elbows and knees), far from where a joint's angle
+            // wraps round.
+            _rig.Apply(StancePose(_rig), 0f, 0f);
+            _physical = new PhysicalBody(_rig.Find, look.HeightMetres, look.MassKg, name);
+        }
+
+        /// <summary>A neutral standing stance at the model's place and facing: knees bent, arms ready in front.</summary>
+        private static Pose StancePose(CharacterRig rig)
+        {
+            Vector3 forward3 = Vector3.ProjectOnPlane(rig.Bind.ChestNormal, Vector3.up).normalized;
+            var forward = new Vector2(forward3.x, forward3.z);
+            var left = new Vector2(-forward.y, forward.x);
+            Vector3 pelvis = rig.Bind.Pelvis;
+            var position = new Vector2(pelvis.x, pelvis.z);
+            const float baseWidth = 0.5f;
+            var frame = new WrestlerFrame
+            {
+                Position = position,
+                Facing = forward,
+                LeftFoot = position + (left * (baseWidth * 0.5f)),
+                RightFoot = position - (left * (baseWidth * 0.5f)),
+                Level = 0.7f,
+                Posture = 0.6f,
+                Balance = 1f,
+                Ground = Wrestling.Core.Match.GroundState.Standing,
+                RollSide = 1f,
+            };
+            Pose pose = PoseSolver.SolveBody(frame, rig.Body, PoseRole.Neutral);
+            PoseSolver.SolveArms(ref pose, rig.Body, PoseRole.Neutral, frame, default, System.Array.Empty<Wrestling.Core.Match.Grip>());
+            return pose;
         }
 
         /// <summary>Current world positions of the motion-take joints, read from the rig (after physics).</summary>
@@ -117,8 +148,8 @@ namespace Wrestling.Presentation
                 _model = null;
             }
 
-            _ragdoll?.Destroy();
-            _ragdoll = null;
+            _physical?.Destroy();
+            _physical = null;
             if (_body != null)
             {
                 DestroyNow(_body);
