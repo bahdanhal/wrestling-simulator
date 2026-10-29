@@ -46,6 +46,7 @@ namespace Wrestling.Presentation
         private TechniqueExecution _throwTechnique;
         private int _throwPhase = -1;
         private Corner _thrown;
+        private bool _turning;
         private readonly GroundState[] _previousGround = new GroundState[2];
 
         /// <summary>Physics substep for the ragdolls (display only).</summary>
@@ -283,12 +284,20 @@ namespace Wrestling.Presentation
             {
                 _redFigure.Ragdoll.Drive();
                 _blueFigure.Ragdoll.Drive();
-                if (throwing != null && _throwTechnique != null)
+                if (throwing != null && _throwTechnique != null && !_turning)
+                {
+                    figures[(int)_thrown].Ragdoll.HoldLoad();
+                }
+                else if (throwing != null && _throwTechnique != null)
                 {
                     var t = throwing.Value;
                     float progress = t.Progress + ((s + 0.5f) / steps * deltaTime / Mathf.Max(t.PhaseSeconds, 1e-3f));
                     (float angle, float rate) = ThrowPlan(t.Spec, progress, t.PhaseSeconds);
                     figures[(int)_thrown].Ragdoll.DriveThrow(angle, rate, deltaTime / steps);
+                    if (s == 0)
+                    {
+                        Debug.Log($"[throwstep] {t.Technique.Definition.Id} p={t.Progress:F2} gap={figures[(int)_thrown].Ragdoll.Gap * 100f:F0}cm loaded={figures[(int)_thrown].Ragdoll.Loaded} force={figures[(int)_thrown].Ragdoll.ThrowForce:F0}");
+                    }
                 }
 
                 Physics.Simulate(deltaTime / steps);
@@ -305,40 +314,72 @@ namespace Wrestling.Presentation
         private void UpdateThrow((TechniqueExecution Technique, Corner Thrower, ThrowSpec Spec, float Progress, float PhaseSeconds, bool Mirrored)? throwing, WrestlerCharacter[] figures)
         {
             bool active = throwing != null && throwing.Value.Progress >= throwing.Value.Spec.From && throwing.Value.Progress < throwing.Value.Spec.To;
-
             if (_throwTechnique != null)
             {
-                bool same = active && ReferenceEquals(throwing.Value.Technique, _throwTechnique) && throwing.Value.Technique.PhaseIndex == _throwPhase;
+                // A load carries on into its throw within the same technique; anything else lets go.
+                bool same = throwing != null && ReferenceEquals(throwing.Value.Technique, _throwTechnique)
+                    && (active || (throwing.Value.Spec.Kind == ThrowKind.Load && throwing.Value.Progress >= throwing.Value.Spec.To));
                 if (!same)
                 {
                     figures[(int)_thrown].Ragdoll.EndThrow(0.8f);
                     figures[1 - (int)_thrown].Ragdoll.SetCarrying(false);
                     _throwTechnique = null;
                     _throwPhase = -1;
+                    _turning = false;
                 }
             }
 
-            if (active && _throwTechnique == null && !(throwing.Value.Technique.PhaseIndex == _throwPhase))
+            if (!active)
             {
-                var t = throwing.Value;
+                return;
+            }
+
+            var t = throwing.Value;
+            Vector3 axis = ThrowAxisFor(t);
+            if (_throwTechnique == null)
+            {
                 _thrown = t.Thrower.Opponent();
-                Vector3 forward = WrestlerFrame.OnMat(_shown[(int)t.Thrower].Facing).normalized;
-                Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
-                // ω = up × direction makes the body's top move along the direction (v = ω × r).
-                Vector3 axis = t.Spec.Axis == ThrowAxis.Lateral
-                    ? Vector3.Cross(Vector3.up, forward)
-                    : Vector3.Cross(Vector3.up, right) * (t.Mirrored ? -1f : 1f);
                 var grips = new List<(string, string)>();
                 foreach (ThrowGrip grip in t.Spec.Grips)
                 {
                     grips.Add((Mirror(grip.Thrower, t.Mirrored), Mirror(grip.Thrown, t.Mirrored)));
                 }
 
-                figures[(int)_thrown].Ragdoll.BeginThrow(figures[(int)t.Thrower].Ragdoll, t.Spec.Pivot, axis, grips);
+                figures[(int)_thrown].Ragdoll.BeginThrow(figures[(int)t.Thrower].Ragdoll, t.Spec.Pivot, axis, grips, ThrowStrength(_session.WrestlerOf(t.Thrower)));
                 figures[(int)t.Thrower].Ragdoll.SetCarrying(true);
                 _throwTechnique = t.Technique;
-                _throwPhase = t.Technique.PhaseIndex;
+                _turning = false;
             }
+
+            if (t.Spec.Kind == ThrowKind.Throw && !_turning)
+            {
+                // The opponent is loaded: the turn starts about the thrower's current facing.
+                figures[(int)_thrown].Ragdoll.StartTurn(axis);
+                _turning = true;
+            }
+
+            _throwPhase = t.Technique.PhaseIndex;
+        }
+
+        private Vector3 ThrowAxisFor((TechniqueExecution Technique, Corner Thrower, ThrowSpec Spec, float Progress, float PhaseSeconds, bool Mirrored) t)
+        {
+            Vector3 forward = WrestlerFrame.OnMat(_shown[(int)t.Thrower].Facing).normalized;
+            Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
+            // ω = up × direction makes the body's top move along the direction (v = ω × r).
+            return t.Spec.Axis == ThrowAxis.Lateral
+                ? Vector3.Cross(Vector3.up, forward)
+                : Vector3.Cross(Vector3.up, right) * (t.Mirrored ? -1f : 1f);
+        }
+
+        /// <summary>
+        /// Most force (newtons) a wrestler can put into a throw: about 1.5 kN for the weakest to 3.5 kN
+        /// for the strongest, from upper- and lower-body strength (a 50 average gives 2.5 kN).
+        /// </summary>
+        private static float ThrowStrength(Wrestling.Core.Wrestlers.Wrestler wrestler)
+        {
+            float strength = (wrestler.Attributes[Wrestling.Core.Wrestlers.WrestlerAttribute.UpperBodyStrength]
+                + wrestler.Attributes[Wrestling.Core.Wrestlers.WrestlerAttribute.LowerBodyStrength]) * 0.5f;
+            return 1500f + (20f * strength);
         }
 
         /// <summary>The throw's planned rotation at phase progress <paramref name="progress"/>: eased in and out over its window.</summary>

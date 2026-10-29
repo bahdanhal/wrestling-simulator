@@ -48,7 +48,8 @@ public class MoveAnimationTests
         Assert.Equal(ThrowKind.Throw, headlock.Throw.Kind);
         Assert.Equal(ThrowAxis.Lateral, headlock.Throw.Axis);
         Assert.Contains(headlock.Throw.Grips, g => g.Thrown == "Head");
-        Assert.Equal(ThrowKind.None, entry.Throw.Kind);
+        Assert.Equal(ThrowKind.Load, entry.Throw.Kind);
+        Assert.Equal(0f, entry.Throw.Degrees);
         Assert.Equal(ThrowAxis.Forward, fireman.Throw.Axis);
         Assert.NotSame(headlock.Throw, fireman.Throw);
         Assert.Equal(ThrowKind.None, ThrowSpec.NoThrow.Kind);
