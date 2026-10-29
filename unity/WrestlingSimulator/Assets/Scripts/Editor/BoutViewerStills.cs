@@ -304,7 +304,7 @@ namespace Wrestling.Editor
                 {
                     viewer.FastForward(frame == 0 ? 1 : spacing);
                     WrestlerCharacter[] pair = UnityEngine.Object.FindObjectsByType<WrestlerCharacter>(FindObjectsInactive.Exclude);
-                    Debug.Log($"[overlap] {Path.GetFileName(file)} frame {frame}: {pair[0].Ragdoll.DeepestOverlap(pair[1].Ragdoll) * 100f:F1} cm, throw angles {pair[0].Ragdoll.ThrowAngle:F0}/{pair[1].Ragdoll.ThrowAngle:F0} (thrown {pair[0].Ragdoll.IsThrown}/{pair[1].Ragdoll.IsThrown}), hips {pair[0].Ragdoll.HipHeight:F2}/{pair[1].Ragdoll.HipHeight:F2} m");
+                    Debug.Log($"[overlap] {Path.GetFileName(file)} frame {frame}: {pair[0].Ragdoll.DeepestOverlap(pair[1].Ragdoll) * 100f:F1} cm, throw angles {pair[0].Ragdoll.ThrowAngle:F0}/{pair[1].Ragdoll.ThrowAngle:F0} (thrown {pair[0].Ragdoll.IsThrown}/{pair[1].Ragdoll.IsThrown}), hips {pair[0].Ragdoll.HipHeight:F2}/{pair[1].Ragdoll.HipHeight:F2} m; {pair[0].Ragdoll.ThrowReport} / {pair[1].Ragdoll.ThrowReport}");
                     camera.targetTexture = target;
                     Canvas.ForceUpdateCanvases();
                     camera.Render();
@@ -335,6 +335,20 @@ namespace Wrestling.Editor
 
         /// <summary>Renders <see cref="VideoTicks"/> ticks live at 30 frames per second and encodes them with ffmpeg.</summary>
         private static void CaptureVideo(BoutViewer viewer, Camera camera, string file)
+        {
+            string name = Path.GetFileNameWithoutExtension(file);
+            ActiveRagdoll.Trace = line => Debug.Log($"[trace] {name}: {line}");
+            try
+            {
+                CaptureVideoFrames(viewer, camera, file);
+            }
+            finally
+            {
+                ActiveRagdoll.Trace = null;
+            }
+        }
+
+        private static void CaptureVideoFrames(BoutViewer viewer, Camera camera, string file)
         {
             string ffmpeg = new[] { "/Users/bahdan/git/brew/bin/ffmpeg", "/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg", "/usr/bin/ffmpeg" }.FirstOrDefault(File.Exists);
             if (ffmpeg == null)

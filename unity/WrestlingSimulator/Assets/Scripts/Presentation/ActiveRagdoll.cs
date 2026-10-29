@@ -41,9 +41,6 @@ namespace Wrestling.Presentation
         /// <summary>Muscle strength while thrown: the body keeps a wrestler's tension but does not steer.</summary>
         private const float ThrownMuscle = 0.55f;
 
-        /// <summary>How fast the throw drive corrects the thrown body's motion (1/s), and its cap.</summary>
-        private const float ThrowGain = 18f;
-        private const float MaxThrowAcceleration = 70f;
 
         /// <summary>How fast a lag behind the throw's planned rotation is made up (1/s).</summary>
         private const float ThrowAngleGain = 6f;
@@ -58,11 +55,39 @@ namespace Wrestling.Presentation
         private const float LoadDamper = 500f;
         private const float LoadShare = 0.5f;
 
+        /// <summary>Share of the grip stiffness and of the thrower's strength the grips keep during the turn.</summary>
+        private const float TurnContactShare = 0.1f;
+
+        /// <summary>Where the loaded trunk sits on the fulcrum: mostly on the opponent's side, partly on top.</summary>
+        private const float SeatSide = 0.85f;
+        private const float SeatUp = 0.5f;
+
+        /// <summary>Planted feet or knees each add this share of the thrower's strength to the throw (none planted: <see cref="UnsupportedShare"/>).</summary>
+        private const float PlantedShare = 0.35f;
+        private const float UnsupportedShare = 0.3f;
+        private const float PlantedHeight = 0.12f;
+
+        private ConfigurableJoint _load;
+        private float _lastAvailable;
+        private float _lastDemand;
+        private Vector3 _turnOffset;
+        private bool _turning;
+        private int _traceCount;
+        private Quaternion _trunkRotation = Quaternion.identity;
+
+        /// <summary>Diagnostics sink for throw drive traces (tools only; null in the game).</summary>
+        public static Action<string> Trace;
+
+        /// <summary>Centre-of-mass carry gains (1/s², 1/s) and the turn gain (1/s) with its cap (deg/s²).</summary>
+        private const float CarryStiffness = 60f;
+        private const float CarryDamping = 14f;
+        private const float TurnGain = 12f;
+        private const float MaxTurnAcceleration = 4000f;
+
         private ActiveRagdoll _throwerBody;
         private float _maxThrowForce;
         private Segment _pivot;
         private Vector3 _throwAxis;
-        private Vector3 _throwReference;
         private float _throwAngle;
 
         private sealed class Segment
@@ -239,6 +264,25 @@ namespace Wrestling.Presentation
         /// <summary>Hip height above the mat in metres (diagnostics).</summary>
         public float HipHeight => Find("Hips").Body.position.y;
 
+        /// <summary>Hip position in metres (diagnostics).</summary>
+        public Vector3 HipPosition => Find("Hips").Body.position;
+
+        /// <summary>Diagnostics while thrown: strength available and asked for (N), and how far the trunk is from its seat on the fulcrum (m).</summary>
+        public string ThrowReport
+        {
+            get
+            {
+                if (_mode != Mode.Thrown || _load == null)
+                {
+                    return "-";
+                }
+
+                Vector3 seat = _pivot.Body.transform.TransformPoint(_load.connectedAnchor);
+                Vector3 trunk = _load.transform.TransformPoint(_load.anchor);
+                return FormattableString.Invariant($"available {_lastAvailable:F0} N, demand {_lastDemand:F0} N, seat gap {(trunk - seat).magnitude:F2} m (trunk {trunk.y:F2} m, seat {seat.y:F2} m), angle {_throwAngle:F0}");
+            }
+        }
+
         /// <summary>Rotation achieved so far in the current throw, in degrees about its axis.</summary>
         public float ThrowAngle => _throwAngle;
 
@@ -257,18 +301,16 @@ namespace Wrestling.Presentation
 
         /// <summary>
         /// Starts a throw: tracking lets go, gravity acts, and the thrower's grip segments are joined to
-        /// this body's held segments. <paramref name="axis"/> is the world rotation axis (unit): the body
-        /// turns round the thrower's <paramref name="pivot"/> segment, so positive angles move its top
-        /// along axis × up.
+        /// this body's held segments, and the trunk is squeezed onto the thrower's <paramref name="pivot"/>
+        /// segment (the fulcrum). The turn round the fulcrum starts with <see cref="StartTurn"/>.
         /// </summary>
-        public void BeginThrow(ActiveRagdoll thrower, string pivot, Vector3 axis, IEnumerable<(string Thrower, string Thrown)> grips, float maxForce)
+        public void BeginThrow(ActiveRagdoll thrower, string pivot, IEnumerable<(string Thrower, string Thrown)> grips, float maxForce)
         {
             EndGrips();
             _throwerBody = thrower;
             _maxThrowForce = maxForce;
             _pivot = thrower.Find(pivot);
-            _throwAxis = axis.normalized;
-            _throwReference = Vector3.ProjectOnPlane(Find("Spine2").Body.position - Find("Hips").Body.position, _throwAxis);
+            _trunkRotation = Find("Spine").Body.rotation;
             _throwAngle = 0f;
             foreach ((string holder, string held) in grips)
             {
@@ -298,13 +340,21 @@ namespace Wrestling.Presentation
             }
 
             // The arm wrap squeezes the trunk onto the fulcrum (hip, back, chest or shoulders), so the
-            // opponent is loaded across the thrower rather than swinging beside them.
+            // opponent is loaded across the thrower rather than swinging beside them. The trunk is
+            // seated on the fulcrum's surface, on the opponent's side and above it, never pulled into
+            // its middle: a body loaded on a hip rests on top of it. The seat is fixed to the thrower's
+            // segment, so as the thrower turns in and bends, the opponent goes with them.
             Segment trunk = Find("Spine");
+            Vector3 trunkCentre = trunk.Body.GetComponent<Collider>().bounds.center;
+            Vector3 pivotCentre = _pivot.Body.GetComponent<Collider>().bounds.center;
+            Vector3 side = Vector3.ProjectOnPlane(trunkCentre - pivotCentre, Vector3.up);
+            side = side.sqrMagnitude > 1e-6f ? side.normalized : Vector3.ProjectOnPlane(trunkCentre - thrower.Find("Hips").Body.position, Vector3.up).normalized;
+            Vector3 seat = Seat(side, trunk);
             var load = trunk.Body.gameObject.AddComponent<ConfigurableJoint>();
             load.connectedBody = _pivot.Body;
             load.autoConfigureConnectedAnchor = false;
-            load.anchor = Vector3.zero;
-            load.connectedAnchor = Vector3.zero;
+            load.anchor = trunk.Body.transform.InverseTransformPoint(trunkCentre);
+            load.connectedAnchor = _pivot.Body.transform.InverseTransformPoint(pivotCentre + seat);
             load.xMotion = ConfigurableJointMotion.Free;
             load.yMotion = ConfigurableJointMotion.Free;
             load.zMotion = ConfigurableJointMotion.Free;
@@ -318,6 +368,7 @@ namespace Wrestling.Presentation
             load.angularZMotion = ConfigurableJointMotion.Free;
             load.enableCollision = true;
             _gripJoints.Add(load);
+            _load = load;
 
             _mode = Mode.Thrown;
             _tracking = 0f;
@@ -325,14 +376,39 @@ namespace Wrestling.Presentation
             SetMuscle(ThrownMuscle);
         }
 
+        /// <summary>
+        /// Each physics substep while loading (before the turn): the seat stays on the side of the
+        /// fulcrum facing the opponent's trunk, so the squeeze draws them in tight and up onto it.
+        /// </summary>
+        public void DriveLoad()
+        {
+            if (_mode != Mode.Thrown || _load == null || _turning)
+            {
+                return;
+            }
+
+            Segment trunk = Find("Spine");
+            Vector3 centre = _pivot.Body.GetComponent<Collider>().bounds.center;
+            Vector3 side = Vector3.ProjectOnPlane(trunk.Body.GetComponent<Collider>().bounds.center - centre, Vector3.up);
+            if (side.sqrMagnitude > 1e-6f)
+            {
+                _load.connectedAnchor = _pivot.Body.transform.InverseTransformPoint(centre + Seat(side.normalized, trunk));
+            }
+        }
+
+        /// <summary>Offset from the fulcrum's centre to where the trunk rests on it, the two surfaces touching.</summary>
+        private Vector3 Seat(Vector3 side, Segment trunk) => ((side * SeatSide) + (Vector3.up * SeatUp)).normalized * (Radius(_pivot) + Radius(trunk));
+
         /// <summary>World point a grip holds on this body's segment (the middle of the segment's volume).</summary>
         public Vector3 GripPoint(string segment) => Find(segment).Body.GetComponent<Collider>().bounds.center;
 
         /// <summary>
-        /// Each physics substep while thrown: steers the body's motion towards a rigid rotation round
-        /// the thrower's fulcrum at the rate the throw needs to reach <paramref name="targetAngle"/>
-        /// (degrees) on time. Contact with the thrower and the grips do the rest; the drive is capped,
-        /// so the body can be stopped by a block or the mat.
+        /// Each physics substep while thrown, the way a thrower applies force: one net force carries
+        /// the body's centre of mass round the thrower's fulcrum along the planned turn (so they lift
+        /// and carry the weight), and one couple turns the body about its own centre at the planned
+        /// rate. Both come out of the thrower's strength, which shrinks without a base, and both are
+        /// pushed back onto the thrower. Limbs are left to the body's own joints, so no effort is spent
+        /// fighting them. Being capped, the drive can be stopped by a block or the mat.
         /// </summary>
         public void DriveThrow(float targetAngle, float targetRate, float deltaTime)
         {
@@ -341,42 +417,126 @@ namespace Wrestling.Presentation
                 return;
             }
 
-            Vector3 current = Vector3.ProjectOnPlane(Find("Spine2").Body.position - Find("Hips").Body.position, _throwAxis);
-            if (current.sqrMagnitude > 1e-6f && _throwReference.sqrMagnitude > 1e-6f)
+            float dt = Mathf.Max(deltaTime, 1e-4f);
+            float turned = TurnAbout(_throwAxis);
+            _throwAngle += turned;
+
+            float spin = turned / dt;
+            float mass = 0f;
+            Vector3 centre = Vector3.zero;
+            Vector3 momentum = Vector3.zero;
+            foreach (Segment segment in _segments)
             {
-                _throwAngle += Vector3.SignedAngle(_throwReference, current, _throwAxis);
-                _throwReference = current;
+                mass += segment.Body.mass;
+                centre += segment.Body.worldCenterOfMass * segment.Body.mass;
+                momentum += segment.Body.linearVelocity * segment.Body.mass;
             }
 
-            float rate = targetRate + (ThrowAngleGain * (targetAngle - _throwAngle));
-            Vector3 omega = _throwAxis * (Mathf.Clamp(rate, -900f, 900f) * Mathf.Deg2Rad);
+            centre /= mass;
+            Vector3 velocity = momentum / mass;
+            // Where the centre of mass should be: its offset from the fulcrum at the start of the turn,
+            // turned by the planned angle. The fulcrum moves with the thrower (rising, bending, kneeling).
             Vector3 pivot = _pivot.Body.position;
-            var forces = new Vector3[_segments.Count];
-            var torques = new Vector3[_segments.Count];
-            float demand = 0f;
+            Quaternion plan = Quaternion.AngleAxis(targetAngle, _throwAxis);
+            Vector3 target = pivot + (plan * _turnOffset);
+            Vector3 targetVelocity = Vector3.Cross(_throwAxis * (targetRate * Mathf.Deg2Rad), target - pivot) + _pivot.Body.linearVelocity;
+            Vector3 carry = mass * ((CarryStiffness * (target - centre)) + (CarryDamping * (targetVelocity - velocity)) - Physics.gravity);
+
+            // The turn: angular acceleration that brings the spin to the planned rate (plus catching
+            // up any lag), as a pure couple: each segment pushed along its circle round the centre.
+            float wantedRate = targetRate + (ThrowAngleGain * (targetAngle - _throwAngle));
+            float alpha = Mathf.Clamp(TurnGain * (wantedRate - spin), -MaxTurnAcceleration, MaxTurnAcceleration) * Mathf.Deg2Rad;
+            float coupleEffort = 0f;
+            var couple = new Vector3[_segments.Count];
+            for (int i = 0; i < _segments.Count; i++)
+            {
+                Vector3 r = Vector3.ProjectOnPlane(_segments[i].Body.worldCenterOfMass - centre, _throwAxis);
+                couple[i] = Vector3.Cross(_throwAxis * alpha, r) * _segments[i].Body.mass;
+                coupleEffort += couple[i].magnitude * 0.5f;
+            }
+
+            // The thrower's whole-body strength caps the effort, and it shrinks without a base.
+            float available = _maxThrowForce * _throwerBody.Support();
+            float demand = carry.magnitude + coupleEffort;
+            float scale = demand > available ? available / demand : 1f;
+            _lastAvailable = available;
+            _lastDemand = demand;
+            if (Trace != null && (++_traceCount % 8) == 0)
+            {
+                Trace(FormattableString.Invariant($"plan {targetAngle:F0}° got {_throwAngle:F0}° spin {spin:F0}°/s want {wantedRate:F0}°/s | com err {(target - centre).magnitude:F2} m (com y {centre.y:F2}, target y {target.y:F2}) | com-pivot {centre - pivot} target-pivot {target - pivot} axis {_throwAxis} | carry {carry.magnitude:F0} N couple {coupleEffort:F0} N avail {available:F0} N scale {scale:F2}"));
+            }
+
+            Vector3 torque = Vector3.zero;
             for (int i = 0; i < _segments.Count; i++)
             {
                 Rigidbody body = _segments[i].Body;
-                Vector3 orbit = Vector3.Cross(omega, body.position - pivot);
-                forces[i] = Vector3.ClampMagnitude(ThrowGain * (orbit - body.linearVelocity), MaxThrowAcceleration) * body.mass;
-                torques[i] = Vector3.ClampMagnitude(ThrowGain * (omega - body.angularVelocity), MaxThrowAcceleration * 4f) * (body.mass * 0.02f);
-                demand += forces[i].magnitude;
+                Vector3 force = (carry * (body.mass / mass)) + couple[i];
+                body.AddForce(force * scale, ForceMode.Force);
+                torque += Vector3.Cross(body.worldCenterOfMass - centre, couple[i] * scale);
             }
 
-            // The thrower's whole-body strength caps the effort; everything pushed onto the opponent is
-            // pushed back onto the thrower at the fulcrum, where their planted legs take it.
-            float scale = demand > _maxThrowForce ? _maxThrowForce / demand : 1f;
-            Vector3 reaction = Vector3.zero;
-            Vector3 reactionTorque = Vector3.zero;
-            for (int i = 0; i < _segments.Count; i++)
+            // Equal and opposite: the carrying force pushes the thrower down and back at the fulcrum,
+            // and the turning couple twists the thrower the other way.
+            _throwerBody.ReceiveReaction(-carry * scale, -torque, pivot);
+        }
+
+        /// <summary>How far (degrees) the trunk has turned about <paramref name="axis"/> since the last call: the twist part of its rotation.</summary>
+        private float TurnAbout(Vector3 axis)
+        {
+            Quaternion now = Find("Spine").Body.rotation;
+            Quaternion delta = now * Quaternion.Inverse(_trunkRotation);
+            _trunkRotation = now;
+            Vector3 v = new Vector3(delta.x, delta.y, delta.z);
+            Vector3 along = Vector3.Project(v, axis);
+            var twist = new Quaternion(along.x, along.y, along.z, delta.w);
+            float length = Mathf.Sqrt((twist.x * twist.x) + (twist.y * twist.y) + (twist.z * twist.z) + (twist.w * twist.w));
+            if (length < 1e-6f)
             {
-                _segments[i].Body.AddForce(forces[i] * scale, ForceMode.Force);
-                _segments[i].Body.AddTorque(torques[i] * scale, ForceMode.Force);
-                reaction -= forces[i] * scale;
-                reactionTorque -= torques[i] * scale;
+                return 0f;
             }
 
-            _throwerBody.ReceiveReaction(reaction, reactionTorque, pivot);
+            float w = Mathf.Clamp(twist.w / length, -1f, 1f);
+            float angle = 2f * Mathf.Acos(Mathf.Abs(w)) * Mathf.Rad2Deg;
+            float sign = Mathf.Sign(Vector3.Dot(along, axis)) * Mathf.Sign(twist.w);
+            return angle * sign;
+        }
+
+        /// <summary>While thrown: the horizontal offset from the thrower's fulcrum to this body's centre of mass.</summary>
+        public Vector3 OffsetFromFulcrum => _pivot == null ? Vector3.zero : Vector3.ProjectOnPlane(CentreOfMass() - _pivot.Body.position, Vector3.up);
+
+        private Vector3 CentreOfMass()
+        {
+            float mass = 0f;
+            Vector3 centre = Vector3.zero;
+            foreach (Segment segment in _segments)
+            {
+                mass += segment.Body.mass;
+                centre += segment.Body.worldCenterOfMass * segment.Body.mass;
+            }
+
+            return centre / mass;
+        }
+
+        /// <summary>Share of full strength this body can push with: more for each foot or knee planted on the mat.</summary>
+        private float Support()
+        {
+            float support = UnsupportedShare;
+            foreach (string part in new[] { "LeftLeg", "RightLeg" })
+            {
+                if (Find(part).Body.GetComponent<Collider>().bounds.min.y < PlantedHeight)
+                {
+                    support += PlantedShare;
+                }
+            }
+
+            return Mathf.Min(support, 1f);
+        }
+
+        private static float Radius(Segment segment)
+        {
+            Collider collider = segment.Body.GetComponent<Collider>();
+            float scale = segment.Body.transform.lossyScale.x;
+            return collider is CapsuleCollider capsule ? capsule.radius * scale : collider is SphereCollider sphere ? sphere.radius * scale : 0f;
         }
 
         private void ReceiveReaction(Vector3 force, Vector3 torque, Vector3 point)
@@ -393,8 +553,26 @@ namespace Wrestling.Presentation
         public void StartTurn(Vector3 axis)
         {
             _throwAxis = axis.normalized;
-            _throwReference = Vector3.ProjectOnPlane(Find("Spine2").Body.position - Find("Hips").Body.position, _throwAxis);
+            _trunkRotation = Find("Spine").Body.rotation;
             _throwAngle = 0f;
+            if (_pivot != null)
+            {
+                _turnOffset = CentreOfMass() - _pivot.Body.position;
+                _turning = true;
+                // From here the carry is what the arms and hips apply (strength-capped, pushed back on
+                // the thrower); the grips and the squeeze only keep the hands and bodies in contact.
+                // Left stiff, they would pin the body to where the animation puts the hands.
+                var contact = new JointDrive { positionSpring = GripSpring * TurnContactShare, positionDamper = GripDamper * TurnContactShare, maximumForce = _maxThrowForce * TurnContactShare };
+                foreach (ConfigurableJoint joint in _gripJoints)
+                {
+                    if (joint != null)
+                    {
+                        joint.xDrive = contact;
+                        joint.yDrive = contact;
+                        joint.zDrive = contact;
+                    }
+                }
+            }
         }
 
         /// <summary>Lets go: the grips release and the body flies on with its momentum, then lands.</summary>
@@ -428,6 +606,8 @@ namespace Wrestling.Presentation
             }
 
             _gripJoints.Clear();
+            _load = null;
+            _turning = false;
             _pivot = null;
             _throwerBody = null;
         }
