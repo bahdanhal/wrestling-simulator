@@ -109,6 +109,9 @@ namespace Wrestling.Presentation
         /// <summary>Muscle activation time (s): how quickly a change in what the animation asks for reaches the muscles.</summary>
         private const float ActivationSeconds = 0.05f;
 
+        /// <summary>Fastest the hips rise (m/s) when the animation stands a wrestler up.</summary>
+        private const float MaxRiseSpeed = 1f;
+
         /// <summary>Fastest a joint target may move (degrees per second; a pitcher's elbow peaks near 2000).</summary>
         private const float MaxJointSpeed = 900f;
 
@@ -131,8 +134,19 @@ namespace Wrestling.Presentation
         /// <summary>Whole-body radius of gyration (m) for turning the body as one.</summary>
         private const float GyrationRadius = 0.3f;
 
-        /// <summary>Most the legs can push, in body weights, at average strength (sprinters and lifters reach 2.5–3).</summary>
+        /// <summary>Most the legs can push, in body weights, at average strength, nearly straight (sprinters and lifters reach 2.5–3) and from a deep crouch or the mat.</summary>
         private const float LegCapacity = 2.6f;
+        private const float DeepLegCapacity = 1.1f;
+
+        /// <summary>
+        /// Legs push hardest nearly straight and weakest deeply bent (the muscles' force–length
+        /// relation): from the mat or a deep crouch a wrestler rises slowly, helped by a hand post.
+        /// </summary>
+        private float LegCapacityAt(float hipHeight)
+        {
+            float standing = 0.5f * _height;
+            return Mathf.Lerp(DeepLegCapacity, LegCapacity, Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.35f * standing, 0.8f * standing, hipHeight)));
+        }
 
         /// <summary>Friction between shoes, knees or skin and the mat.</summary>
         private const float MatFriction = 0.9f;
@@ -487,6 +501,12 @@ namespace Wrestling.Presentation
             float follow = 1f - Mathf.Exp(-dt / ActivationSeconds);
             Segment root = Root;
             Vector3 rootPosition = _hasRootTarget ? Vector3.Lerp(_rootTarget, root.Bone.position, follow) : root.Bone.position;
+            if (_hasRootTarget && rootPosition.y > _rootTarget.y + (MaxRiseSpeed * dt))
+            {
+                // Getting up takes a moment: the hips rise no faster than a wrestler stands from the mat.
+                rootPosition.y = _rootTarget.y + (MaxRiseSpeed * dt);
+            }
+
             Quaternion rootRotation = _hasRootTarget ? Quaternion.Slerp(_rootTargetRotation, root.Bone.rotation, follow) : root.Bone.rotation;
             if (_hasRootTarget)
             {
@@ -565,6 +585,13 @@ namespace Wrestling.Presentation
         {
             _lastSubstep = Mathf.Max(deltaTime, 1e-4f);
             SenseSupport();
+            if (_mode == Mode.Thrown)
+            {
+                // Before the turn the defender still stands on their own base, giving way only as they
+                // are drawn onto the thrower; once the turn starts they are off their feet.
+                _authority = _turning ? 0f : ThrownResistance * (1f - Loaded());
+            }
+
             Balance();
             if (_mode == Mode.Thrown)
             {
@@ -733,11 +760,30 @@ namespace Wrestling.Presentation
             }
 
             Support = Mathf.Min(support, 1f);
+            float limbs = 0f;
+            foreach (Segment segment in _segments)
+            {
+                if (segment.OnMat && !IsTrunk(segment))
+                {
+                    limbs += segment.SupportWeight;
+                }
+            }
+
+            LimbSupport = Mathf.Min(limbs, 1f);
             // Contacts chatter for a substep or two as the feet roll and shift: a base the body had a
             // moment ago still lets it push (a fast rise, a slow fade over SupportMemorySeconds).
             float fade = _lastSubstep / SupportMemorySeconds;
             HeldSupport = Mathf.Max(Support, HeldSupport - fade);
         }
+
+        /// <summary>
+        /// Share of support from feet, knees and hands only: what can push the body up. The trunk or
+        /// head on the mat holds it and lets it slide and roll, but a body cannot rise off its back;
+        /// getting up takes a hand post or a knee under the hips.
+        /// </summary>
+        public float LimbSupport { get; private set; }
+
+        private static bool IsTrunk(Segment segment) => segment.Parent == null || segment.Name.StartsWith("Spine", StringComparison.Ordinal) || segment.Name == "Head";
 
         /// <summary>The support over the last moment (fades over <see cref="SupportMemorySeconds"/>), for efforts like throws that do not stop for a foot rolling.</summary>
         public float HeldSupport { get; private set; }
@@ -770,7 +816,8 @@ namespace Wrestling.Presentation
             Vector3 wanted = _mass * (acceleration - Physics.gravity);
 
             float weight = _mass * -Physics.gravity.y;
-            float most = share * weight * LegCapacity * _lowerStrength * _brace;
+            float lifting = Mathf.Max(LimbSupport, carried) * _authority * _balanceShare;
+            float most = lifting * weight * LegCapacityAt(position.y) * _lowerStrength * _brace;
             float up = Mathf.Clamp(wanted.y, 0f, most);
             if (wanted.y > most)
             {
@@ -1130,8 +1177,28 @@ namespace Wrestling.Presentation
         private const float LoadDamper = 300f;
         private const float LoadShare = 0.5f;
 
-        /// <summary>Share of the hold's stiffness and of the thrower's strength the hand grips keep during the turn.</summary>
-        private const float TurnContactShare = 0.15f;
+        /// <summary>Share of the hold's stiffness and of the thrower's strength the hand grips keep during the turn (enough that the controlled arm stays visibly held).</summary>
+        private const float TurnContactShare = 0.45f;
+
+        /// <summary>Share of their own balance a defender keeps before being loaded, and the least share of the lift a throw keeps when the body is not yet loaded.</summary>
+        private const float ThrownResistance = 0.7f;
+        private const float MinimumLoad = 0.35f;
+
+        /// <summary>The thrown body counts as loaded when its centre of mass is within the first distance (m) of the fulcrum horizontally, and not at all beyond the second.</summary>
+        private const float LoadedDistance = 0.15f;
+        private const float UnloadedDistance = 0.5f;
+
+        /// <summary>How far (0–1) the thrown body is drawn onto the thrower's fulcrum: its centre of mass over it.</summary>
+        private float Loaded()
+        {
+            if (_pivot == null)
+            {
+                return 0f;
+            }
+
+            float distance = Vector3.ProjectOnPlane(CentreOfMass() - _pivot.Body.worldCenterOfMass, Vector3.up).magnitude;
+            return 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(LoadedDistance, UnloadedDistance, distance));
+        }
 
         /// <summary>Centre-of-mass carry gains (1/s², 1/s) and the turn gain (1/s) with its cap (deg/s²).</summary>
         private const float CarryStiffness = 60f;
@@ -1340,6 +1407,9 @@ namespace Wrestling.Presentation
             Vector3 pull = carry - new Vector3(0f, lift, 0f);
             float legs = _maxThrowForce * Mathf.Max(UnsupportedShare, _throwerBody.HeldSupport);
             float arms = _maxThrowForce * ArmsShare;
+            // A body is lifted only once it is loaded onto the fulcrum: hauling up someone still
+            // standing off to the side takes far more than a thrower has.
+            legs *= Mathf.Max(MinimumLoad, Loaded());
             float liftScale = lift > legs ? legs / lift : 1f;
             float pullDemand = pull.magnitude + coupleEffort;
             float pullScale = pullDemand > arms ? arms / pullDemand : 1f;

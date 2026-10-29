@@ -564,7 +564,7 @@ namespace Wrestling.Presentation
         private const float LandingSeconds = 1.2f;
 
         /// <summary>How long (s) a thrown wrestler who counters stays loose before following their counter.</summary>
-        private const float CounterReleaseSeconds = 0.15f;
+        private const float CounterReleaseSeconds = 0.05f;
 
         /// <summary>The fulcrum of throws where the thrower turns their back in under the opponent.</summary>
         private const string HipFulcrum = "Hips";

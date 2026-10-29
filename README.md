@@ -105,7 +105,7 @@ Any stretch of a bout can be rendered as video, with the animation's pelvis targ
 /Applications/Unity/Hub/Editor/6000.6.7f1/Unity.app/Contents/MacOS/Unity -batchmode -projectPath unity/WrestlingSimulator -executeMethod Wrestling.Editor.PhysicsLab.ClipFromCommandLine -clipStyle gr -clipSeed 6 -clipFrom 2380 -clipTicks 150 -clipOutput clip.mp4 -logFile -
 ```
 
-Latest lab run (9 bouts × 60 s, all styles): pelvis 13.5 cm from its animated place on average, a body off its motion (over 25 cm) in 14% of frames (mostly recovering from scrambles and throws), standing collapses 1.4%, mean overlap under 0.1 cm, joints within 2–11°, and 77% of the balance force and turn the bodies use could be made by their mat contacts alone (the rest stands in for stepping and leaning on the opponent). The physics costs about 1 ms per frame for both wrestlers on an Apple Silicon Mac (about 1.8 ms in the lab, which also solves the contact forces).
+Latest lab run (9 bouts × 60 s, all styles): pelvis 10.3 cm from its animated place on average, a body off its motion (over 25 cm) in 11% of frames (mostly recovering from scrambles and throws), standing collapses 1.6%, mean overlap under 0.1 cm, joints within 2–10°, and 78% of the balance force and turn the bodies use could be made by their mat contacts alone (the rest stands in for stepping and leaning on the opponent). The physics costs about 1 ms per frame for both wrestlers on an Apple Silicon Mac (about 1.5 ms in the lab, which also solves the contact forces).
 
 ## Determinism check
 
