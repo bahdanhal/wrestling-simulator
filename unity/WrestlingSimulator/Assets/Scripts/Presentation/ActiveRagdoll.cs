@@ -31,9 +31,28 @@ namespace Wrestling.Presentation
         private enum Mode
         {
             Tracking,
+
+            /// <summary>Thrown: driven round the thrower's fulcrum, hanging from their grips, under gravity.</summary>
+            Thrown,
             Falling,
             Recovering,
         }
+
+        /// <summary>Muscle strength while thrown: the body keeps a wrestler's tension but does not steer.</summary>
+        private const float ThrownMuscle = 0.55f;
+
+        /// <summary>How fast the throw drive corrects the thrown body's motion (1/s), and its cap.</summary>
+        private const float ThrowGain = 18f;
+        private const float MaxThrowAcceleration = 70f;
+
+        /// <summary>How fast a lag behind the throw's planned rotation is made up (1/s).</summary>
+        private const float ThrowAngleGain = 6f;
+
+        private readonly List<ConfigurableJoint> _gripJoints = new List<ConfigurableJoint>();
+        private Segment _pivot;
+        private Vector3 _throwAxis;
+        private Vector3 _throwReference;
+        private float _throwAngle;
 
         private sealed class Segment
         {
@@ -197,6 +216,129 @@ namespace Wrestling.Presentation
 
         public bool IsFalling => _mode == Mode.Falling;
 
+        public bool IsThrown => _mode == Mode.Thrown;
+
+        /// <summary>Rotation achieved so far in the current throw, in degrees about its axis.</summary>
+        public float ThrowAngle => _throwAngle;
+
+        private Segment Find(string segmentName)
+        {
+            foreach (Segment segment in _segments)
+            {
+                if (segment.Name == segmentName)
+                {
+                    return segment;
+                }
+            }
+
+            throw new ArgumentException($"No ragdoll segment '{segmentName}'.");
+        }
+
+        /// <summary>
+        /// Starts a throw: tracking lets go, gravity acts, and the thrower's grip segments are joined to
+        /// this body's held segments. <paramref name="axis"/> is the world rotation axis (unit): the body
+        /// turns round the thrower's <paramref name="pivot"/> segment, so positive angles move its top
+        /// along axis × up.
+        /// </summary>
+        public void BeginThrow(ActiveRagdoll thrower, string pivot, Vector3 axis, IEnumerable<(string Thrower, string Thrown)> grips)
+        {
+            EndGrips();
+            _pivot = thrower.Find(pivot);
+            _throwAxis = axis.normalized;
+            _throwReference = Vector3.ProjectOnPlane(Find("Spine2").Body.position - Find("Hips").Body.position, _throwAxis);
+            _throwAngle = 0f;
+            foreach ((string holder, string held) in grips)
+            {
+                Segment mine = Find(held);
+                Segment theirs = thrower.Find(holder);
+                var joint = mine.Body.gameObject.AddComponent<ConfigurableJoint>();
+                joint.connectedBody = theirs.Body;
+                joint.autoConfigureConnectedAnchor = true;
+                joint.anchor = Vector3.zero;
+                joint.xMotion = ConfigurableJointMotion.Limited;
+                joint.yMotion = ConfigurableJointMotion.Limited;
+                joint.zMotion = ConfigurableJointMotion.Limited;
+                joint.linearLimit = new SoftJointLimit { limit = 0.05f };
+                joint.linearLimitSpring = new SoftJointLimitSpring { spring = 6000f, damper = 300f };
+                joint.angularXMotion = ConfigurableJointMotion.Free;
+                joint.angularYMotion = ConfigurableJointMotion.Free;
+                joint.angularZMotion = ConfigurableJointMotion.Free;
+                joint.enableCollision = true;
+                _gripJoints.Add(joint);
+            }
+
+            _mode = Mode.Thrown;
+            _tracking = 0f;
+            SetGravity(true);
+            SetMuscle(ThrownMuscle);
+        }
+
+        /// <summary>
+        /// Each physics substep while thrown: steers the body's motion towards a rigid rotation round
+        /// the thrower's fulcrum at the rate the throw needs to reach <paramref name="targetAngle"/>
+        /// (degrees) on time. Contact with the thrower and the grips do the rest; the drive is capped,
+        /// so the body can be stopped by a block or the mat.
+        /// </summary>
+        public void DriveThrow(float targetAngle, float targetRate, float deltaTime)
+        {
+            if (_mode != Mode.Thrown)
+            {
+                return;
+            }
+
+            Vector3 current = Vector3.ProjectOnPlane(Find("Spine2").Body.position - Find("Hips").Body.position, _throwAxis);
+            if (current.sqrMagnitude > 1e-6f && _throwReference.sqrMagnitude > 1e-6f)
+            {
+                _throwAngle += Vector3.SignedAngle(_throwReference, current, _throwAxis);
+                _throwReference = current;
+            }
+
+            float rate = targetRate + (ThrowAngleGain * (targetAngle - _throwAngle));
+            Vector3 omega = _throwAxis * (Mathf.Clamp(rate, -900f, 900f) * Mathf.Deg2Rad);
+            Vector3 pivot = _pivot.Body.position;
+            foreach (Segment segment in _segments)
+            {
+                Rigidbody body = segment.Body;
+                Vector3 orbit = Vector3.Cross(omega, body.position - pivot);
+                body.AddForce(Vector3.ClampMagnitude(ThrowGain * (orbit - body.linearVelocity), MaxThrowAcceleration), ForceMode.Acceleration);
+                body.AddTorque(Vector3.ClampMagnitude(ThrowGain * (omega - body.angularVelocity), MaxThrowAcceleration * 4f), ForceMode.Acceleration);
+            }
+        }
+
+        /// <summary>Lets go: the grips release and the body flies on with its momentum, then lands.</summary>
+        public void EndThrow(float fallSeconds)
+        {
+            if (_mode != Mode.Thrown)
+            {
+                return;
+            }
+
+            EndGrips();
+            _mode = Mode.Tracking;
+            Fall(fallSeconds);
+        }
+
+        private void EndGrips()
+        {
+            foreach (ConfigurableJoint joint in _gripJoints)
+            {
+                if (joint != null)
+                {
+                    if (Application.isPlaying)
+                    {
+                        UnityEngine.Object.Destroy(joint);
+                    }
+                    else
+                    {
+                        UnityEngine.Object.DestroyImmediate(joint);
+                    }
+                }
+            }
+
+            _gripJoints.Clear();
+            _pivot = null;
+        }
+
         /// <summary>Puts the body exactly on the animated pose at rest (bout start, restarts, snapshots).</summary>
         public void Reset()
         {
@@ -210,6 +352,7 @@ namespace Wrestling.Presentation
                 segment.HasTarget = false;
             }
 
+            EndGrips();
             _mode = Mode.Tracking;
             _tracking = TrackingGain;
             SetGravity(false);
@@ -220,6 +363,11 @@ namespace Wrestling.Presentation
         /// <summary>Starts a fall: tracking lets go for <paramref name="seconds"/> and the body falls with the motion it has.</summary>
         public void Fall(float seconds)
         {
+            if (_mode == Mode.Thrown)
+            {
+                return;
+            }
+
             if (_mode == Mode.Falling)
             {
                 _fallSeconds = Mathf.Max(_fallSeconds, _timer + seconds);

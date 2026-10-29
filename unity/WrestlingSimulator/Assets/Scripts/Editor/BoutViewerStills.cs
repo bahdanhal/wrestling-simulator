@@ -37,7 +37,7 @@ namespace Wrestling.Editor
             Danger,
             Result,
 
-            /// <summary>Six frames across one throw, from its start, in a grid.</summary>
+            /// <summary>Six frames across one throw's flight and landing, in a grid.</summary>
             ThrowSequence,
 
             /// <summary>Six frames three ticks apart around the moment a counter interrupts an attack.</summary>
@@ -135,7 +135,7 @@ namespace Wrestling.Editor
                     if (moment == Moment.ThrowSequence || moment == Moment.CounterSequence)
                     {
                         viewer.FastForward(shot.Tick - 1);
-                        CaptureSequence(viewer, camera, file, moment == Moment.CounterSequence ? 3 : 11);
+                        CaptureSequence(viewer, camera, file, moment == Moment.CounterSequence ? 3 : 7);
                         Debug.Log($"Wrote {file} (seed {shot.Seed}, from tick {shot.Tick}).");
                         continue;
                     }
@@ -188,7 +188,7 @@ namespace Wrestling.Editor
                         && technique.Start.Positions.Contains(StartPosition.NeutralTied))
                     {
                         found[Moment.Throw] = tick;
-                        found[Moment.ThrowSequence] = active.StartTick;
+                        found[Moment.ThrowSequence] = tick - active.PhaseTick - 4;
                     }
 
                     if (!found.ContainsKey(Moment.CounterSequence) && technique.Role == TechniqueRole.Counter && active.StartTick > 8)
@@ -294,7 +294,7 @@ namespace Wrestling.Editor
                 {
                     viewer.FastForward(frame == 0 ? 1 : spacing);
                     WrestlerCharacter[] pair = UnityEngine.Object.FindObjectsByType<WrestlerCharacter>(FindObjectsInactive.Exclude);
-                    Debug.Log($"[overlap] {Path.GetFileName(file)} frame {frame}: {pair[0].Ragdoll.DeepestOverlap(pair[1].Ragdoll) * 100f:F1} cm");
+                    Debug.Log($"[overlap] {Path.GetFileName(file)} frame {frame}: {pair[0].Ragdoll.DeepestOverlap(pair[1].Ragdoll) * 100f:F1} cm, throw angles {pair[0].Ragdoll.ThrowAngle:F0}/{pair[1].Ragdoll.ThrowAngle:F0} (thrown {pair[0].Ragdoll.IsThrown}/{pair[1].Ragdoll.IsThrown})");
                     camera.targetTexture = target;
                     Canvas.ForceUpdateCanvases();
                     camera.Render();

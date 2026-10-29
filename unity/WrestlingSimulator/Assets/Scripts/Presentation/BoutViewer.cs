@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using Wrestling.Core.Match;
 using Wrestling.Core.Rules;
@@ -42,6 +43,9 @@ namespace Wrestling.Presentation
         private float _finishedFor;
         private bool _snapNextFrame;
         private readonly float[] _previousAnchor = new float[2];
+        private TechniqueExecution _throwTechnique;
+        private int _throwPhase = -1;
+        private Corner _thrown;
         private readonly GroundState[] _previousGround = new GroundState[2];
 
         /// <summary>Physics substep for the ragdolls (display only).</summary>
@@ -256,7 +260,7 @@ namespace Wrestling.Presentation
                 bool released = _previousAnchor[i] >= 0.95f && anchor < 0.95f;
                 bool wasUp = _previousGround[i] == GroundState.Standing || _previousGround[i] == GroundState.OneKnee;
                 bool landedLying = ground == GroundState.Prone || ground == GroundState.Supine || ground == GroundState.Bridge;
-                if (released)
+                if (released && !figures[i].Ragdoll.IsThrown)
                 {
                     figures[i].Ragdoll.Fall(0.9f);
                 }
@@ -269,6 +273,9 @@ namespace Wrestling.Presentation
                 _previousGround[i] = ground;
             }
 
+            var throwing = _choreographer.Throw;
+            UpdateThrow(throwing, figures);
+
             _redFigure.Ragdoll.BeforeStep(deltaTime);
             _blueFigure.Ragdoll.BeforeStep(deltaTime);
             int steps = Mathf.Clamp(Mathf.CeilToInt(deltaTime / PhysicsStep), 1, 8);
@@ -276,11 +283,80 @@ namespace Wrestling.Presentation
             {
                 _redFigure.Ragdoll.Drive();
                 _blueFigure.Ragdoll.Drive();
+                if (throwing != null && _throwTechnique != null)
+                {
+                    var t = throwing.Value;
+                    float progress = t.Progress + ((s + 0.5f) / steps * deltaTime / Mathf.Max(t.PhaseSeconds, 1e-3f));
+                    (float angle, float rate) = ThrowPlan(t.Spec, progress, t.PhaseSeconds);
+                    figures[(int)_thrown].Ragdoll.DriveThrow(angle, rate, deltaTime / steps);
+                }
+
                 Physics.Simulate(deltaTime / steps);
             }
 
             _redFigure.Ragdoll.AfterStep();
             _blueFigure.Ragdoll.AfterStep();
+        }
+
+        /// <summary>
+        /// Starts the thrown wrestler's physical flight when a throw phase reaches its window, and lets
+        /// go when the window ends or the technique stops (completed, failed or countered).
+        /// </summary>
+        private void UpdateThrow((TechniqueExecution Technique, Corner Thrower, ThrowSpec Spec, float Progress, float PhaseSeconds, bool Mirrored)? throwing, WrestlerCharacter[] figures)
+        {
+            bool active = throwing != null && throwing.Value.Progress >= throwing.Value.Spec.From && throwing.Value.Progress < throwing.Value.Spec.To;
+
+            if (_throwTechnique != null)
+            {
+                bool same = active && ReferenceEquals(throwing.Value.Technique, _throwTechnique) && throwing.Value.Technique.PhaseIndex == _throwPhase;
+                if (!same)
+                {
+                    figures[(int)_thrown].Ragdoll.EndThrow(0.8f);
+                    _throwTechnique = null;
+                    _throwPhase = -1;
+                }
+            }
+
+            if (active && _throwTechnique == null && !(throwing.Value.Technique.PhaseIndex == _throwPhase))
+            {
+                var t = throwing.Value;
+                _thrown = t.Thrower.Opponent();
+                Vector3 forward = WrestlerFrame.OnMat(_shown[(int)t.Thrower].Facing).normalized;
+                Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
+                // ω = up × direction makes the body's top move along the direction (v = ω × r).
+                Vector3 axis = t.Spec.Axis == ThrowAxis.Lateral
+                    ? Vector3.Cross(Vector3.up, forward)
+                    : Vector3.Cross(Vector3.up, right) * (t.Mirrored ? -1f : 1f);
+                var grips = new List<(string, string)>();
+                foreach (ThrowGrip grip in t.Spec.Grips)
+                {
+                    grips.Add((Mirror(grip.Thrower, t.Mirrored), Mirror(grip.Thrown, t.Mirrored)));
+                }
+
+                figures[(int)_thrown].Ragdoll.BeginThrow(figures[(int)t.Thrower].Ragdoll, t.Spec.Pivot, axis, grips);
+                _throwTechnique = t.Technique;
+                _throwPhase = t.Technique.PhaseIndex;
+            }
+        }
+
+        /// <summary>The throw's planned rotation at phase progress <paramref name="progress"/>: eased in and out over its window.</summary>
+        private static (float Angle, float Rate) ThrowPlan(ThrowSpec spec, float progress, float phaseSeconds)
+        {
+            float span = spec.To - spec.From;
+            float u = Mathf.Clamp01((progress - spec.From) / span);
+            float angle = spec.Degrees * u * u * (3f - (2f * u));
+            float rate = spec.Degrees * 6f * u * (1f - u) / (span * Mathf.Max(phaseSeconds, 1e-3f));
+            return (angle, rate);
+        }
+
+        private static string Mirror(string segment, bool mirrored)
+        {
+            if (!mirrored)
+            {
+                return segment;
+            }
+
+            return segment.StartsWith("Left") ? "Right" + segment.Substring(4) : segment.StartsWith("Right") ? "Left" + segment.Substring(5) : segment;
         }
 
         /// <summary>

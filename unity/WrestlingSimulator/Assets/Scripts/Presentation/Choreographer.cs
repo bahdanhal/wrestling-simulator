@@ -33,6 +33,9 @@ namespace Wrestling.Presentation
             _library = library;
         }
 
+        /// <summary>The active phase's throw, if it has one: who throws, the spec, phase progress and phase length in seconds, and whether the clip is mirrored.</summary>
+        public (TechniqueExecution Technique, Corner Thrower, ThrowSpec Spec, float Progress, float PhaseSeconds, bool Mirrored)? Throw { get; private set; }
+
         /// <summary>The active clip's id, or null when no technique is running.</summary>
         public string CurrentClip { get; private set; }
 
@@ -51,6 +54,7 @@ namespace Wrestling.Presentation
             TechniqueExecution active = engine.ActiveTechnique;
             Anchors[0] = (AnchorPoint.None, 0f, 0f);
             Anchors[1] = (AnchorPoint.None, 0f, 0f);
+            Throw = null;
             if (active == null || engine.IsStopped)
             {
                 // Holds end with the technique; the next one eases in from the displayed pose.
@@ -75,6 +79,10 @@ namespace Wrestling.Presentation
 
             float progress = active.PhaseLength > 0 ? (active.PhaseTick + alpha) / active.PhaseLength : 1f;
             (ActorKey executorKey, ActorKey opponentKey) = clip.Sample(progress);
+            if (clip.Throw.Kind == ThrowKind.Throw)
+            {
+                Throw = (active, executor, clip.Throw, progress, active.PhaseLength / (float)BoutClock.TicksPerSecond, _mirror);
+            }
             Anchors[(int)executor] = (executorKey.Anchor, executorKey.AnchorWeight, executorKey.Contact);
             Anchors[(int)executor.Opponent()] = (opponentKey.Anchor, opponentKey.AnchorWeight, opponentKey.Contact);
             WrestlerFrame placedExecutor = Place(executorKey, executorFrame);

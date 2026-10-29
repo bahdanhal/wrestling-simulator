@@ -40,6 +40,21 @@ public class MoveAnimationTests
     }
 
     [Fact]
+    public void ThrowPhasesLoadTheirOwnThrowSpecs()
+    {
+        MoveClip headlock = Library.Get(Catalog.Get("technique.all.headlock_throw").Phases[1].Animation);
+        MoveClip entry = Library.Get(Catalog.Get("technique.all.headlock_throw").Phases[0].Animation);
+        MoveClip fireman = Library.Get(Catalog.Get("technique.fs.fireman_carry").Phases[1].Animation);
+        Assert.Equal(ThrowKind.Throw, headlock.Throw.Kind);
+        Assert.Equal(ThrowAxis.Lateral, headlock.Throw.Axis);
+        Assert.Contains(headlock.Throw.Grips, g => g.Thrown == "Head");
+        Assert.Equal(ThrowKind.None, entry.Throw.Kind);
+        Assert.Equal(ThrowAxis.Forward, fireman.Throw.Axis);
+        Assert.NotSame(headlock.Throw, fireman.Throw);
+        Assert.Equal(ThrowKind.None, ThrowSpec.NoThrow.Kind);
+    }
+
+    [Fact]
     public void SamplingHitsKeysAndEasesBetweenThem()
     {
         MoveClip clip = Clip(Key(0f, x: 0f, heading: 170f, ground: GroundState.Standing), Key(1f, x: 1f, heading: -170f, ground: GroundState.Prone));

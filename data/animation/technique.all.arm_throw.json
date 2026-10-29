@@ -111,7 +111,16 @@
             "contact": 0.11
           }
         }
-      ]
+      ],
+      "throw": {
+        "kind": "none",
+        "pivot": "",
+        "axis": "lateral",
+        "degrees": 0,
+        "from": 0,
+        "to": 1,
+        "grips": []
+      }
     },
     {
       "id": "anim.arm_throw.flight",
@@ -292,7 +301,25 @@
             "contact": 0.0
           }
         }
-      ]
+      ],
+      "throw": {
+        "kind": "throw",
+        "pivot": "Hips",
+        "axis": "lateral",
+        "degrees": 180,
+        "from": 0.0,
+        "to": 0.8,
+        "grips": [
+          {
+            "thrower": "RightForeArm",
+            "thrown": "RightArm"
+          },
+          {
+            "thrower": "LeftForeArm",
+            "thrown": "RightForeArm"
+          }
+        ]
+      }
     }
   ]
 }

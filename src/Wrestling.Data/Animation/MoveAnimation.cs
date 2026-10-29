@@ -95,6 +95,62 @@ namespace Wrestling.Data.Animation
         public ActorKey Opponent { get; init; } = new ActorKey();
     }
 
+    /// <summary>How the thrown wrestler moves in a phase.</summary>
+    public enum ThrowKind
+    {
+        /// <summary>Both wrestlers follow the clip (with physical contact between them).</summary>
+        None,
+
+        /// <summary>The thrown wrestler is a physical body, pulled over a fulcrum on the thrower.</summary>
+        Throw,
+    }
+
+    /// <summary>Axis of a throw's rotation, relative to the thrower's facing.</summary>
+    public enum ThrowAxis
+    {
+        /// <summary>Head over heels across the thrower's left-right axis (hip tosses, suplexes, lifts).</summary>
+        Lateral,
+
+        /// <summary>Sideways about the thrower's facing (body-lock throws, lateral drops, fireman's carry).</summary>
+        Forward,
+    }
+
+    /// <summary>A thrower's hand joined to a point of the thrown wrestler for the throw.</summary>
+    public sealed class ThrowGrip
+    {
+        /// <summary>Thrower's body segment holding (for example "RightForeArm").</summary>
+        public string Thrower { get; init; } = string.Empty;
+
+        /// <summary>Thrown wrestler's segment held (for example "Head", "Spine2", "LeftUpLeg").</summary>
+        public string Thrown { get; init; } = string.Empty;
+    }
+
+    /// <summary>
+    /// The physics of a throw phase: the thrown wrestler's body is driven round the thrower's
+    /// <see cref="Pivot"/> segment by <see cref="Degrees"/> between <see cref="From"/> and <see cref="To"/>
+    /// of the phase, held by the grips, colliding with the thrower, under gravity; after
+    /// <see cref="To"/> it flies free and lands. Positive degrees on the lateral axis take the thrown
+    /// wrestler's top towards the thrower's front; on the forward axis, towards the thrower's right.
+    /// </summary>
+    public sealed class ThrowSpec
+    {
+        public static readonly ThrowSpec NoThrow = new ThrowSpec();
+
+        public ThrowKind Kind { get; init; }
+
+        public string Pivot { get; init; } = string.Empty;
+
+        public ThrowAxis Axis { get; init; }
+
+        public float Degrees { get; init; }
+
+        public float From { get; init; }
+
+        public float To { get; init; } = 1f;
+
+        public IReadOnlyList<ThrowGrip> Grips { get; init; } = Array.Empty<ThrowGrip>();
+    }
+
     /// <summary>The paired motion for one technique phase, sampled by phase progress.</summary>
     public sealed class MoveClip
     {
@@ -104,10 +160,49 @@ namespace Wrestling.Data.Animation
 
         public IReadOnlyList<ClipKey> Keys { get; init; } = Array.Empty<ClipKey>();
 
+        /// <summary>Physics of the thrown wrestler in this phase (<see cref="ThrowKind.None"/> for most clips).</summary>
+        public ThrowSpec Throw { get; init; } = ThrowSpec.NoThrow;
+
+        /// <summary>Ragdoll segment names a throw may refer to.</summary>
+        public static readonly IReadOnlyCollection<string> Segments = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "Hips", "Spine", "Spine2", "Head", "LeftArm", "LeftForeArm", "RightArm", "RightForeArm",
+            "LeftUpLeg", "LeftLeg", "RightUpLeg", "RightLeg",
+        };
+
         public IReadOnlyList<string> Validate()
         {
             var errors = new List<string>();
             string path = string.IsNullOrEmpty(Id) ? "clip" : Id;
+            if (Throw == null)
+            {
+                errors.Add($"{path}: throw is missing.");
+            }
+            else if (Throw.Kind == ThrowKind.Throw)
+            {
+                if (!Segments.Contains(Throw.Pivot))
+                {
+                    errors.Add($"{path}: throw pivot '{Throw.Pivot}' is not a body segment.");
+                }
+
+                if (Throw.From < 0f || Throw.To > 1f || Throw.From >= Throw.To)
+                {
+                    errors.Add($"{path}: throw window must satisfy 0 <= from < to <= 1.");
+                }
+
+                if (Math.Abs(Throw.Degrees) > 300f || Throw.Degrees == 0f)
+                {
+                    errors.Add($"{path}: throw degrees must be non-zero and within ±300.");
+                }
+
+                foreach (ThrowGrip grip in Throw.Grips)
+                {
+                    if (!Segments.Contains(grip.Thrower) || !Segments.Contains(grip.Thrown))
+                    {
+                        errors.Add($"{path}: throw grip '{grip.Thrower}' -> '{grip.Thrown}' names an unknown segment.");
+                    }
+                }
+            }
             if (string.IsNullOrWhiteSpace(Id))
             {
                 errors.Add("Clip id must not be empty.");

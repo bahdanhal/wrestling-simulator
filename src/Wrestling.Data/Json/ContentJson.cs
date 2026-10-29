@@ -23,6 +23,9 @@ namespace Wrestling.Data.Json
                 FloatParseHandling = FloatParseHandling.Decimal,
                 DateParseHandling = DateParseHandling.None,
                 NullValueHandling = NullValueHandling.Include,
+                // Always build new objects: populating a property's default instance would write into
+                // shared defaults (static "empty" values) and leak one file's content into another.
+                ObjectCreationHandling = ObjectCreationHandling.Replace,
                 Formatting = Formatting.Indented,
             };
             settings.Converters.Add(new StringEnumConverter(new CamelCaseNamingStrategy(), allowIntegerValues: false));

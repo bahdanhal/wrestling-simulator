@@ -76,7 +76,16 @@
             "contact": 0.0
           }
         }
-      ]
+      ],
+      "throw": {
+        "kind": "none",
+        "pivot": "",
+        "axis": "lateral",
+        "degrees": 0,
+        "from": 0,
+        "to": 1,
+        "grips": []
+      }
     },
     {
       "id": "anim.leg_lace.roll",
@@ -187,7 +196,16 @@
             "contact": 0.0
           }
         }
-      ]
+      ],
+      "throw": {
+        "kind": "none",
+        "pivot": "",
+        "axis": "lateral",
+        "degrees": 0,
+        "from": 0,
+        "to": 1,
+        "grips": []
+      }
     }
   ]
 }

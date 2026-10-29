@@ -111,7 +111,25 @@
             "contact": 0.11
           }
         }
-      ]
+      ],
+      "throw": {
+        "kind": "throw",
+        "pivot": "Spine2",
+        "axis": "lateral",
+        "degrees": -150,
+        "from": 0.3,
+        "to": 0.95,
+        "grips": [
+          {
+            "thrower": "RightForeArm",
+            "thrown": "Spine2"
+          },
+          {
+            "thrower": "LeftForeArm",
+            "thrown": "Spine"
+          }
+        ]
+      }
     }
   ]
 }
