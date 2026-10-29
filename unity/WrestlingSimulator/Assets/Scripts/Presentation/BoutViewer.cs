@@ -314,8 +314,14 @@ namespace Wrestling.Presentation
             Pose blueBody = bluePose;
             if (!recorded)
             {
+                // Two passes: grips on the opponent's arms (wrist control, two-on-one, overhooks) aim at
+                // where those arms are once placed, not where they hang before the arms are solved.
                 PoseSolver.SolveArms(ref redPose, _redFigure.Body, redRole, _shown[0], in blueBody, engine.Grips.Of(Corner.Red));
                 PoseSolver.SolveArms(ref bluePose, _blueFigure.Body, blueRole, _shown[1], in redBody, engine.Grips.Of(Corner.Blue));
+                Pose redArms = redPose;
+                Pose blueArms = bluePose;
+                PoseSolver.SolveArms(ref redPose, _redFigure.Body, redRole, _shown[0], in blueArms, engine.Grips.Of(Corner.Red));
+                PoseSolver.SolveArms(ref bluePose, _blueFigure.Body, blueRole, _shown[1], in redArms, engine.Grips.Of(Corner.Blue));
             }
 
             if (!recorded)
