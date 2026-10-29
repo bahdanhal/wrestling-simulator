@@ -132,6 +132,16 @@ namespace Wrestling.Editor
                     viewer.StartBout(shot.Seed);
                     Debug.Log($"Built both wrestlers in {build.ElapsedMilliseconds} ms.");
                     string file = Path.Combine(folder, $"bout-{Slug(style)}-{Slug(moment.ToString())}.png");
+                    if (moment == Moment.ThrowSequence)
+                    {
+                        // The throw as video too: timing and impact cannot be judged from stills.
+                        viewer.Style = style;
+                        viewer.StartBout(shot.Seed);
+                        viewer.FastForward(Math.Max(1, shot.Tick - VideoLead));
+                        CaptureVideo(viewer, camera, Path.Combine(folder, $"bout-{Slug(style)}-throw.mp4"));
+                        viewer.StartBout(shot.Seed);
+                    }
+
                     if (moment == Moment.ThrowSequence || moment == Moment.CounterSequence)
                     {
                         viewer.FastForward(shot.Tick - 1);
@@ -316,6 +326,66 @@ namespace Wrestling.Editor
                 UnityEngine.Object.DestroyImmediate(target);
                 UnityEngine.Object.DestroyImmediate(sheet);
             }
+        }
+
+        private const int VideoLead = 50;
+        private const int VideoTicks = 150;
+        private const int VideoWidth = 1280;
+        private const int VideoHeight = 720;
+
+        /// <summary>Renders <see cref="VideoTicks"/> ticks live at 30 frames per second and encodes them with ffmpeg.</summary>
+        private static void CaptureVideo(BoutViewer viewer, Camera camera, string file)
+        {
+            string ffmpeg = new[] { "/Users/bahdan/git/brew/bin/ffmpeg", "/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg", "/usr/bin/ffmpeg" }.FirstOrDefault(File.Exists);
+            if (ffmpeg == null)
+            {
+                Debug.LogWarning("ffmpeg not found; skipping video " + file);
+                return;
+            }
+
+            string frames = Path.Combine(Path.GetTempPath(), "wrestling-video-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(frames);
+            foreach (SkinnedMeshRenderer skinned in UnityEngine.Object.FindObjectsByType<SkinnedMeshRenderer>(FindObjectsInactive.Exclude))
+            {
+                skinned.forceMatrixRecalculationPerRender = true;
+            }
+
+            var target = new RenderTexture(VideoWidth, VideoHeight, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            var image = new Texture2D(VideoWidth, VideoHeight, TextureFormat.RGB24, false);
+            RenderTexture previousTarget = camera.targetTexture;
+            RenderTexture previousActive = RenderTexture.active;
+            try
+            {
+                for (int frame = 0; frame < VideoTicks / 2; frame++)
+                {
+                    viewer.FastForward(2);
+                    camera.targetTexture = target;
+                    Canvas.ForceUpdateCanvases();
+                    camera.Render();
+                    RenderTexture.active = target;
+                    image.ReadPixels(new Rect(0, 0, VideoWidth, VideoHeight), 0, 0);
+                    image.Apply();
+                    File.WriteAllBytes(Path.Combine(frames, $"{frame:D4}.png"), image.EncodeToPNG());
+                }
+            }
+            finally
+            {
+                camera.targetTexture = previousTarget;
+                RenderTexture.active = previousActive;
+                target.Release();
+                UnityEngine.Object.DestroyImmediate(target);
+                UnityEngine.Object.DestroyImmediate(image);
+            }
+
+            var encode = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = ffmpeg,
+                Arguments = $"-y -loglevel error -framerate 30 -i \"{Path.Combine(frames, "%04d.png")}\" -c:v libx264 -pix_fmt yuv420p -crf 20 \"{file}\"",
+                UseShellExecute = false,
+            });
+            encode.WaitForExit();
+            Directory.Delete(frames, true);
+            Debug.Log(encode.ExitCode == 0 ? $"Wrote {file}." : $"ffmpeg failed ({encode.ExitCode}) for {file}.");
         }
 
         private static void Capture(Camera camera, string file)

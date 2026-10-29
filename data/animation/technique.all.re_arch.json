@@ -113,13 +113,22 @@
         }
       ],
       "throw": {
-        "kind": "none",
-        "pivot": "",
+        "kind": "throw",
+        "pivot": "Spine2",
         "axis": "lateral",
-        "degrees": 0,
-        "from": 0,
-        "to": 1,
-        "grips": []
+        "degrees": -120,
+        "from": 0.1,
+        "to": 0.9,
+        "grips": [
+          {
+            "thrower": "RightForeArm",
+            "thrown": "Spine2"
+          },
+          {
+            "thrower": "LeftForeArm",
+            "thrown": "Spine"
+          }
+        ]
       }
     }
   ]

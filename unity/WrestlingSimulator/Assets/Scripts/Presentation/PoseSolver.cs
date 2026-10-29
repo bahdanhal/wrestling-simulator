@@ -235,8 +235,14 @@ namespace Wrestling.Presentation
                     return posted;
                 }
 
-                // Ready stance: hands up in front, elbows in.
-                return shoulder + (reachForward * ((body.UpperArm + body.Forearm) * 0.6f)) - (Vector3.up * 0.12f) - (current.Left * (side * 0.08f));
+                // Hand fighting: each hand works the opponent's facing wrist and forearm (my left
+                // against their right), reaching as far as the arm allows.
+                Vector3 otherForward = Vector3.ProjectOnPlane(other.ChestNormal, Vector3.up).normalized;
+                Vector3 otherShoulder = side > 0f ? other.ShoulderR : other.ShoulderL;
+                Vector3 opponentForearm = otherShoulder + (otherForward * ((body.UpperArm + body.Forearm) * 0.55f)) - (Vector3.up * 0.15f);
+                Vector3 ready = shoulder + (reachForward * ((body.UpperArm + body.Forearm) * 0.6f)) - (Vector3.up * 0.12f) - (current.Left * (side * 0.08f));
+                bool inReach = (opponentForearm - shoulder).magnitude < (body.UpperArm + body.Forearm) * 1.05f && other.Spine != Vector3.zero;
+                return inReach ? opponentForearm : ready;
             }
 
             Vector3 handL = left ?? DefaultHand(pose.ShoulderL, 1f);
@@ -310,7 +316,8 @@ namespace Wrestling.Presentation
             var pose = new Pose { Left = left };
             float legLength = body.Thigh + body.Shin;
             float hipHeight = Mathf.Min(AnkleHeight + (legLength * (0.45f + (0.53f * frame.Level))), AnkleHeight + (legLength * 0.985f));
-            float lean = Mathf.Lerp(72f, 6f, frame.Posture) + ((1f - frame.Level) * 18f) + ((1f - frame.Balance) * 12f);
+            // A wrestling stance leans in even at full posture: chest over the knees, ready to react.
+            float lean = Mathf.Lerp(72f, 26f, frame.Posture) + ((1f - frame.Level) * 18f) + ((1f - frame.Balance) * 12f);
             pose.Pelvis = WrestlerFrame.OnMat(frame.Position, hipHeight) - (forward * (Mathf.Sin(lean * Mathf.Deg2Rad) * 0.12f));
             pose.Spine = Tilt(forward, lean);
             pose.ChestNormal = Vector3.Cross(pose.Spine, left).normalized;

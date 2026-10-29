@@ -49,6 +49,17 @@ namespace Wrestling.Presentation
         private const float ThrowAngleGain = 6f;
 
         private readonly List<ConfigurableJoint> _gripJoints = new List<ConfigurableJoint>();
+
+        /// <summary>Grip and arm-wrap drives (stiffness N/m, damping) and their share of the thrower's strength.</summary>
+        private const float GripSpring = 6000f;
+        private const float GripDamper = 400f;
+        private const float GripShare = 0.35f;
+        private const float LoadSpring = 5000f;
+        private const float LoadDamper = 500f;
+        private const float LoadShare = 0.5f;
+
+        private ActiveRagdoll _throwerBody;
+        private float _maxThrowForce;
         private Segment _pivot;
         private Vector3 _throwAxis;
         private Vector3 _throwReference;
@@ -250,9 +261,11 @@ namespace Wrestling.Presentation
         /// turns round the thrower's <paramref name="pivot"/> segment, so positive angles move its top
         /// along axis × up.
         /// </summary>
-        public void BeginThrow(ActiveRagdoll thrower, string pivot, Vector3 axis, IEnumerable<(string Thrower, string Thrown)> grips)
+        public void BeginThrow(ActiveRagdoll thrower, string pivot, Vector3 axis, IEnumerable<(string Thrower, string Thrown)> grips, float maxForce)
         {
             EndGrips();
+            _throwerBody = thrower;
+            _maxThrowForce = maxForce;
             _pivot = thrower.Find(pivot);
             _throwAxis = axis.normalized;
             _throwReference = Vector3.ProjectOnPlane(Find("Spine2").Body.position - Find("Hips").Body.position, _throwAxis);
@@ -261,15 +274,22 @@ namespace Wrestling.Presentation
             {
                 Segment mine = Find(held);
                 Segment theirs = thrower.Find(holder);
+                // The hand closes on the held point: a joint drive pulling it to the end of the
+                // thrower's forearm, acting on both bodies equally and capped by grip strength.
                 var joint = mine.Body.gameObject.AddComponent<ConfigurableJoint>();
                 joint.connectedBody = theirs.Body;
-                joint.autoConfigureConnectedAnchor = true;
-                joint.anchor = Vector3.zero;
-                joint.xMotion = ConfigurableJointMotion.Limited;
-                joint.yMotion = ConfigurableJointMotion.Limited;
-                joint.zMotion = ConfigurableJointMotion.Limited;
-                joint.linearLimit = new SoftJointLimit { limit = 0.05f };
-                joint.linearLimitSpring = new SoftJointLimitSpring { spring = 6000f, damper = 300f };
+                joint.autoConfigureConnectedAnchor = false;
+                joint.anchor = mine.Body.transform.InverseTransformPoint(mine.Body.GetComponent<Collider>().bounds.center);
+                var forearm = theirs.Body.GetComponent<CapsuleCollider>();
+                joint.connectedAnchor = forearm != null ? forearm.center * 2f : Vector3.zero;
+                joint.xMotion = ConfigurableJointMotion.Free;
+                joint.yMotion = ConfigurableJointMotion.Free;
+                joint.zMotion = ConfigurableJointMotion.Free;
+                var hold = new JointDrive { positionSpring = GripSpring, positionDamper = GripDamper, maximumForce = maxForce * GripShare };
+                joint.xDrive = hold;
+                joint.yDrive = hold;
+                joint.zDrive = hold;
+                joint.targetPosition = Vector3.zero;
                 joint.angularXMotion = ConfigurableJointMotion.Free;
                 joint.angularYMotion = ConfigurableJointMotion.Free;
                 joint.angularZMotion = ConfigurableJointMotion.Free;
@@ -277,11 +297,36 @@ namespace Wrestling.Presentation
                 _gripJoints.Add(joint);
             }
 
+            // The arm wrap squeezes the trunk onto the fulcrum (hip, back, chest or shoulders), so the
+            // opponent is loaded across the thrower rather than swinging beside them.
+            Segment trunk = Find("Spine");
+            var load = trunk.Body.gameObject.AddComponent<ConfigurableJoint>();
+            load.connectedBody = _pivot.Body;
+            load.autoConfigureConnectedAnchor = false;
+            load.anchor = Vector3.zero;
+            load.connectedAnchor = Vector3.zero;
+            load.xMotion = ConfigurableJointMotion.Free;
+            load.yMotion = ConfigurableJointMotion.Free;
+            load.zMotion = ConfigurableJointMotion.Free;
+            var squeeze = new JointDrive { positionSpring = LoadSpring, positionDamper = LoadDamper, maximumForce = maxForce * LoadShare };
+            load.xDrive = squeeze;
+            load.yDrive = squeeze;
+            load.zDrive = squeeze;
+            load.targetPosition = Vector3.zero;
+            load.angularXMotion = ConfigurableJointMotion.Free;
+            load.angularYMotion = ConfigurableJointMotion.Free;
+            load.angularZMotion = ConfigurableJointMotion.Free;
+            load.enableCollision = true;
+            _gripJoints.Add(load);
+
             _mode = Mode.Thrown;
             _tracking = 0f;
             SetGravity(true);
             SetMuscle(ThrownMuscle);
         }
+
+        /// <summary>World point a grip holds on this body's segment (the middle of the segment's volume).</summary>
+        public Vector3 GripPoint(string segment) => Find(segment).Body.GetComponent<Collider>().bounds.center;
 
         /// <summary>
         /// Each physics substep while thrown: steers the body's motion towards a rigid rotation round
@@ -306,13 +351,50 @@ namespace Wrestling.Presentation
             float rate = targetRate + (ThrowAngleGain * (targetAngle - _throwAngle));
             Vector3 omega = _throwAxis * (Mathf.Clamp(rate, -900f, 900f) * Mathf.Deg2Rad);
             Vector3 pivot = _pivot.Body.position;
-            foreach (Segment segment in _segments)
+            var forces = new Vector3[_segments.Count];
+            var torques = new Vector3[_segments.Count];
+            float demand = 0f;
+            for (int i = 0; i < _segments.Count; i++)
             {
-                Rigidbody body = segment.Body;
+                Rigidbody body = _segments[i].Body;
                 Vector3 orbit = Vector3.Cross(omega, body.position - pivot);
-                body.AddForce(Vector3.ClampMagnitude(ThrowGain * (orbit - body.linearVelocity), MaxThrowAcceleration), ForceMode.Acceleration);
-                body.AddTorque(Vector3.ClampMagnitude(ThrowGain * (omega - body.angularVelocity), MaxThrowAcceleration * 4f), ForceMode.Acceleration);
+                forces[i] = Vector3.ClampMagnitude(ThrowGain * (orbit - body.linearVelocity), MaxThrowAcceleration) * body.mass;
+                torques[i] = Vector3.ClampMagnitude(ThrowGain * (omega - body.angularVelocity), MaxThrowAcceleration * 4f) * (body.mass * 0.02f);
+                demand += forces[i].magnitude;
             }
+
+            // The thrower's whole-body strength caps the effort; everything pushed onto the opponent is
+            // pushed back onto the thrower at the fulcrum, where their planted legs take it.
+            float scale = demand > _maxThrowForce ? _maxThrowForce / demand : 1f;
+            Vector3 reaction = Vector3.zero;
+            Vector3 reactionTorque = Vector3.zero;
+            for (int i = 0; i < _segments.Count; i++)
+            {
+                _segments[i].Body.AddForce(forces[i] * scale, ForceMode.Force);
+                _segments[i].Body.AddTorque(torques[i] * scale, ForceMode.Force);
+                reaction -= forces[i] * scale;
+                reactionTorque -= torques[i] * scale;
+            }
+
+            _throwerBody.ReceiveReaction(reaction, reactionTorque, pivot);
+        }
+
+        private void ReceiveReaction(Vector3 force, Vector3 torque, Vector3 point)
+        {
+            foreach (string part in new[] { "Hips", "Spine", "Spine2" })
+            {
+                Rigidbody body = Find(part).Body;
+                body.AddForceAtPosition(force / 3f, point, ForceMode.Force);
+                body.AddTorque(torque / 3f, ForceMode.Force);
+            }
+        }
+
+        /// <summary>Starts the turn of a throw that has been loaded: rotation is measured from now about <paramref name="axis"/>.</summary>
+        public void StartTurn(Vector3 axis)
+        {
+            _throwAxis = axis.normalized;
+            _throwReference = Vector3.ProjectOnPlane(Find("Spine2").Body.position - Find("Hips").Body.position, _throwAxis);
+            _throwAngle = 0f;
         }
 
         /// <summary>Lets go: the grips release and the body flies on with its momentum, then lands.</summary>
@@ -347,6 +429,7 @@ namespace Wrestling.Presentation
 
             _gripJoints.Clear();
             _pivot = null;
+            _throwerBody = null;
         }
 
         /// <summary>Puts the body exactly on the animated pose at rest (bout start, restarts, snapshots).</summary>

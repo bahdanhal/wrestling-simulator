@@ -103,6 +103,9 @@ namespace Wrestling.Data.Animation
 
         /// <summary>The thrown wrestler is a physical body, pulled over a fulcrum on the thrower.</summary>
         Throw,
+
+        /// <summary>The entry to a throw: the grips and arm wrap pull the opponent's trunk tight onto the fulcrum, without turning.</summary>
+        Load,
     }
 
     /// <summary>Axis of a throw's rotation, relative to the thrower's facing.</summary>
@@ -178,7 +181,7 @@ namespace Wrestling.Data.Animation
             {
                 errors.Add($"{path}: throw is missing.");
             }
-            else if (Throw.Kind == ThrowKind.Throw)
+            else if (Throw.Kind != ThrowKind.None)
             {
                 if (!Segments.Contains(Throw.Pivot))
                 {
@@ -190,9 +193,14 @@ namespace Wrestling.Data.Animation
                     errors.Add($"{path}: throw window must satisfy 0 <= from < to <= 1.");
                 }
 
-                if (Math.Abs(Throw.Degrees) > 300f || Throw.Degrees == 0f)
+                if (Throw.Kind == ThrowKind.Throw && (Math.Abs(Throw.Degrees) > 300f || Throw.Degrees == 0f))
                 {
                     errors.Add($"{path}: throw degrees must be non-zero and within ±300.");
+                }
+
+                if (Throw.Kind == ThrowKind.Load && Throw.Degrees != 0f)
+                {
+                    errors.Add($"{path}: a load phase does not turn (degrees must be 0).");
                 }
 
                 foreach (ThrowGrip grip in Throw.Grips)

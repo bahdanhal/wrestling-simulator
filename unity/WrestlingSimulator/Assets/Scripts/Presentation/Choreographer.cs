@@ -123,7 +123,7 @@ namespace Wrestling.Presentation
 
             float progress = active.PhaseLength > 0 ? (active.PhaseTick + alpha) / active.PhaseLength : 1f;
             (ActorKey executorKey, ActorKey opponentKey) = clip.Sample(progress);
-            if (clip.Throw.Kind == ThrowKind.Throw)
+            if (clip.Throw.Kind != ThrowKind.None)
             {
                 Throw = (active, executor, clip.Throw, progress, active.PhaseLength / (float)BoutClock.TicksPerSecond, _mirror);
             }

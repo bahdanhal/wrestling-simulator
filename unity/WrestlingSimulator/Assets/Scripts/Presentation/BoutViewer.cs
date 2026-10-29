@@ -46,7 +46,9 @@ namespace Wrestling.Presentation
         private TechniqueExecution _throwTechnique;
         private int _throwPhase = -1;
         private readonly Pose[] _lastPoses = new Pose[2];
+        private List<(string Thrower, string Thrown)> _throwGrips = new List<(string, string)>();
         private Corner _thrown;
+        private bool _turning;
         private readonly GroundState[] _previousGround = new GroundState[2];
 
         /// <summary>Physics substep for the ragdolls (display only).</summary>
@@ -233,6 +235,20 @@ namespace Wrestling.Presentation
                 PoseSolver.SolveArms(ref bluePose, _blueFigure.Body, blueRole, _shown[1], in redBody, engine.Grips.Of(Corner.Blue));
             }
 
+            if (_throwTechnique != null)
+            {
+                // Throughout a throw the thrower's hands stay on the grip points of the opponent's actual body.
+                Corner thrower = _thrown.Opponent();
+                if (thrower == Corner.Red)
+                {
+                    HoldGrips(ref redPose, _redFigure.Body, _blueFigure.Ragdoll);
+                }
+                else
+                {
+                    HoldGrips(ref bluePose, _blueFigure.Body, _redFigure.Ragdoll);
+                }
+            }
+
             _lastPoses[0] = redPose;
             _lastPoses[1] = bluePose;
             _redFigure.Apply(in redPose, GripOn(engine, Corner.Red, GripSide.Left), GripOn(engine, Corner.Red, GripSide.Right));
@@ -306,7 +322,7 @@ namespace Wrestling.Presentation
             {
                 _redFigure.Ragdoll.Drive();
                 _blueFigure.Ragdoll.Drive();
-                if (throwing != null && _throwTechnique != null)
+                if (throwing != null && _throwTechnique != null && _turning)
                 {
                     var t = throwing.Value;
                     float progress = t.Progress + ((s + 0.5f) / steps * deltaTime / Mathf.Max(t.PhaseSeconds, 1e-3f));
@@ -328,39 +344,90 @@ namespace Wrestling.Presentation
         private void UpdateThrow((TechniqueExecution Technique, Corner Thrower, ThrowSpec Spec, float Progress, float PhaseSeconds, bool Mirrored)? throwing, WrestlerCharacter[] figures)
         {
             bool active = throwing != null && throwing.Value.Progress >= throwing.Value.Spec.From && throwing.Value.Progress < throwing.Value.Spec.To;
-
             if (_throwTechnique != null)
             {
-                bool same = active && ReferenceEquals(throwing.Value.Technique, _throwTechnique) && throwing.Value.Technique.PhaseIndex == _throwPhase;
+                // A load carries on into its throw within the same technique; anything else lets go.
+                bool same = throwing != null && ReferenceEquals(throwing.Value.Technique, _throwTechnique)
+                    && (active || (throwing.Value.Spec.Kind == ThrowKind.Load && throwing.Value.Progress >= throwing.Value.Spec.To));
                 if (!same)
                 {
                     figures[(int)_thrown].Ragdoll.EndThrow(0.8f);
                     figures[1 - (int)_thrown].Ragdoll.SetCarrying(false);
+                    _throwGrips = new List<(string, string)>();
                     _throwTechnique = null;
                     _throwPhase = -1;
+                    _turning = false;
                 }
             }
 
-            if (active && _throwTechnique == null && !(throwing.Value.Technique.PhaseIndex == _throwPhase))
+            if (!active)
             {
-                var t = throwing.Value;
+                return;
+            }
+
+            var t = throwing.Value;
+            Vector3 axis = ThrowAxisFor(t);
+            if (_throwTechnique == null)
+            {
                 _thrown = t.Thrower.Opponent();
-                Vector3 forward = WrestlerFrame.OnMat(_shown[(int)t.Thrower].Facing).normalized;
-                Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
-                // ω = up × direction makes the body's top move along the direction (v = ω × r).
-                Vector3 axis = t.Spec.Axis == ThrowAxis.Lateral
-                    ? Vector3.Cross(Vector3.up, forward)
-                    : Vector3.Cross(Vector3.up, right) * (t.Mirrored ? -1f : 1f);
                 var grips = new List<(string, string)>();
                 foreach (ThrowGrip grip in t.Spec.Grips)
                 {
                     grips.Add((Mirror(grip.Thrower, t.Mirrored), Mirror(grip.Thrown, t.Mirrored)));
                 }
 
-                figures[(int)_thrown].Ragdoll.BeginThrow(figures[(int)t.Thrower].Ragdoll, t.Spec.Pivot, axis, grips);
+                figures[(int)_thrown].Ragdoll.BeginThrow(figures[(int)t.Thrower].Ragdoll, t.Spec.Pivot, axis, grips, ThrowStrength(_session.WrestlerOf(t.Thrower)));
                 figures[(int)t.Thrower].Ragdoll.SetCarrying(true);
+                _throwGrips = grips;
                 _throwTechnique = t.Technique;
-                _throwPhase = t.Technique.PhaseIndex;
+                _turning = false;
+            }
+
+            if (t.Spec.Kind == ThrowKind.Throw && !_turning)
+            {
+                // The opponent is loaded: the turn starts about the thrower's current facing.
+                figures[(int)_thrown].Ragdoll.StartTurn(axis);
+                _turning = true;
+            }
+
+            _throwPhase = t.Technique.PhaseIndex;
+        }
+
+        private Vector3 ThrowAxisFor((TechniqueExecution Technique, Corner Thrower, ThrowSpec Spec, float Progress, float PhaseSeconds, bool Mirrored) t)
+        {
+            Vector3 forward = WrestlerFrame.OnMat(_shown[(int)t.Thrower].Facing).normalized;
+            Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
+            // ω = up × direction makes the body's top move along the direction (v = ω × r).
+            return t.Spec.Axis == ThrowAxis.Lateral
+                ? Vector3.Cross(Vector3.up, forward)
+                : Vector3.Cross(Vector3.up, right) * (t.Mirrored ? -1f : 1f);
+        }
+
+        /// <summary>
+        /// Most force (newtons) a wrestler can put into a throw through the body: about 2 kN for the
+        /// weakest to 5 kN for the strongest (3.5 kN at 50 upper- and lower-body strength).
+        /// </summary>
+        private static float ThrowStrength(Wrestling.Core.Wrestlers.Wrestler wrestler)
+        {
+            float strength = (wrestler.Attributes[Wrestling.Core.Wrestlers.WrestlerAttribute.UpperBodyStrength]
+                + wrestler.Attributes[Wrestling.Core.Wrestlers.WrestlerAttribute.LowerBodyStrength]) * 0.5f;
+            return 2000f + (30f * strength);
+        }
+
+        /// <summary>Puts the thrower's hands on the grip points of the opponent's actual (physics) body.</summary>
+        private void HoldGrips(ref Pose pose, BodyProportions body, ActiveRagdoll held)
+        {
+            foreach ((string holder, string point) in _throwGrips)
+            {
+                Vector3 target = held.GripPoint(point);
+                if (holder.StartsWith("Left"))
+                {
+                    pose.ElbowL = PoseSolver.TwoBone(pose.ShoulderL, target, body.UpperArm, body.Forearm, (-Vector3.up * 0.6f) + (pose.Left * 0.6f), out pose.HandL);
+                }
+                else
+                {
+                    pose.ElbowR = PoseSolver.TwoBone(pose.ShoulderR, target, body.UpperArm, body.Forearm, (-Vector3.up * 0.6f) - (pose.Left * 0.6f), out pose.HandR);
+                }
             }
         }
 
