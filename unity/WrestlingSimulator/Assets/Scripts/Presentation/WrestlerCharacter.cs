@@ -18,11 +18,15 @@ namespace Wrestling.Presentation
 
         public BodyProportions Body => _rig.Body;
 
+        /// <summary>The wrestler's standing height in metres.</summary>
+        public float Height { get; private set; }
+
         public void Build(CharacterLibrary.CharacterBase characterBase, WrestlerLook look, Color singlet)
         {
             Release();
             transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             transform.localScale = Vector3.one;
+            Height = look.HeightMetres;
             _model = Instantiate(characterBase.Model, transform, false);
             _model.name = characterBase.Name;
 
@@ -78,6 +82,27 @@ namespace Wrestling.Presentation
 
             _rig = new CharacterRig(transform);
             _ragdoll = new ActiveRagdoll(_rig.Find, look.HeightMetres, look.MassKg, name);
+        }
+
+        /// <summary>Current world positions of the motion-take joints, read from the rig (after physics).</summary>
+        public Vector3[] JointPositions()
+        {
+            Vector3 P(string bone) => _rig.Find(bone).position;
+            Vector3 neck = P("Neck");
+            Vector3 headBase = P("Head");
+            return new[]
+            {
+                (P("LeftUpLeg") + P("RightUpLeg")) * 0.5f,
+                neck,
+                headBase + ((headBase - neck).normalized * ((headBase - neck).magnitude * 0.6f)),
+                P("LeftArm"), P("RightArm"),
+                P("LeftForeArm"), P("RightForeArm"),
+                P("LeftHand"), P("RightHand"),
+                P("LeftUpLeg"), P("RightUpLeg"),
+                P("LeftLeg"), P("RightLeg"),
+                P("LeftFoot"), P("RightFoot"),
+                P("LeftToeBase"), P("RightToeBase"),
+            };
         }
 
         public void Apply(in Pose pose, float leftGrip, float rightGrip) => _rig.Apply(in pose, leftGrip, rightGrip);

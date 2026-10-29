@@ -26,6 +26,12 @@ public static class Program
                   [--seed N] [--level N] [--spread N]
           tournament [--style fs|gr|ww]            Simulate a weight category (any size) and print standings.
                   [--entrants N] [--seed N]
+          motion-import --id ID --out-data DIR      Build a two-person motion take from BVH files
+                  (--bvh-a FILE --bvh-b FILE [--units-to-metres 0.01]) or a keypoint JSON (--keypoints FILE),
+                  [--height-a M --height-b M], --source-url URL --source-author NAME --source-license ID
+                  [--source-title TEXT --source-notes TEXT].
+          motion-assign --clip ANIM_ID --take ID     Play frames of a take for a technique phase.
+                  --from N --to N [--executor 0|1] [--left-side true|false]
           help                                     Show this help.
 
         Common options:
@@ -49,6 +55,8 @@ public static class Program
                 "bout" => RunBout(options),
                 "balance" => RunBalance(options),
                 "tournament" => RunTournament(options),
+                "motion-import" => RunMotionImport(options),
+                "motion-assign" => RunMotionAssign(options),
                 _ => Fail($"Unknown command '{args[0]}'."),
             };
         }
@@ -188,6 +196,87 @@ public static class Program
 
         return 0;
     }
+
+    private static int RunMotionImport(Options options)
+    {
+        string id = options.String("id") ?? throw new ArgumentException("--id is required.");
+        string data = options.String("out-data") ?? DataDirectory(options);
+        var source = new Wrestling.Data.Motion.MotionSource
+        {
+            Title = options.String("source-title") ?? string.Empty,
+            Url = options.String("source-url") ?? string.Empty,
+            Author = options.String("source-author") ?? throw new ArgumentException("--source-author is required."),
+            License = options.String("source-license") ?? throw new ArgumentException("--source-license is required."),
+            Notes = options.String("source-notes") ?? string.Empty,
+        };
+        float?[] heights = { Float(options.String("height-a")), Float(options.String("height-b")) };
+        IReadOnlyList<Wrestling.Data.Motion.RecordedActor> actors;
+        string? keypoints = options.String("keypoints");
+        if (keypoints != null)
+        {
+            actors = Wrestling.Data.Motion.KeypointReader.Read(File.ReadAllText(keypoints));
+        }
+        else
+        {
+            double units = Float(options.String("units-to-metres")) ?? 0.01;
+            string a = options.String("bvh-a") ?? throw new ArgumentException("--bvh-a (or --keypoints) is required.");
+            string b = options.String("bvh-b") ?? throw new ArgumentException("--bvh-b is required.");
+            actors = new[]
+            {
+                Wrestling.Data.Motion.BvhReader.ReadFile(a, Path.GetFileNameWithoutExtension(a), units),
+                Wrestling.Data.Motion.BvhReader.ReadFile(b, Path.GetFileNameWithoutExtension(b), units),
+            };
+        }
+
+        options.EnsureAllUsed();
+        if (actors.Count != 2)
+        {
+            throw new ArgumentException($"A take needs exactly two actors; found {actors.Count}.");
+        }
+
+        Wrestling.Data.Motion.MotionTake take = Wrestling.Data.Motion.MotionImporter.Build(id, source, actors[0], actors[1], heights);
+        Wrestling.Data.Motion.MotionLoader.WriteTake(take, Path.Combine(data, "motion"));
+        Console.WriteLine($"Wrote take '{id}': {take.FrameCount} frames at {take.FramesPerSecond:F1} fps, actors {take.Actors[0].HeightMetres:F2} m and {take.Actors[1].HeightMetres:F2} m.");
+        return 0;
+    }
+
+    private static int RunMotionAssign(Options options)
+    {
+        string data = DataDirectory(options);
+        var phase = new Wrestling.Data.Motion.MotionPhase
+        {
+            Clip = options.String("clip") ?? throw new ArgumentException("--clip is required."),
+            Take = options.String("take") ?? throw new ArgumentException("--take is required."),
+            FromFrame = options.Int("from", -1, 0),
+            ToFrame = options.Int("to", -1, 1),
+            Executor = options.Int("executor", 0, 0),
+            LeftSide = (options.String("left-side") ?? "false") == "true",
+        };
+        options.EnsureAllUsed();
+        string indexPath = Path.Combine(data, "motion", Wrestling.Data.Motion.MotionLoader.IndexFile);
+        string previous = File.ReadAllText(indexPath);
+        Wrestling.Data.Motion.MotionLoader.SetPhase(Path.Combine(data, "motion"), phase);
+        GameContent content;
+        try
+        {
+            content = GameContent.Load(data);
+        }
+        catch (Exception)
+        {
+            File.WriteAllText(indexPath, previous);
+            throw;
+        }
+
+        Console.WriteLine($"{phase.Clip} now plays take '{phase.Take}' frames {phase.FromFrame}–{phase.ToFrame}; {content.Motion.PhaseCount} phases have recorded motion.");
+        return 0;
+    }
+
+    private static float? Float(string? text) =>
+        text == null ? null : float.Parse(text, NumberStyles.Float, CultureInfo.InvariantCulture);
+
+    private static string DataDirectory(Options options) =>
+        options.String("data") ?? GameContent.FindDataDirectory(Directory.GetCurrentDirectory()) ?? GameContent.FindDataDirectory(AppContext.BaseDirectory)
+        ?? throw new ArgumentException("Could not find the data/ folder; pass --data DIR.");
 
     private static BoutEngine CreateEngine(GameContent content, WrestlingStyle style, Wrestler red, Wrestler blue, ulong seed) => new(new BoutSetup
     {

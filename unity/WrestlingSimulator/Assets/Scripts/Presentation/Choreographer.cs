@@ -2,6 +2,7 @@ using UnityEngine;
 using Wrestling.Core.Match;
 using Wrestling.Core.Rules;
 using Wrestling.Data.Animation;
+using Wrestling.Data.Motion;
 
 namespace Wrestling.Presentation
 {
@@ -23,15 +24,58 @@ namespace Wrestling.Presentation
         private readonly (AnchorPoint Point, float Weight, float Contact)[] _lastAnchors = new (AnchorPoint, float, float)[2];
 
         private readonly MoveAnimationLibrary _library;
+        private readonly MotionLibrary _motion;
+        private readonly MotionPlayback _playback = new MotionPlayback();
+        private TechniqueExecution _motionTechnique;
+        private int _motionPhase = -1;
         private TechniqueExecution _anchored;
         private Vector2 _origin;
         private Vector2 _forward;
         private bool _mirror;
 
-        public Choreographer(MoveAnimationLibrary library)
+        public Choreographer(MoveAnimationLibrary library, MotionLibrary motion)
         {
             _library = library;
+            _motion = motion;
         }
+
+        /// <summary>
+        /// This frame's recorded poses (motion capture or video) when the active phase has them, by
+        /// corner, with how far the entry has eased in (0 the pose on screen, 1 the recording).
+        /// </summary>
+        public (Pose Red, Pose Blue, float Entry)? Recorded { get; private set; }
+
+        /// <summary>
+        /// Looks up recorded motion for the active phase; on a new phase it aligns the take to the
+        /// poses on screen. Call after <see cref="Apply"/>.
+        /// </summary>
+        public void ApplyRecorded(BoutEngine engine, float alpha, Pose[] shownPoses, float[] heights)
+        {
+            Recorded = null;
+            TechniqueExecution active = engine.ActiveTechnique;
+            if (active == null || engine.IsStopped || !_motion.TryGet(active.Phase.Animation, out MotionPhase phase, out MotionTake take))
+            {
+                _motionTechnique = null;
+                _motionPhase = -1;
+                return;
+            }
+
+            int executor = (int)active.Executor;
+            if (!ReferenceEquals(_motionTechnique, active) || _motionPhase != active.PhaseIndex)
+            {
+                _playback.Begin(take, phase, in shownPoses[executor], in shownPoses[1 - executor], heights[executor], heights[1 - executor], active.Side == GripSide.Left);
+                _motionTechnique = active;
+                _motionPhase = active.PhaseIndex;
+                _recordedStartTick = engine.Tick;
+            }
+
+            float progress = active.PhaseLength > 0 ? (active.PhaseTick + alpha) / active.PhaseLength : 1f;
+            (Pose executorPose, Pose opponentPose) = _playback.Sample(progress);
+            float entry = Mathf.SmoothStep(0f, 1f, (engine.Tick - _recordedStartTick + alpha) / EntryBlendTicks);
+            Recorded = active.Executor == Corner.Red ? (executorPose, opponentPose, entry) : (opponentPose, executorPose, entry);
+        }
+
+        private int _recordedStartTick;
 
         /// <summary>The active phase's throw, if it has one: who throws, the spec, phase progress and phase length in seconds, and whether the clip is mirrored.</summary>
         public (TechniqueExecution Technique, Corner Thrower, ThrowSpec Spec, float Progress, float PhaseSeconds, bool Mirrored)? Throw { get; private set; }

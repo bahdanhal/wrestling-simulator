@@ -4,6 +4,7 @@ using Wrestling.Core.Rules;
 using Wrestling.Core.Techniques;
 using Wrestling.Core.Wrestlers;
 using Wrestling.Data.Animation;
+using Wrestling.Data.Motion;
 using Wrestling.Data.Engine;
 using Wrestling.Data.Localization;
 using Wrestling.Data.Names;
@@ -19,7 +20,7 @@ namespace Wrestling.Data
 
         public const string DefaultNamePoolId = "fictional";
 
-        private GameContent(Ruleset rules, EngineTuning tuning, TechniqueCatalog techniques, LocalizationTable english, NamePool names, MoveAnimationLibrary animations)
+        private GameContent(Ruleset rules, EngineTuning tuning, TechniqueCatalog techniques, LocalizationTable english, NamePool names, MoveAnimationLibrary animations, MotionLibrary motion)
         {
             Rules = rules;
             Tuning = tuning;
@@ -27,6 +28,7 @@ namespace Wrestling.Data
             English = english;
             Names = names;
             Animations = animations;
+            Motion = motion;
         }
 
         public Ruleset Rules { get; }
@@ -43,6 +45,9 @@ namespace Wrestling.Data
         /// <summary>Paired move clips for every technique phase (display only).</summary>
         public MoveAnimationLibrary Animations { get; }
 
+        /// <summary>Recorded motion (motion capture or extracted from video) for technique phases that have it.</summary>
+        public MotionLibrary Motion { get; }
+
         public static GameContent Load(string dataDirectory, string rulesetId = DefaultRulesetId)
         {
             if (!Directory.Exists(dataDirectory))
@@ -51,13 +56,15 @@ namespace Wrestling.Data
             }
 
             TechniqueCatalog techniques = TechniqueLoader.FromDirectory(Path.Combine(dataDirectory, "techniques"));
+            MoveAnimationLibrary animations = MoveAnimationLoader.FromDirectory(Path.Combine(dataDirectory, "animation"), techniques);
             return new GameContent(
                 RulesetLoader.FromFile(Path.Combine(dataDirectory, "rulesets", rulesetId + ".json")),
                 TuningLoader.FromFile(Path.Combine(dataDirectory, "engine", "tuning.json")),
                 techniques,
                 LocalizationTable.FromFile(Path.Combine(dataDirectory, "localization", "en.json")),
                 NamePoolLoader.FromFile(Path.Combine(dataDirectory, "names", DefaultNamePoolId + ".json")),
-                MoveAnimationLoader.FromDirectory(Path.Combine(dataDirectory, "animation"), techniques));
+                animations,
+                MotionLoader.FromDirectory(Path.Combine(dataDirectory, "motion"), animations));
         }
 
         /// <summary>Finds the repository's <c>data/</c> folder from <paramref name="start"/> or its parents.</summary>

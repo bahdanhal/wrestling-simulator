@@ -47,3 +47,8 @@ unity/WrestlingSimulator/Assets/Plugins/Wrestling/*.pdb
 unity/WrestlingSimulator/Assets/Plugins/Wrestling/*.xml
 unity/WrestlingSimulator/Assets/StreamingAssets/data/
 unity/WrestlingSimulator/Assets/StreamingAssets/data.meta
+
+# Imitation training environment and outputs
+tools/imitation/.venv/
+tools/imitation/runs/
+__pycache__/

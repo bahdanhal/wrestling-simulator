@@ -77,6 +77,20 @@ The wrestler models in `unity/WrestlingSimulator/Assets/Characters` are built fr
 
 Then run **Wrestling → Build Character Library** in Unity (the scene builder does this too).
 
+## Recorded motion
+
+Real motion (motion capture, or extracted from video with a tool that allows commercial use) replaces the keyed clips phase by phase. Import two people's BVH files (or a keypoint JSON) as a take, then assign a frame range to a technique phase:
+
+```bash
+dotnet run --project src/Wrestling.Sim -c Release -- motion-import --id commons.semenov-coon.throw1 --bvh-a a.bvh --bvh-b b.bvh --source-url URL --source-author NAME --source-license CC-BY-SA-4.0
+```
+
+```bash
+dotnet run --project src/Wrestling.Sim -c Release -- motion-assign --clip anim.headlock_throw.flight --take commons.semenov-coon.throw1 --from 120 --to 150 --executor 0
+```
+
+Every take records its source and licence. See `docs/research/footage-sources.md`.
+
 ## Determinism check
 
 The simulation must give identical results on every platform. A fixed workload produces a hash that every platform must reproduce:

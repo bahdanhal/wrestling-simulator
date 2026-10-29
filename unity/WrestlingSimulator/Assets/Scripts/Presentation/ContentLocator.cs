@@ -25,6 +25,14 @@ namespace Wrestling.Presentation
 
         public static string DirectDataDirectory()
         {
+            // "-wrestlingData DIR" on the command line points at another content folder (tools and tests).
+            string[] args = Environment.GetCommandLineArgs();
+            int index = Array.IndexOf(args, "-wrestlingData");
+            if (index >= 0 && index + 1 < args.Length)
+            {
+                return args[index + 1];
+            }
+
 #if UNITY_EDITOR
             string repository = GameContent.FindDataDirectory(Application.dataPath);
             if (repository != null)

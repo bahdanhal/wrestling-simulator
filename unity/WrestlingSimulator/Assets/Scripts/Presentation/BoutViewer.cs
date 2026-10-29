@@ -45,6 +45,7 @@ namespace Wrestling.Presentation
         private readonly float[] _previousAnchor = new float[2];
         private TechniqueExecution _throwTechnique;
         private int _throwPhase = -1;
+        private readonly Pose[] _lastPoses = new Pose[2];
         private Corner _thrown;
         private readonly GroundState[] _previousGround = new GroundState[2];
 
@@ -55,6 +56,10 @@ namespace Wrestling.Presentation
         private const int FastForwardWarmUp = 45;
 
         public BoutSession Session => _session;
+
+        public WrestlerCharacter RedFigure => _redFigure;
+
+        public WrestlerCharacter BlueFigure => _blueFigure;
 
         public WrestlingStyle Style
         {
@@ -87,7 +92,7 @@ namespace Wrestling.Presentation
         public void Initialise(GameContent content)
         {
             _content = content;
-            _choreographer = new Choreographer(content.Animations);
+            _choreographer = new Choreographer(content.Animations, content.Motion);
             Physics.simulationMode = SimulationMode.Script;
             _mat.Build(content.Rules.Mat);
             _scoreboard.Build(_font);
@@ -204,6 +209,17 @@ namespace Wrestling.Presentation
                 PoseSolver.ApplyWholeBody(ref bluePose, _shown[1], _blueFigure.Body);
             }
 
+            _choreographer.ApplyRecorded(engine, alpha, _lastPoses, new[] { _redFigure.Height, _blueFigure.Height });
+            bool recorded = _choreographer.Recorded != null;
+            if (recorded)
+            {
+                // Real recorded motion: both bodies follow it, eased in from the poses on screen.
+                var r = _choreographer.Recorded.Value;
+                float entry = snapped || _lastPoses[0].Spine == Vector3.zero ? 1f : r.Entry;
+                redPose = Blend(_lastPoses[0], r.Red, entry);
+                bluePose = Blend(_lastPoses[1], r.Blue, entry);
+            }
+
             if (redAnchor.Weight <= 0f && blueAnchor.Weight <= 0f)
             {
                 // Held bodies are in contact by construction; only free bodies need separating.
@@ -211,8 +227,14 @@ namespace Wrestling.Presentation
             }
             Pose redBody = redPose;
             Pose blueBody = bluePose;
-            PoseSolver.SolveArms(ref redPose, _redFigure.Body, redRole, _shown[0], in blueBody, engine.Grips.Of(Corner.Red));
-            PoseSolver.SolveArms(ref bluePose, _blueFigure.Body, blueRole, _shown[1], in redBody, engine.Grips.Of(Corner.Blue));
+            if (!recorded)
+            {
+                PoseSolver.SolveArms(ref redPose, _redFigure.Body, redRole, _shown[0], in blueBody, engine.Grips.Of(Corner.Red));
+                PoseSolver.SolveArms(ref bluePose, _blueFigure.Body, blueRole, _shown[1], in redBody, engine.Grips.Of(Corner.Blue));
+            }
+
+            _lastPoses[0] = redPose;
+            _lastPoses[1] = bluePose;
             _redFigure.Apply(in redPose, GripOn(engine, Corner.Red, GripSide.Left), GripOn(engine, Corner.Red, GripSide.Right));
             _blueFigure.Apply(in bluePose, GripOn(engine, Corner.Blue, GripSide.Left), GripOn(engine, Corner.Blue, GripSide.Right));
             SimulateFalls(deltaTime, snapped);
@@ -273,7 +295,8 @@ namespace Wrestling.Presentation
                 _previousGround[i] = ground;
             }
 
-            var throwing = _choreographer.Throw;
+            // Recorded motion already carries the real throw; the physics drive is only for keyed clips.
+            var throwing = _choreographer.Recorded != null ? null : _choreographer.Throw;
             UpdateThrow(throwing, figures);
 
             _redFigure.Ragdoll.BeforeStep(deltaTime);
@@ -376,6 +399,38 @@ namespace Wrestling.Presentation
             Vector3 target = point + (outward * anchor.Contact);
             Vector3 free = PoseSolver.WholeBodyPivot(in held) + (Vector3.up * heldFrame.Lift);
             PoseSolver.Translate(ref held, (target - free) * Mathf.Clamp01(anchor.Weight));
+        }
+
+        private static Pose Blend(in Pose a, in Pose b, float t)
+        {
+            if (t >= 1f)
+            {
+                return b;
+            }
+
+            return new Pose
+            {
+                Pelvis = Vector3.Lerp(a.Pelvis, b.Pelvis, t),
+                Neck = Vector3.Lerp(a.Neck, b.Neck, t),
+                Head = Vector3.Lerp(a.Head, b.Head, t),
+                ShoulderL = Vector3.Lerp(a.ShoulderL, b.ShoulderL, t),
+                ShoulderR = Vector3.Lerp(a.ShoulderR, b.ShoulderR, t),
+                ElbowL = Vector3.Lerp(a.ElbowL, b.ElbowL, t),
+                ElbowR = Vector3.Lerp(a.ElbowR, b.ElbowR, t),
+                HandL = Vector3.Lerp(a.HandL, b.HandL, t),
+                HandR = Vector3.Lerp(a.HandR, b.HandR, t),
+                HipL = Vector3.Lerp(a.HipL, b.HipL, t),
+                HipR = Vector3.Lerp(a.HipR, b.HipR, t),
+                KneeL = Vector3.Lerp(a.KneeL, b.KneeL, t),
+                KneeR = Vector3.Lerp(a.KneeR, b.KneeR, t),
+                AnkleL = Vector3.Lerp(a.AnkleL, b.AnkleL, t),
+                AnkleR = Vector3.Lerp(a.AnkleR, b.AnkleR, t),
+                ToeL = Vector3.Lerp(a.ToeL, b.ToeL, t),
+                ToeR = Vector3.Lerp(a.ToeR, b.ToeR, t),
+                Spine = Vector3.Slerp(a.Spine, b.Spine, t).normalized,
+                Left = Vector3.Slerp(a.Left, b.Left, t).normalized,
+                ChestNormal = Vector3.Slerp(a.ChestNormal, b.ChestNormal, t).normalized,
+            };
         }
 
         /// <summary>1 when the hand is holding a grip, so the fingers close around it.</summary>
