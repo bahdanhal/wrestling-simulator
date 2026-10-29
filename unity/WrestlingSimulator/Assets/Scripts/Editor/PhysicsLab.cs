@@ -147,6 +147,17 @@ namespace Wrestling.Editor
                     {
                         PhysicalBody red = viewer.RedFigure.Physical;
                         PhysicalBody blue = viewer.BlueFigure.Physical;
+                        if (Array.IndexOf(args, "-clipSide") >= 0)
+                        {
+                            // Profile view at hip height, square to the line between the wrestlers.
+                            Vector3 a = red.HipPosition;
+                            Vector3 b = blue.HipPosition;
+                            Vector3 across = Vector3.Cross(Vector3.up, Vector3.ProjectOnPlane(b - a, Vector3.up).normalized);
+                            Vector3 focus = ((a + b) * 0.5f) + (Vector3.up * 0.15f);
+                            camera.transform.SetPositionAndRotation(focus + (across * 3.2f) + (Vector3.up * 0.25f), Quaternion.LookRotation(-across - (Vector3.up * 0.08f), Vector3.up));
+                            camera.fieldOfView = 40f;
+                        }
+
                         markers[0].transform.position = red.PelvisTarget;
                         markers[1].transform.position = blue.PelvisTarget;
                         Debug.Log(FormattableString.Invariant($"[clip] frame {frame++} tick {viewer.Session.Engine.Tick}: red err {red.TrackingError:F2} support {red.Support:F2} {(red.IsThrown ? "thrown" : red.IsFalling ? "falling" : "")} {red.Limit} | blue err {blue.TrackingError:F2} support {blue.Support:F2} {(blue.IsThrown ? "thrown" : blue.IsFalling ? "falling" : "")} {blue.Limit} | overlap {red.DeepestOverlap(blue) * 100f:F1} cm | red hips {red.HipPosition:F2} target {red.PelvisTarget:F2} | blue hips {blue.HipPosition:F2} target {blue.PelvisTarget:F2} | clip {viewer.CurrentClip} grips {viewer.HandGrips.Holding}/{viewer.HandGrips.Gripping} push {red.GroundPush:F2}/{blue.GroundPush:F2} worst {red.WorstJointError(out string rj):F0} {rj} / {blue.WorstJointError(out string bj):F0} {bj}"));

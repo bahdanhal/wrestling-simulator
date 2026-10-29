@@ -132,9 +132,43 @@ namespace Wrestling.Presentation
         public Vector3 ToeL;
         public Vector3 ToeR;
 
-        public Vector3 Waist => Vector3.Lerp(Pelvis, Neck, 0.3f);
+        /// <summary>
+        /// Share of the bend between thighs and trunk taken by the pelvis; the lumbar and thoracic
+        /// spine take the rest. A wrestler leans by bending at the hips and rounding the back, with
+        /// the pelvis tipping only part of the way (tipping it all the way pushes the buttocks up
+        /// and back and leaves the back board-straight).
+        /// </summary>
+        private const float PelvisShare = 0.45f;
 
-        public Vector3 Chest => Vector3.Lerp(Pelvis, Neck, 0.7f);
+        /// <summary>Direction the pelvis points up the spine: between the thighs' line and the trunk's.</summary>
+        public Vector3 PelvisAxis
+        {
+            get
+            {
+                Vector3 hips = (HipL + HipR) * 0.5f;
+                Vector3 knees = (KneeL + KneeR) * 0.5f;
+                Vector3 alongThighs = hips - knees;
+                if (Spine.sqrMagnitude < 1e-6f || alongThighs.sqrMagnitude < 1e-4f || KneeL == Vector3.zero)
+                {
+                    return Spine;
+                }
+
+                return Vector3.Slerp(alongThighs.normalized, Spine, PelvisShare).normalized;
+            }
+        }
+
+        /// <summary>Point on the curved spine from the pelvis (0) to the neck (1): it leaves the pelvis along its axis and bends smoothly up to the neck.</summary>
+        public Vector3 SpinePoint(float t)
+        {
+            float length = (Neck - Pelvis).magnitude;
+            Vector3 control = Pelvis + (PelvisAxis * (length * 0.5f));
+            float u = 1f - t;
+            return (Pelvis * (u * u)) + (control * (2f * u * t)) + (Neck * (t * t));
+        }
+
+        public Vector3 Waist => SpinePoint(0.3f);
+
+        public Vector3 Chest => SpinePoint(0.7f);
     }
 
     /// <summary>The wrestler's role in the current bout position, which shapes the pose.</summary>
@@ -315,10 +349,12 @@ namespace Wrestling.Presentation
         {
             var pose = new Pose { Left = left };
             float legLength = body.Thigh + body.Shin;
-            float hipHeight = Mathf.Min(AnkleHeight + (legLength * (0.45f + (0.53f * frame.Level))), AnkleHeight + (legLength * 0.985f));
+            // A wrestling stance sinks the hips on bent knees (over the toes) rather than folding at
+            // the hips with straight legs, which pushes the buttocks out behind the feet.
+            float hipHeight = Mathf.Min(AnkleHeight + (legLength * (0.4f + (0.5f * frame.Level))), AnkleHeight + (legLength * 0.985f));
             // A wrestling stance leans in even at full posture: chest over the knees, ready to react.
-            float lean = Mathf.Lerp(72f, 26f, frame.Posture) + ((1f - frame.Level) * 18f) + ((1f - frame.Balance) * 12f);
-            pose.Pelvis = WrestlerFrame.OnMat(frame.Position, hipHeight) - (forward * (Mathf.Sin(lean * Mathf.Deg2Rad) * 0.12f));
+            float lean = Mathf.Lerp(62f, 24f, frame.Posture) + ((1f - frame.Level) * 14f) + ((1f - frame.Balance) * 12f);
+            pose.Pelvis = WrestlerFrame.OnMat(frame.Position, hipHeight) - (forward * (Mathf.Sin(lean * Mathf.Deg2Rad) * 0.04f));
             pose.Spine = Tilt(forward, lean);
             pose.ChestNormal = Vector3.Cross(pose.Spine, left).normalized;
             FinishUpperBody(ref pose, body);
@@ -538,11 +574,11 @@ namespace Wrestling.Presentation
                     // The hip bone at the back, where a hip toss loads the opponent.
                     return pose.Pelvis - (pose.ChestNormal * (body.TorsoHalfDepth * 0.8f));
                 case AnchorPoint.LowerBack:
-                    return Vector3.Lerp(pose.Pelvis, pose.Neck, 0.3f) - (pose.ChestNormal * body.TorsoHalfDepth);
+                    return pose.SpinePoint(0.3f) - (pose.ChestNormal * body.TorsoHalfDepth);
                 case AnchorPoint.Shoulders:
                     return pose.Neck - (pose.Spine * (body.Torso * 0.08f)) - (pose.ChestNormal * (body.TorsoHalfDepth * 0.4f));
                 case AnchorPoint.Chest:
-                    return Vector3.Lerp(pose.Pelvis, pose.Neck, 0.65f) + (pose.ChestNormal * body.TorsoHalfDepth);
+                    return pose.SpinePoint(0.65f) + (pose.ChestNormal * body.TorsoHalfDepth);
                 default:
                     return WholeBodyPivot(in pose);
             }
