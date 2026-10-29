@@ -160,6 +160,10 @@
             "thrown": "Head"
           },
           {
+            "thrower": "Spine2",
+            "thrown": "Head"
+          },
+          {
             "thrower": "LeftForeArm",
             "thrown": "RightArm"
           }

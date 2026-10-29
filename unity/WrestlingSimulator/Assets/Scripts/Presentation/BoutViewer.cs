@@ -49,6 +49,8 @@ namespace Wrestling.Presentation
         private List<(string Thrower, string Thrown)> _throwGrips = new List<(string, string)>();
         private Corner _thrown;
         private bool _turning;
+
+
         private readonly GroundState[] _previousGround = new GroundState[2];
 
         /// <summary>Physics substep for the ragdolls (display only).</summary>
@@ -241,10 +243,12 @@ namespace Wrestling.Presentation
                 Corner thrower = _thrown.Opponent();
                 if (thrower == Corner.Red)
                 {
+                    TrapLimbs(ref bluePose, _blueFigure.Body, in redPose, _redFigure.Body);
                     HoldGrips(ref redPose, _redFigure.Body, _blueFigure.Ragdoll);
                 }
                 else
                 {
+                    TrapLimbs(ref redPose, _redFigure.Body, in bluePose, _blueFigure.Body);
                     HoldGrips(ref bluePose, _blueFigure.Body, _redFigure.Ragdoll);
                 }
             }
@@ -363,6 +367,7 @@ namespace Wrestling.Presentation
                     // Countered: the thrown wrestler is acting now, so they are loose only for a
                     // moment as they twist out, then carry out their counter. Otherwise they land.
                     bool countered = throwing != null && throwing.Value.Thrower == _thrown;
+
                     figures[(int)_thrown].Ragdoll.EndThrow(countered ? CounterReleaseSeconds : LandingSeconds);
                     figures[1 - (int)_thrown].Ragdoll.SetCarrying(false);
                     _throwGrips = new List<(string, string)>();
@@ -474,17 +479,60 @@ namespace Wrestling.Presentation
                     continue;
                 }
 
+                bool left = holder.StartsWith("Left");
+                Vector3 shoulder = left ? pose.ShoulderL : pose.ShoulderR;
+                Vector3 outward = left ? pose.Left : -pose.Left;
                 Vector3 target = held.GripPoint(point);
-                if (holder.StartsWith("Left"))
+                Vector3 pole = (-Vector3.up * 0.6f) + (outward * 0.6f);
+                if (point == "Head")
                 {
-                    pose.ElbowL = PoseSolver.TwoBone(pose.ShoulderL, target, body.UpperArm, body.Forearm, (-Vector3.up * 0.6f) + (pose.Left * 0.6f), out pose.HandL);
+                    // A headlock: the arm goes round the neck, the elbow up over the head and the hand
+                    // coming out on the far side, so the forearm is across the back of the neck.
+                    Vector3 neck = Vector3.Lerp(target, held.GripPoint("Spine2"), HeadlockNeckDrop);
+                    Vector3 through = Vector3.ProjectOnPlane(neck - shoulder, Vector3.up);
+                    target = neck + ((through.sqrMagnitude > 1e-6f ? through.normalized : outward) * HeadlockReach);
+                    pole = (Vector3.up * 0.8f) + (outward * 0.4f);
+                }
+
+                if (left)
+                {
+                    pose.ElbowL = PoseSolver.TwoBone(pose.ShoulderL, target, body.UpperArm, body.Forearm, pole, out pose.HandL);
                 }
                 else
                 {
-                    pose.ElbowR = PoseSolver.TwoBone(pose.ShoulderR, target, body.UpperArm, body.Forearm, (-Vector3.up * 0.6f) - (pose.Left * 0.6f), out pose.HandR);
+                    pose.ElbowR = PoseSolver.TwoBone(pose.ShoulderR, target, body.UpperArm, body.Forearm, pole, out pose.HandR);
                 }
             }
         }
+
+        /// <summary>
+        /// Lays a trapped arm where the trap holds it: over the thrower's shoulder and across their
+        /// chest, so the clamp is visible (and the physical body's muscles reach for the same place).
+        /// </summary>
+        private void TrapLimbs(ref Pose pose, BodyProportions body, in Pose thrower, BodyProportions throwerBody)
+        {
+            foreach ((string holder, string point) in _throwGrips)
+            {
+                if (holder.EndsWith("ForeArm", System.StringComparison.Ordinal) || !(point.EndsWith("Arm", System.StringComparison.Ordinal)))
+                {
+                    continue;
+                }
+
+                Vector3 chest = PoseSolver.AnchorOn(in thrower, throwerBody, AnchorPoint.Chest);
+                if (point.StartsWith("Left"))
+                {
+                    pose.ElbowL = PoseSolver.TwoBone(pose.ShoulderL, chest, body.UpperArm, body.Forearm, Vector3.up, out pose.HandL);
+                }
+                else
+                {
+                    pose.ElbowR = PoseSolver.TwoBone(pose.ShoulderR, chest, body.UpperArm, body.Forearm, Vector3.up, out pose.HandR);
+                }
+            }
+        }
+
+        /// <summary>How far down from the head's centre towards the chest a headlock wraps (share), and how far past the neck the hand comes out (m).</summary>
+        private const float HeadlockNeckDrop = 0.35f;
+        private const float HeadlockReach = 0.1f;
 
         /// <summary>The throw's planned rotation at phase progress <paramref name="progress"/>: eased in and out over its window.</summary>
         private static (float Angle, float Rate) ThrowPlan(ThrowSpec spec, float progress, float phaseSeconds)

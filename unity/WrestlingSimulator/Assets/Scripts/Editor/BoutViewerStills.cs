@@ -42,6 +42,9 @@ namespace Wrestling.Editor
 
             /// <summary>Six frames three ticks apart around the moment a counter interrupts an attack.</summary>
             CounterSequence,
+
+            /// <summary>A counter that ends with the counterer in control (flank or danger), as a sequence and a video.</summary>
+            CounterSuccess,
         }
 
         [MenuItem("Wrestling/Render Bout Viewer Stills")]
@@ -100,8 +103,8 @@ namespace Wrestling.Editor
 
             var shots = new (WrestlingStyle Style, Moment[] Moments)[]
             {
-                (WrestlingStyle.Freestyle, new[] { Moment.HandFighting, Moment.Shot, Moment.Throw, Moment.ThrowSequence, Moment.Counter, Moment.ParTerreTurn, Moment.Danger, Moment.Result }),
-                (WrestlingStyle.GrecoRoman, new[] { Moment.HandFighting, Moment.Throw, Moment.ThrowSequence, Moment.CounterSequence, Moment.ParTerre, Moment.ParTerreTurn }),
+                (WrestlingStyle.Freestyle, new[] { Moment.HandFighting, Moment.Shot, Moment.Throw, Moment.ThrowSequence, Moment.Counter, Moment.CounterSuccess, Moment.ParTerreTurn, Moment.Danger, Moment.Result }),
+                (WrestlingStyle.GrecoRoman, new[] { Moment.HandFighting, Moment.Throw, Moment.ThrowSequence, Moment.CounterSequence, Moment.CounterSuccess, Moment.ParTerre, Moment.ParTerreTurn }),
                 (WrestlingStyle.Womens, new[] { Moment.HandFighting, Moment.Shot, Moment.Throw, Moment.ThrowSequence, Moment.ParTerre }),
             };
 
@@ -142,11 +145,31 @@ namespace Wrestling.Editor
                         viewer.StartBout(shot.Seed);
                     }
 
+                    if (moment == Moment.CounterSuccess)
+                    {
+                        viewer.FastForward(Math.Max(1, shot.Tick - 1));
+                        CaptureVideo(viewer, camera, Path.Combine(folder, $"bout-{Slug(style)}-counter-success.mp4"));
+                        viewer.StartBout(shot.Seed);
+                        viewer.FastForward(shot.Tick);
+                        CaptureSequence(viewer, camera, file, 5);
+                        Debug.Log($"Wrote {file} (seed {shot.Seed}, from tick {shot.Tick}).");
+                        continue;
+                    }
+
                     if (moment == Moment.ThrowSequence || moment == Moment.CounterSequence)
                     {
                         viewer.FastForward(shot.Tick - 1);
                         CaptureSequence(viewer, camera, file, moment == Moment.CounterSequence ? 3 : 7);
                         Debug.Log($"Wrote {file} (seed {shot.Seed}, from tick {shot.Tick}).");
+                        if (moment == Moment.ThrowSequence)
+                        {
+                            viewer.StartBout(shot.Seed);
+                            viewer.FastForward(shot.Tick + GripLead);
+                            string grips = Path.Combine(folder, $"bout-{Slug(style)}-throw-grips.png");
+                            CaptureGripCloseUps(viewer, camera, grips);
+                            Debug.Log($"Wrote {grips}.");
+                        }
+
                         continue;
                     }
 
@@ -174,10 +197,28 @@ namespace Wrestling.Editor
             BoutEngine engine = session.Engine;
             var found = new Dictionary<Moment, int>();
             int groundedSince = -1;
+            TechniqueExecution counter = null;
             while (!engine.IsFinished)
             {
                 session.StepTicks(1);
                 int tick = engine.Tick;
+                if (counter != null && !ReferenceEquals(engine.ActiveTechnique, counter))
+                {
+                    // The counter has finished: kept only if the counterer came out of it in control.
+                    if (!found.ContainsKey(Moment.CounterSuccess) && (engine.Position == BoutPosition.ParTerre || engine.Position == BoutPosition.Danger)
+                        && engine.Top == counter.Executor && counter.StartTick > 30)
+                    {
+                        found[Moment.CounterSuccess] = counter.StartTick - 20;
+                    }
+
+                    counter = null;
+                }
+
+                if (engine.ActiveTechnique != null && engine.ActiveTechnique.Definition.Role == TechniqueRole.Counter && !ReferenceEquals(engine.ActiveTechnique, counter))
+                {
+                    counter = engine.ActiveTechnique;
+                }
+
                 if (!found.ContainsKey(Moment.HandFighting) && engine.Clock.TickInPeriod > 20 * BoutClock.TicksPerSecond && engine.Position == BoutPosition.Neutral
                     && engine.ActiveTechnique == null && engine.Grips.All.Count >= 2 && !engine.IsStopped)
                 {
@@ -278,6 +319,82 @@ namespace Wrestling.Editor
             {
                 camera.transform.SetPositionAndRotation(position, rotation);
                 camera.fieldOfView = fieldOfView;
+            }
+        }
+
+        /// <summary>Ticks after the throw sequence's start (four ticks before the flight phase) of the first grip close-up, and between the two.</summary>
+        private const int GripLead = 6;
+        private const int GripSpacing = 6;
+
+        /// <summary>
+        /// Close views of how the thrower holds the opponent during the turn: two moments (just after the
+        /// turn starts, and mid-turn), each from both sides, tiled 2 × 2. Framed on the thrower's chest and
+        /// the opponent's head or arm nearest to it (a headlock, an arm trap, a carry).
+        /// </summary>
+        private static void CaptureGripCloseUps(BoutViewer viewer, Camera camera, string file)
+        {
+            const int tileWidth = Width / 2;
+            const int tileHeight = Height / 2;
+            var sheet = new Texture2D(Width, Height, TextureFormat.RGB24, false);
+            var target = new RenderTexture(tileWidth, tileHeight, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            RenderTexture previousTarget = camera.targetTexture;
+            RenderTexture previousActive = RenderTexture.active;
+            Vector3 position = camera.transform.position;
+            Quaternion rotation = camera.transform.rotation;
+            float fieldOfView = camera.fieldOfView;
+            foreach (SkinnedMeshRenderer skinned in UnityEngine.Object.FindObjectsByType<SkinnedMeshRenderer>(FindObjectsInactive.Exclude))
+            {
+                skinned.forceMatrixRecalculationPerRender = true;
+            }
+
+            try
+            {
+                for (int moment = 0; moment < 2; moment++)
+                {
+                    if (moment > 0)
+                    {
+                        viewer.FastForward(GripSpacing);
+                    }
+
+                    Transform Find(WrestlerCharacter figure, string name) =>
+                        figure.GetComponentsInChildren<Transform>().First(t => t.name == name || t.name.EndsWith(":" + name));
+                    WrestlerCharacter thrown = viewer.RedFigure.Ragdoll.IsThrown ? viewer.RedFigure : viewer.BlueFigure;
+                    WrestlerCharacter thrower = thrown == viewer.RedFigure ? viewer.BlueFigure : viewer.RedFigure;
+                    Vector3 chest = Find(thrower, "Spine2").position;
+                    Vector3 held = new[] { "Head", "LeftArm", "RightArm", "LeftForeArm", "RightForeArm", "Spine2" }
+                        .Select(name => Find(thrown, name).position)
+                        .OrderBy(p => (p - chest).sqrMagnitude)
+                        .First();
+                    Vector3 focus = Vector3.Lerp(chest, held, 0.5f);
+                    Vector3 across = Vector3.ProjectOnPlane(Find(thrown, "Hips").position - Find(thrower, "Hips").position, Vector3.up);
+                    across = across.sqrMagnitude > 1e-6f ? across.normalized : Vector3.forward;
+                    Vector3 side = Vector3.Cross(Vector3.up, across);
+                    for (int view = 0; view < 2; view++)
+                    {
+                        Vector3 eye = focus + (side * (view == 0 ? 1.3f : -1.3f)) + (Vector3.up * 0.5f);
+                        camera.transform.SetPositionAndRotation(eye, Quaternion.LookRotation(focus - eye, Vector3.up));
+                        camera.fieldOfView = 38f;
+                        camera.targetTexture = target;
+                        Canvas.ForceUpdateCanvases();
+                        camera.Render();
+                        camera.Render();
+                        RenderTexture.active = target;
+                        sheet.ReadPixels(new Rect(0, 0, tileWidth, tileHeight), view * tileWidth, (1 - moment) * tileHeight);
+                    }
+                }
+
+                sheet.Apply();
+                File.WriteAllBytes(file, sheet.EncodeToPNG());
+            }
+            finally
+            {
+                camera.transform.SetPositionAndRotation(position, rotation);
+                camera.fieldOfView = fieldOfView;
+                camera.targetTexture = previousTarget;
+                RenderTexture.active = previousActive;
+                target.Release();
+                UnityEngine.Object.DestroyImmediate(target);
+                UnityEngine.Object.DestroyImmediate(sheet);
             }
         }
 

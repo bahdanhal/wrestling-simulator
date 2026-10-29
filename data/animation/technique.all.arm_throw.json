@@ -156,6 +156,10 @@
         "to": 1,
         "grips": [
           {
+            "thrower": "Spine2",
+            "thrown": "RightArm"
+          },
+          {
             "thrower": "RightForeArm",
             "thrown": "RightArm"
           },
@@ -357,6 +361,10 @@
         "grips": [
           {
             "thrower": "Spine2",
+            "thrown": "RightArm"
+          },
+          {
+            "thrower": "RightForeArm",
             "thrown": "RightArm"
           },
           {
