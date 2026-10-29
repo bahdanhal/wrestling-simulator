@@ -312,6 +312,7 @@ namespace Wrestling.Presentation
                 if (!same)
                 {
                     figures[(int)_thrown].Ragdoll.EndThrow(0.8f);
+                    figures[1 - (int)_thrown].Ragdoll.SetCarrying(false);
                     _throwTechnique = null;
                     _throwPhase = -1;
                 }
@@ -334,6 +335,7 @@ namespace Wrestling.Presentation
                 }
 
                 figures[(int)_thrown].Ragdoll.BeginThrow(figures[(int)t.Thrower].Ragdoll, t.Spec.Pivot, axis, grips);
+                figures[(int)t.Thrower].Ragdoll.SetCarrying(true);
                 _throwTechnique = t.Technique;
                 _throwPhase = t.Technique.PhaseIndex;
             }

@@ -92,6 +92,10 @@ namespace Wrestling.Presentation
         private readonly GameObject _root;
         private Mode _mode = Mode.Tracking;
         private float _tracking = TrackingGain;
+
+        /// <summary>Tracking strength multiplier while carrying a thrown opponent, so their weight cannot stand the thrower up.</summary>
+        private const float CarryingStrength = 3f;
+        private float _strength = 1f;
         private float _timer;
         private float _fallSeconds;
         private float _weight;
@@ -217,6 +221,12 @@ namespace Wrestling.Presentation
         public bool IsFalling => _mode == Mode.Falling;
 
         public bool IsThrown => _mode == Mode.Thrown;
+
+        /// <summary>Braces the body while it carries a thrown opponent (stronger tracking), or relaxes it.</summary>
+        public void SetCarrying(bool carrying) => _strength = carrying ? CarryingStrength : 1f;
+
+        /// <summary>Hip height above the mat in metres (diagnostics).</summary>
+        public float HipHeight => Find("Hips").Body.position.y;
 
         /// <summary>Rotation achieved so far in the current throw, in degrees about its axis.</summary>
         public float ThrowAngle => _throwAngle;
@@ -353,6 +363,7 @@ namespace Wrestling.Presentation
             }
 
             EndGrips();
+            _strength = 1f;
             _mode = Mode.Tracking;
             _tracking = TrackingGain;
             SetGravity(false);
@@ -458,10 +469,10 @@ namespace Wrestling.Presentation
             {
                 Rigidbody body = segment.Body;
                 Vector3 linear = (k * (segment.TargetPosition - body.position)) + (c * (segment.TargetVelocity - body.linearVelocity));
-                body.AddForce(Vector3.ClampMagnitude(linear, MaxTrackingAcceleration), ForceMode.Acceleration);
+                body.AddForce(Vector3.ClampMagnitude(linear, MaxTrackingAcceleration * _strength), ForceMode.Acceleration);
                 Vector3 error = AngularVelocity(body.rotation, segment.TargetRotation, 1f);
                 Vector3 angular = (k * error) + (c * (segment.TargetAngularVelocity - body.angularVelocity));
-                body.AddTorque(Vector3.ClampMagnitude(angular, MaxTrackingAngularAcceleration), ForceMode.Acceleration);
+                body.AddTorque(Vector3.ClampMagnitude(angular, MaxTrackingAngularAcceleration * _strength), ForceMode.Acceleration);
             }
         }
 

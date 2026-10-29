@@ -294,7 +294,7 @@ namespace Wrestling.Editor
                 {
                     viewer.FastForward(frame == 0 ? 1 : spacing);
                     WrestlerCharacter[] pair = UnityEngine.Object.FindObjectsByType<WrestlerCharacter>(FindObjectsInactive.Exclude);
-                    Debug.Log($"[overlap] {Path.GetFileName(file)} frame {frame}: {pair[0].Ragdoll.DeepestOverlap(pair[1].Ragdoll) * 100f:F1} cm, throw angles {pair[0].Ragdoll.ThrowAngle:F0}/{pair[1].Ragdoll.ThrowAngle:F0} (thrown {pair[0].Ragdoll.IsThrown}/{pair[1].Ragdoll.IsThrown})");
+                    Debug.Log($"[overlap] {Path.GetFileName(file)} frame {frame}: {pair[0].Ragdoll.DeepestOverlap(pair[1].Ragdoll) * 100f:F1} cm, throw angles {pair[0].Ragdoll.ThrowAngle:F0}/{pair[1].Ragdoll.ThrowAngle:F0} (thrown {pair[0].Ragdoll.IsThrown}/{pair[1].Ragdoll.IsThrown}), hips {pair[0].Ragdoll.HipHeight:F2}/{pair[1].Ragdoll.HipHeight:F2} m");
                     camera.targetTexture = target;
                     Canvas.ForceUpdateCanvases();
                     camera.Render();

@@ -114,17 +114,17 @@
         {
           "t": 1,
           "executor": {
-            "x": 0.25,
-            "z": -0.15,
-            "heading": 0.0,
+            "x": 0.3,
+            "z": -0.3,
+            "heading": -20,
             "level": 0.3,
-            "posture": 0.6,
-            "ground": "standing",
+            "posture": 0.3,
+            "ground": "bothKnees",
             "roll": 0.0,
             "rollSide": 1,
             "lift": 0.0,
             "pitch": 0.0,
-            "bank": -70,
+            "bank": 0.0,
             "anchor": "none",
             "anchorWeight": 0.0,
             "contact": 0.0

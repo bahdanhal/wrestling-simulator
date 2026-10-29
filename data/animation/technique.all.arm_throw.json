@@ -42,12 +42,12 @@
           }
         },
         {
-          "t": 0.45,
+          "t": 0.4,
           "executor": {
-            "x": 0.32,
-            "z": 0.05,
-            "heading": 95,
-            "level": 0.55,
+            "x": 0.42,
+            "z": 0.06,
+            "heading": 100,
+            "level": 0.5,
             "posture": 0.75,
             "ground": "standing",
             "roll": 0.0,
@@ -79,11 +79,11 @@
         {
           "t": 1,
           "executor": {
-            "x": 0.55,
+            "x": 0.6,
             "z": 0.0,
             "heading": 180,
-            "level": 0.38,
-            "posture": 0.55,
+            "level": 0.18,
+            "posture": 0.75,
             "ground": "standing",
             "roll": 0.0,
             "rollSide": 1,
@@ -129,11 +129,11 @@
         {
           "t": 0,
           "executor": {
-            "x": 0.55,
+            "x": 0.6,
             "z": 0.0,
             "heading": 180,
-            "level": 0.38,
-            "posture": 0.55,
+            "level": 0.18,
+            "posture": 0.75,
             "ground": "standing",
             "roll": 0.0,
             "rollSide": 1,
@@ -162,13 +162,13 @@
           }
         },
         {
-          "t": 0.3,
+          "t": 0.25,
           "executor": {
-            "x": 0.55,
+            "x": 0.58,
             "z": 0.0,
-            "heading": 180,
-            "level": 0.52,
-            "posture": 0.45,
+            "heading": 182,
+            "level": 0.5,
+            "posture": 0.5,
             "ground": "standing",
             "roll": 0.0,
             "rollSide": 1,
@@ -197,19 +197,19 @@
           }
         },
         {
-          "t": 0.6,
+          "t": 0.5,
           "executor": {
-            "x": 0.52,
+            "x": 0.5,
             "z": 0.0,
-            "heading": 180,
-            "level": 0.45,
-            "posture": 0.35,
+            "heading": 195,
+            "level": 0.42,
+            "posture": 0.25,
             "ground": "standing",
             "roll": 0.0,
             "rollSide": 1,
             "lift": 0.0,
             "pitch": 0.0,
-            "bank": -15,
+            "bank": -18,
             "anchor": "none",
             "anchorWeight": 0.0,
             "contact": 0.0
@@ -232,19 +232,19 @@
           }
         },
         {
-          "t": 0.85,
+          "t": 0.75,
           "executor": {
-            "x": 0.5,
+            "x": 0.38,
             "z": 0.0,
-            "heading": 180,
-            "level": 0.38,
-            "posture": 0.3,
-            "ground": "standing",
+            "heading": 205,
+            "level": 0.32,
+            "posture": 0.2,
+            "ground": "oneKnee",
             "roll": 0.0,
             "rollSide": 1,
             "lift": 0.0,
             "pitch": 0.0,
-            "bank": -18,
+            "bank": -15,
             "anchor": "none",
             "anchorWeight": 0.0,
             "contact": 0.0
@@ -269,17 +269,17 @@
         {
           "t": 1,
           "executor": {
-            "x": 0.5,
+            "x": 0.3,
             "z": 0.0,
-            "heading": 180,
+            "heading": 210,
             "level": 0.35,
-            "posture": 0.35,
-            "ground": "standing",
+            "posture": 0.25,
+            "ground": "bothKnees",
             "roll": 0.0,
             "rollSide": 1,
             "lift": 0.0,
             "pitch": 0.0,
-            "bank": -15,
+            "bank": 0.0,
             "anchor": "none",
             "anchorWeight": 0.0,
             "contact": 0.0
