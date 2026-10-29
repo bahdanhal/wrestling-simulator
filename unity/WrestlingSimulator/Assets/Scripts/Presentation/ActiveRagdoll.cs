@@ -6,22 +6,31 @@ namespace Wrestling.Presentation
 {
     /// <summary>
     /// Physics body for one wrestler: twelve rigid segments on the character's bones, joined by
-    /// motorised joints that pull towards the animated pose. While the wrestler is in control it
-    /// follows the animation exactly (kinematic). On a fall it turns dynamic: it keeps the motion it
-    /// had, falls under gravity onto the mat and against the other wrestler, while its muscles keep
-    /// pulling towards the pose the engine says it lands in; then it blends back to the animation.
+    /// motorised joints. The animation is only a target: every segment is driven towards its
+    /// animated pose, and the physics solver keeps the two wrestlers and the mat from passing
+    /// through each other, so limbs press against the opponent instead of sinking in. On a fall the
+    /// tracking lets go: the body keeps its motion, falls under gravity, and only weak muscles pull
+    /// towards the pose the engine says it lands in; then tracking strengthens again.
     /// Display only: nothing here feeds back into the simulation.
     /// </summary>
     public sealed class ActiveRagdoll
     {
-        /// <summary>How hard the muscles pull towards the animated pose while falling (relative to full control).</summary>
+        /// <summary>How hard the joint muscles pull towards the animated pose while falling (relative to full control).</summary>
         private const float FallingMuscle = 0.35f;
-        private const float RecoveringMuscle = 1f;
+        private const float TrackingMuscle = 1f;
         private const float RecoverSeconds = 0.45f;
+
+        /// <summary>Natural frequency (rad/s) of the spring pulling each segment to its animated pose.</summary>
+        private const float TrackingFrequency = 2f * Mathf.PI * 7f;
+
+        /// <summary>Most the tracking may accelerate a segment: strong, but finite, so contact with the mat and the opponent always wins.</summary>
+        private const float MaxTrackingAcceleration = 120f;
+        private const float MaxTrackingAngularAcceleration = 900f;
+        private const float TrackingGain = 1f;
 
         private enum Mode
         {
-            Animated,
+            Tracking,
             Falling,
             Recovering,
         }
@@ -34,17 +43,20 @@ namespace Wrestling.Presentation
             public ConfigurableJoint Joint;
             public Segment Parent;
             public Quaternion StartLocal;
-            public Vector3 PreviousPosition;
-            public Quaternion PreviousRotation;
+            public Vector3 TargetPosition;
+            public Quaternion TargetRotation;
+            public Vector3 TargetVelocity;
+            public Vector3 TargetAngularVelocity;
+            public bool HasTarget;
             public float Muscle;
         }
 
-        /// <summary>Segment, parent, mass share, radius as a share of height, and which child bone ends the capsule.</summary>
+        /// <summary>Segment, parent, mass share, radius as a share of height (torso radii match the half chest depth used for contact holds), and which child bone ends the capsule.</summary>
         private static readonly (string Name, string Parent, float Mass, float Radius, string End)[] Layout =
         {
-            ("Hips", null, 0.15f, 0.075f, "Spine"),
-            ("Spine", "Hips", 0.13f, 0.07f, "Spine2"),
-            ("Spine2", "Spine", 0.2f, 0.078f, "Neck"),
+            ("Hips", null, 0.15f, 0.062f, "Spine"),
+            ("Spine", "Hips", 0.13f, 0.058f, "Spine2"),
+            ("Spine2", "Spine", 0.2f, 0.063f, "Neck"),
             ("Head", "Spine2", 0.08f, 0.058f, null),
             ("LeftArm", "Spine2", 0.03f, 0.028f, "LeftForeArm"),
             ("LeftForeArm", "LeftArm", 0.025f, 0.023f, "LeftHand"),
@@ -56,15 +68,11 @@ namespace Wrestling.Presentation
             ("RightLeg", "RightUpLeg", 0.055f, 0.03f, "RightFoot"),
         };
 
-        /// <summary>A thrown body starts its fall wrapped around the thrower; it passes through them this long before they collide.</summary>
-        private const float OpponentGraceSeconds = 0.2f;
-
         private readonly List<Segment> _segments = new List<Segment>();
         private readonly Collider[] _colliders;
-        private ActiveRagdoll _ignoring;
-        private float _ignoreUntil;
         private readonly GameObject _root;
-        private Mode _mode = Mode.Animated;
+        private Mode _mode = Mode.Tracking;
+        private float _tracking = TrackingGain;
         private float _timer;
         private float _fallSeconds;
         private float _weight;
@@ -81,16 +89,18 @@ namespace Wrestling.Presentation
                 go.transform.SetPositionAndRotation(t.position, t.rotation);
                 var body = go.AddComponent<Rigidbody>();
                 body.mass = massKg * massShare;
-                body.isKinematic = true;
+                body.isKinematic = false;
+                body.useGravity = false;
                 body.interpolation = RigidbodyInterpolation.None;
                 body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                body.inertiaTensorRotation = Quaternion.identity;
                 body.solverIterations = 16;
                 body.solverVelocityIterations = 4;
                 body.maxAngularVelocity = 25f;
                 body.angularDamping = 0.6f;
                 body.linearDamping = 0.05f;
-                // Bodies that start a fall in contact separate gently instead of being shot apart.
-                body.maxDepenetrationVelocity = 0.6f;
+                // Overlaps (a released body starts wrapped around the thrower) resolve fast but without being shot apart.
+                body.maxDepenetrationVelocity = 2f;
 
                 float radius = radiusShare * heightMetres;
                 if (end == null)
@@ -164,134 +174,157 @@ namespace Wrestling.Presentation
             }
         }
 
+        /// <summary>Deepest overlap in metres between this body's colliders and another's (diagnostics).</summary>
+        public float DeepestOverlap(ActiveRagdoll other)
+        {
+            float deepest = 0f;
+            foreach (Collider mine in _colliders)
+            {
+                foreach (Collider theirs in other._colliders)
+                {
+                    if (Physics.ComputePenetration(mine, mine.transform.position, mine.transform.rotation, theirs, theirs.transform.position, theirs.transform.rotation, out _, out float distance))
+                    {
+                        deepest = Mathf.Max(deepest, distance);
+                    }
+                }
+            }
+
+            return deepest;
+        }
+
         /// <summary>0 when the animation is shown as is, 1 when the physics body is.</summary>
         public float Weight => _weight;
 
         public bool IsFalling => _mode == Mode.Falling;
 
-        /// <summary>
-        /// Starts a fall: the body goes dynamic for <paramref name="seconds"/>, carrying its current
-        /// motion. <paramref name="opponent"/> (if given) does not collide with it at first, because a
-        /// thrown body is released from inside the thrower's grip.
-        /// </summary>
-        public void Fall(float seconds, float deltaTime, ActiveRagdoll opponent = null)
+        /// <summary>Puts the body exactly on the animated pose at rest (bout start, restarts, snapshots).</summary>
+        public void Reset()
         {
-            if (opponent != null)
+            foreach (Segment segment in _segments)
             {
-                SetIgnore(opponent, true);
-                _ignoring = opponent;
-                _ignoreUntil = OpponentGraceSeconds;
+                segment.Body.position = segment.Bone.position;
+                segment.Body.rotation = segment.Bone.rotation;
+                segment.Body.transform.SetPositionAndRotation(segment.Bone.position, segment.Bone.rotation);
+                segment.Body.linearVelocity = Vector3.zero;
+                segment.Body.angularVelocity = Vector3.zero;
+                segment.HasTarget = false;
             }
 
+            _mode = Mode.Tracking;
+            _tracking = TrackingGain;
+            SetGravity(false);
+            SetMuscle(TrackingMuscle);
+            _weight = 0f;
+        }
+
+        /// <summary>Starts a fall: tracking lets go for <paramref name="seconds"/> and the body falls with the motion it has.</summary>
+        public void Fall(float seconds)
+        {
             if (_mode == Mode.Falling)
             {
                 _fallSeconds = Mathf.Max(_fallSeconds, _timer + seconds);
                 return;
             }
 
-            float dt = Mathf.Max(deltaTime, 1e-3f);
-            foreach (Segment segment in _segments)
-            {
-                Vector3 velocity = (segment.Bone.position - segment.PreviousPosition) / dt;
-                Quaternion delta = segment.Bone.rotation * Quaternion.Inverse(segment.PreviousRotation);
-                delta.ToAngleAxis(out float angle, out Vector3 axis);
-                if (angle > 180f)
-                {
-                    angle -= 360f;
-                }
-
-                segment.Body.isKinematic = false;
-                segment.Body.position = segment.Bone.position;
-                segment.Body.rotation = segment.Bone.rotation;
-                segment.Body.linearVelocity = Vector3.ClampMagnitude(velocity, 7f);
-                segment.Body.angularVelocity = float.IsNaN(axis.x) ? Vector3.zero : Vector3.ClampMagnitude(axis * (angle * Mathf.Deg2Rad / dt), 12f);
-            }
-
             _mode = Mode.Falling;
             _timer = 0f;
             _fallSeconds = seconds;
+            _tracking = 0f;
+            SetGravity(true);
             SetMuscle(FallingMuscle);
         }
 
-        /// <summary>
-        /// Before the physics step: in control, the body copies the animated bones; otherwise the
-        /// joint motors target the animated pose (the bones hold it at this point).
-        /// </summary>
+        /// <summary>Reads this frame's animated pose (the bones hold it now) as the tracking target and advances the fall timers.</summary>
         public void BeforeStep(float deltaTime)
         {
-            switch (_mode)
-            {
-                case Mode.Animated:
-                    foreach (Segment segment in _segments)
-                    {
-                        segment.Body.position = segment.Bone.position;
-                        segment.Body.rotation = segment.Bone.rotation;
-                        segment.Body.transform.SetPositionAndRotation(segment.Bone.position, segment.Bone.rotation);
-                    }
-
-                    _weight = 0f;
-                    return;
-                case Mode.Falling:
-                    _timer += deltaTime;
-                    if (_ignoring != null && _timer >= _ignoreUntil)
-                    {
-                        SetIgnore(_ignoring, false);
-                        _ignoring = null;
-                    }
-
-                    if (_timer >= _fallSeconds)
-                    {
-                        _mode = Mode.Recovering;
-                        _timer = 0f;
-                        SetMuscle(RecoveringMuscle);
-                    }
-
-                    _weight = 1f;
-                    break;
-                case Mode.Recovering:
-                    _timer += deltaTime;
-                    _weight = 1f - Mathf.SmoothStep(0f, 1f, _timer / RecoverSeconds);
-                    if (_timer >= RecoverSeconds)
-                    {
-                        _mode = Mode.Animated;
-                        foreach (Segment segment in _segments)
-                        {
-                            segment.Body.isKinematic = true;
-                        }
-
-                        _weight = 0f;
-                        return;
-                    }
-
-                    break;
-            }
-
+            float dt = Mathf.Max(deltaTime, 1e-4f);
             foreach (Segment segment in _segments)
             {
+                Vector3 position = segment.Bone.position;
+                Quaternion rotation = segment.Bone.rotation;
+                if (segment.HasTarget)
+                {
+                    segment.TargetVelocity = Vector3.ClampMagnitude((position - segment.TargetPosition) / dt, 10f);
+                    segment.TargetAngularVelocity = Vector3.ClampMagnitude(AngularVelocity(segment.TargetRotation, rotation, dt), 20f);
+                }
+
+                segment.TargetPosition = position;
+                segment.TargetRotation = rotation;
+                segment.HasTarget = true;
                 if (segment.Joint != null)
                 {
-                    Quaternion targetLocal = Quaternion.Inverse(segment.Parent.Bone.rotation) * segment.Bone.rotation;
+                    Quaternion targetLocal = Quaternion.Inverse(segment.Parent.Bone.rotation) * rotation;
                     // Joint axes match the segment's local axes, so the target is a plain local-space delta.
                     segment.Joint.targetRotation = Quaternion.Inverse(targetLocal) * segment.StartLocal;
                 }
             }
+
+            switch (_mode)
+            {
+                case Mode.Falling:
+                    _timer += deltaTime;
+                    if (_timer >= _fallSeconds)
+                    {
+                        _mode = Mode.Recovering;
+                        _timer = 0f;
+                        SetMuscle(TrackingMuscle);
+                    }
+
+                    break;
+                case Mode.Recovering:
+                    _timer += deltaTime;
+                    float t = Mathf.SmoothStep(0f, 1f, _timer / RecoverSeconds);
+                    _tracking = TrackingGain * t;
+                    if (t > 0.5f)
+                    {
+                        SetGravity(false);
+                    }
+
+                    if (_timer >= RecoverSeconds)
+                    {
+                        _mode = Mode.Tracking;
+                        _tracking = TrackingGain;
+                    }
+
+                    break;
+            }
+
+            _weight = 1f;
         }
 
-        /// <summary>After the physics step: blends the bones from the animation towards the physics body.</summary>
+        /// <summary>
+        /// Before each physics substep: a damped spring accelerates every segment towards its animated
+        /// pose and motion. The acceleration is capped, so where the pose would push into the mat or
+        /// the opponent, the contact holds and the limb presses against it instead.
+        /// </summary>
+        public void Drive()
+        {
+            if (_tracking <= 0f)
+            {
+                return;
+            }
+
+            float k = TrackingFrequency * TrackingFrequency * _tracking;
+            float c = 2f * TrackingFrequency * _tracking;
+            foreach (Segment segment in _segments)
+            {
+                Rigidbody body = segment.Body;
+                Vector3 linear = (k * (segment.TargetPosition - body.position)) + (c * (segment.TargetVelocity - body.linearVelocity));
+                body.AddForce(Vector3.ClampMagnitude(linear, MaxTrackingAcceleration), ForceMode.Acceleration);
+                Vector3 error = AngularVelocity(body.rotation, segment.TargetRotation, 1f);
+                Vector3 angular = (k * error) + (c * (segment.TargetAngularVelocity - body.angularVelocity));
+                body.AddTorque(Vector3.ClampMagnitude(angular, MaxTrackingAngularAcceleration), ForceMode.Acceleration);
+            }
+        }
+
+        /// <summary>After the physics step: the bones take the physics body's pose (parents before children).</summary>
         public void AfterStep()
         {
             if (_weight <= 0f)
             {
-                foreach (Segment segment in _segments)
-                {
-                    segment.PreviousPosition = segment.Bone.position;
-                    segment.PreviousRotation = segment.Bone.rotation;
-                }
-
                 return;
             }
 
-            // Parents before children (layout order), so each bone's world pose is set once.
             foreach (Segment segment in _segments)
             {
                 Quaternion rotation = Quaternion.Slerp(segment.Bone.rotation, segment.Body.rotation, _weight);
@@ -303,9 +336,31 @@ namespace Wrestling.Presentation
                 {
                     segment.Bone.rotation = rotation;
                 }
+            }
+        }
 
-                segment.PreviousPosition = segment.Bone.position;
-                segment.PreviousRotation = segment.Bone.rotation;
+        private static Vector3 AngularVelocity(Quaternion from, Quaternion to, float seconds)
+        {
+            Quaternion delta = to * Quaternion.Inverse(from);
+            if (delta.w < 0f)
+            {
+                delta = new Quaternion(-delta.x, -delta.y, -delta.z, -delta.w);
+            }
+
+            delta.ToAngleAxis(out float angle, out Vector3 axis);
+            if (float.IsNaN(axis.x) || float.IsInfinity(axis.x) || angle < 1e-3f)
+            {
+                return Vector3.zero;
+            }
+
+            return axis * (angle * Mathf.Deg2Rad / seconds);
+        }
+
+        private void SetGravity(bool on)
+        {
+            foreach (Segment segment in _segments)
+            {
+                segment.Body.useGravity = on;
             }
         }
 
@@ -318,17 +373,6 @@ namespace Wrestling.Presentation
             else
             {
                 UnityEngine.Object.DestroyImmediate(_root);
-            }
-        }
-
-        private void SetIgnore(ActiveRagdoll other, bool ignore)
-        {
-            foreach (Collider mine in _colliders)
-            {
-                foreach (Collider theirs in other._colliders)
-                {
-                    Physics.IgnoreCollision(mine, theirs, ignore);
-                }
             }
         }
 

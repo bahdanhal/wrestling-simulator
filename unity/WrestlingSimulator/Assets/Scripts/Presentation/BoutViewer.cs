@@ -45,7 +45,7 @@ namespace Wrestling.Presentation
         private readonly GroundState[] _previousGround = new GroundState[2];
 
         /// <summary>Physics substep for the ragdolls (display only).</summary>
-        private const float PhysicsStep = 1f / 120f;
+        private const float PhysicsStep = 1f / 240f;
 
         /// <summary>Ticks of real-time presentation run before a fast-forwarded frame, so falls are in motion.</summary>
         private const int FastForwardWarmUp = 45;
@@ -105,14 +105,18 @@ namespace Wrestling.Presentation
         public void FastForward(int ticks)
         {
             int warmUp = Mathf.Min(FastForwardWarmUp, ticks);
-            _session.StepTicks(ticks - warmUp);
-            foreach (BoutEvent e in _session.TakeNewEvents())
+            if (ticks > warmUp)
             {
-                _scoreboard.Push(e, _session);
-            }
+                // A real jump in time: start from the pose at rest, then play the last ticks live.
+                _session.StepTicks(ticks - warmUp);
+                foreach (BoutEvent e in _session.TakeNewEvents())
+                {
+                    _scoreboard.Push(e, _session);
+                }
 
-            _snapNextFrame = true;
-            Present(1f, 0f);
+                _snapNextFrame = true;
+                Present(1f, 0f);
+            }
 
             // The last ticks play as they would live, so ragdoll falls have their motion.
             const float tickSeconds = 1f / BoutClock.TicksPerSecond;
@@ -224,13 +228,27 @@ namespace Wrestling.Presentation
         }
 
         /// <summary>
-        /// Starts a ragdoll fall when a thrown wrestler is let go (the clip's hold weakens) or when a
-        /// wrestler goes from their feet to lying on the mat; then steps the physics and blends the
-        /// bones. With no elapsed time (snapshots) the bodies just follow the animation.
+        /// Steps both physics bodies after they take this frame's animated pose as their target, so
+        /// contact between the wrestlers and with the mat is resolved by the solver. Starts a fall when
+        /// a thrown wrestler is let go (the clip's hold weakens) or when a wrestler goes from their
+        /// feet to lying on the mat. With no elapsed time (snapshots) the bodies sit on the animation.
         /// </summary>
         private void SimulateFalls(float deltaTime, bool snapped)
         {
             WrestlerCharacter[] figures = { _redFigure, _blueFigure };
+            if (snapped || deltaTime <= 0f)
+            {
+                // Snapshots, bout starts and restarts: the bodies sit exactly on the animated pose.
+                for (int i = 0; i < 2; i++)
+                {
+                    figures[i].Ragdoll.Reset();
+                    _previousAnchor[i] = _choreographer.Anchors[i].Weight;
+                    _previousGround[i] = _shown[i].Ground;
+                }
+
+                return;
+            }
+
             for (int i = 0; i < 2; i++)
             {
                 float anchor = _choreographer.Anchors[i].Weight;
@@ -238,16 +256,13 @@ namespace Wrestling.Presentation
                 bool released = _previousAnchor[i] >= 0.95f && anchor < 0.95f;
                 bool wasUp = _previousGround[i] == GroundState.Standing || _previousGround[i] == GroundState.OneKnee;
                 bool landedLying = ground == GroundState.Prone || ground == GroundState.Supine || ground == GroundState.Bridge;
-                if (deltaTime > 0f && !snapped)
+                if (released)
                 {
-                    if (released)
-                    {
-                        figures[i].Ragdoll.Fall(0.9f, deltaTime, figures[1 - i].Ragdoll);
-                    }
-                    else if (wasUp && landedLying)
-                    {
-                        figures[i].Ragdoll.Fall(0.6f, deltaTime);
-                    }
+                    figures[i].Ragdoll.Fall(0.9f);
+                }
+                else if (wasUp && landedLying)
+                {
+                    figures[i].Ragdoll.Fall(0.6f);
                 }
 
                 _previousAnchor[i] = anchor;
@@ -256,13 +271,12 @@ namespace Wrestling.Presentation
 
             _redFigure.Ragdoll.BeforeStep(deltaTime);
             _blueFigure.Ragdoll.BeforeStep(deltaTime);
-            if (deltaTime > 0f && (_redFigure.Ragdoll.Weight > 0f || _blueFigure.Ragdoll.Weight > 0f))
+            int steps = Mathf.Clamp(Mathf.CeilToInt(deltaTime / PhysicsStep), 1, 8);
+            for (int s = 0; s < steps; s++)
             {
-                int steps = Mathf.Clamp(Mathf.RoundToInt(deltaTime / PhysicsStep), 1, 8);
-                for (int s = 0; s < steps; s++)
-                {
-                    Physics.Simulate(deltaTime / steps);
-                }
+                _redFigure.Ragdoll.Drive();
+                _blueFigure.Ragdoll.Drive();
+                Physics.Simulate(deltaTime / steps);
             }
 
             _redFigure.Ragdoll.AfterStep();
@@ -271,15 +285,17 @@ namespace Wrestling.Presentation
 
         /// <summary>
         /// Moves a held body (before its whole-body rotation) so that, after the rotation and lift,
-        /// its waist sits the contact thickness behind the carrier's contact point. The keyed lift
+        /// its waist sits the contact thickness outside the carrier's contact point. The keyed lift
         /// is replaced by the hold in proportion to the anchor weight, so the bodies cannot separate.
         /// </summary>
         private static void Hold(ref Pose held, WrestlerFrame heldFrame, in Pose carrier, BodyProportions carrierBody, (AnchorPoint Point, float Weight, float Contact) anchor)
         {
-            // The held body touches the anchor with its front, so its waist sits behind its own chest
-            // after this frame's rotation: as it turns over the anchor, the contact turns with it.
-            Vector3 front = PoseSolver.WholeBodyRotation(heldFrame) * held.ChestNormal;
-            Vector3 target = PoseSolver.AnchorOn(in carrier, carrierBody, anchor.Point) - (front.normalized * anchor.Contact);
+            // The held waist sits just outside the carrier's surface at the contact point, along the
+            // carrier's outward direction there, so the target never lies inside the carrier's body.
+            Vector3 point = PoseSolver.AnchorOn(in carrier, carrierBody, anchor.Point);
+            Vector3 outward = point - Vector3.Lerp(carrier.Pelvis, carrier.Neck, 0.4f);
+            outward = outward.sqrMagnitude > 1e-6f ? outward.normalized : Vector3.up;
+            Vector3 target = point + (outward * anchor.Contact);
             Vector3 free = PoseSolver.WholeBodyPivot(in held) + (Vector3.up * heldFrame.Lift);
             PoseSolver.Translate(ref held, (target - free) * Mathf.Clamp01(anchor.Weight));
         }

@@ -293,6 +293,8 @@ namespace Wrestling.Editor
                 for (int frame = 0; frame < columns * rows; frame++)
                 {
                     viewer.FastForward(frame == 0 ? 1 : spacing);
+                    WrestlerCharacter[] pair = UnityEngine.Object.FindObjectsByType<WrestlerCharacter>(FindObjectsInactive.Exclude);
+                    Debug.Log($"[overlap] {Path.GetFileName(file)} frame {frame}: {pair[0].Ragdoll.DeepestOverlap(pair[1].Ragdoll) * 100f:F1} cm");
                     camera.targetTexture = target;
                     Canvas.ForceUpdateCanvases();
                     camera.Render();
