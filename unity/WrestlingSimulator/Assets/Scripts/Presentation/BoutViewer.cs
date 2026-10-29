@@ -54,9 +54,64 @@ namespace Wrestling.Presentation
         private readonly GroundState[] _previousGround = new GroundState[2];
         private readonly HandGrips _handGrips = new HandGrips();
         private Corner? _lastExecutor;
+        private readonly Vector2[] _landingOffset = new Vector2[2];
+        private readonly bool[] _followLanding = new bool[2];
 
         /// <summary>The physical holds of the engine's grips (diagnostics).</summary>
         public HandGrips HandGrips => _handGrips;
+
+        /// <summary>After a throw, the thrown wrestler's staging stays where the throw landed them, easing back to the engine's placement over about this long (s).</summary>
+        private const float LandingOffsetSeconds = 3f;
+
+        /// <summary>
+        /// Shifts a thrown wrestler's staged place to where the throw physically landed them, and eases
+        /// the shift away, so the body is not dragged straight back to the engine's abstract position.
+        /// On the mat with one wrestler on top (par terre, danger), the top one is placed by the bottom
+        /// one, so they move with them.
+        /// </summary>
+        private void ApplyLandingOffsets(ref WrestlerFrame red, ref WrestlerFrame blue, float deltaTime)
+        {
+            float keep = deltaTime > 0f ? Mathf.Exp(-deltaTime / LandingOffsetSeconds) : 1f;
+            for (int i = 0; i < 2; i++)
+            {
+                PhysicalBody body = (i == 0 ? _redFigure : _blueFigure).Physical;
+                if (_followLanding[i] && body.IsFalling && deltaTime > 0f)
+                {
+                    // Still flying or rolling: the staged place is where the body is.
+                    Vector2 staged = i == 0 ? red.Position : blue.Position;
+                    _landingOffset[i] = new Vector2(body.HipPosition.x, body.HipPosition.z) - staged;
+                    continue;
+                }
+
+                _followLanding[i] = false;
+                _landingOffset[i] *= keep;
+            }
+
+            Vector2 redShift = _landingOffset[0];
+            Vector2 blueShift = _landingOffset[1];
+            BoutEngine engine = _session.Engine;
+            if (engine.Top != null && (engine.Position == BoutPosition.ParTerre || engine.Position == BoutPosition.Danger))
+            {
+                if (engine.Top == Corner.Red)
+                {
+                    redShift += blueShift;
+                }
+                else
+                {
+                    blueShift += redShift;
+                }
+            }
+
+            Shift(ref red, redShift);
+            Shift(ref blue, blueShift);
+
+            static void Shift(ref WrestlerFrame frame, Vector2 offset)
+            {
+                frame.Position += offset;
+                frame.LeftFoot += offset;
+                frame.RightFoot += offset;
+            }
+        }
 
         /// <summary>Physics substep for the ragdolls (display only).</summary>
         private const float PhysicsStep = 1f / 240f;
@@ -127,6 +182,10 @@ namespace Wrestling.Presentation
             _throwGrips = new List<(string, string)>();
             _turning = false;
             _lastExecutor = null;
+            _landingOffset[0] = Vector2.zero;
+            _landingOffset[1] = Vector2.zero;
+            _followLanding[0] = false;
+            _followLanding[1] = false;
             _redFigure = Figure(_redFigure, "Red", Corner.Red, _redSinglet);
             _blueFigure = Figure(_blueFigure, "Blue", Corner.Blue, _blueSinglet);
             _scoreboard.ResetFor(_session);
@@ -204,6 +263,7 @@ namespace Wrestling.Presentation
             Vector3 view = _camera.transform.forward;
             Staging.Arrange(ref red, ref blue, engine.Position, engine.Top, new Vector2(view.x, view.z).normalized);
             _choreographer.Apply(engine, ref red, ref blue, alpha, _shown);
+            ApplyLandingOffsets(ref red, ref blue, deltaTime);
             Smooth(0, red, deltaTime);
             Smooth(1, blue, deltaTime);
             bool snapped = _snapNextFrame;
@@ -324,6 +384,8 @@ namespace Wrestling.Presentation
                 _handGrips.Clear();
                 for (int i = 0; i < 2; i++)
                 {
+                    _landingOffset[i] = Vector2.zero;
+                    _followLanding[i] = false;
                     figures[i].Physical.Reset();
                     _previousAnchor[i] = _choreographer.Anchors[i].Weight;
                     _previousGround[i] = _shown[i].Ground;
@@ -436,6 +498,9 @@ namespace Wrestling.Presentation
                     bool countered = (throwing != null && throwing.Value.Thrower == _thrown) || (current != null && current.Executor == _thrown);
 
                     figures[(int)_thrown].Physical.EndThrow(countered ? CounterReleaseSeconds : LandingSeconds);
+                    // Where the throw actually puts the body is where it lands: the staging follows it down.
+                    _followLanding[(int)_thrown] = !countered;
+
                     figures[1 - (int)_thrown].Physical.SetCarrying(false);
                     _throwGrips = new List<(string, string)>();
                     _throwTechnique = null;

@@ -563,6 +563,7 @@ namespace Wrestling.Presentation
         /// </summary>
         public void Drive(float deltaTime)
         {
+            _lastSubstep = Mathf.Max(deltaTime, 1e-4f);
             SenseSupport();
             Balance();
             if (_mode == Mode.Thrown)
@@ -732,7 +733,17 @@ namespace Wrestling.Presentation
             }
 
             Support = Mathf.Min(support, 1f);
+            // Contacts chatter for a substep or two as the feet roll and shift: a base the body had a
+            // moment ago still lets it push (a fast rise, a slow fade over SupportMemorySeconds).
+            float fade = _lastSubstep / SupportMemorySeconds;
+            HeldSupport = Mathf.Max(Support, HeldSupport - fade);
         }
+
+        /// <summary>The support over the last moment (fades over <see cref="SupportMemorySeconds"/>), for efforts like throws that do not stop for a foot rolling.</summary>
+        public float HeldSupport { get; private set; }
+
+        private const float SupportMemorySeconds = 0.25f;
+        private float _lastSubstep = 1f / 240f;
 
         /// <summary>
         /// The ground pushing back: the force and torque that would bring the pelvis to its animated
@@ -793,6 +804,11 @@ namespace Wrestling.Presentation
                 Limit = Limit.Length == 0 ? "reach" : Limit;
             }
 
+            if (MeasureFeasibility)
+            {
+                MeasureContacts(push, torque, carried, weight * share);
+            }
+
             // The push acts at the pelvis, where the legs carry the body; the turn acts on the body as
             // a whole, so it does not wrench the pelvis against the trunk and legs.
             root.AddForceAtPosition(push, position);
@@ -805,6 +821,75 @@ namespace Wrestling.Presentation
                 carrierRoot.AddForceAtPosition(-push * fromCarrier, carrierRoot.transform.position);
                 _carrier.TurnAsOne(-torque * fromCarrier);
             }
+        }
+
+        /// <summary>
+        /// Diagnostics (the physics lab): also solve what the actual contacts could give, every substep,
+        /// and report it as <see cref="Feasibility"/>. Off in the game (it costs about as much as the rest).
+        /// </summary>
+        public static bool MeasureFeasibility;
+
+        /// <summary>
+        /// Share (0–1) of the last balance force and turn that the contacts on the mat could have made
+        /// within their friction cones (1: all of it; the rest stands in for stepping and for weight
+        /// leaned on the opponent). Only measured while <see cref="MeasureFeasibility"/> is set.
+        /// </summary>
+        public float Feasibility { get; private set; } = 1f;
+
+        private readonly ContactSolver _solver = new ContactSolver();
+
+        /// <summary>Weights a newton-metre of turn against a newton of force when scoring feasibility (1/m).</summary>
+        private const float FeasibilityLever = 0.6f;
+
+        private void MeasureContacts(Vector3 push, Vector3 torque, float carried, float resting)
+        {
+            float fromCarrier = carried > 0f ? carried / (carried + Support) : 0f;
+            Vector3 force = push * (1f - fromCarrier);
+            Vector3 turn = torque * (1f - fromCarrier);
+            float size = force.magnitude + (turn.magnitude * FeasibilityLever);
+            if (Support <= 0f || size < 1f)
+            {
+                Feasibility = 1f;
+                return;
+            }
+
+            _solver.Clear();
+            float total = 0f;
+            foreach (Segment segment in _segments)
+            {
+                total += segment.OnMat ? segment.SupportWeight : 0f;
+            }
+
+            float rest = Mathf.Max(0f, (resting * (1f - fromCarrier)) - force.y);
+            foreach (Segment segment in _segments)
+            {
+                if (!segment.OnMat)
+                {
+                    continue;
+                }
+
+                float share = rest * segment.SupportWeight / total;
+                if (segment.Shape is BoxCollider box)
+                {
+                    // Heel and toes, so the centre of pressure can move along the foot.
+                    Transform shape = box.transform;
+                    float sole = -box.size.y * 0.5f;
+                    float reach = box.size.z * 0.45f;
+                    _solver.Add(shape.TransformPoint(box.center + new Vector3(0f, sole, -reach)), share * 0.5f);
+                    _solver.Add(shape.TransformPoint(box.center + new Vector3(0f, sole, reach)), share * 0.5f);
+                    continue;
+                }
+
+                Transform link = segment.Body.transform;
+                Vector3 a = link.TransformPoint(segment.CapsuleA);
+                Vector3 b = link.TransformPoint(segment.CapsuleB);
+                Vector3 low = Mathf.Abs(a.y - b.y) < 0.02f ? (a + b) * 0.5f : (a.y < b.y ? a : b);
+                _solver.Add(low - (Vector3.up * segment.Radius), share);
+            }
+
+            (Vector3 madeForce, Vector3 madeTurn) = _solver.Solve(force, turn, CentreOfMass(), MatFriction);
+            float missing = (force - madeForce).magnitude + ((turn - madeTurn).magnitude * FeasibilityLever);
+            Feasibility = Mathf.Clamp01(1f - (missing / size));
         }
 
         /// <summary>
@@ -1054,11 +1139,18 @@ namespace Wrestling.Presentation
         private const float TurnGain = 12f;
         private const float MaxTurnAcceleration = 4000f;
 
+        /// <summary>Fastest a thrown body is turned (deg/s) and carried round the fulcrum (m/s): high-amplitude throws turn the body over in about a third of a second.</summary>
+        private const float MaxThrowSpin = 540f;
+        private const float MaxCarrySpeed = 4f;
+
         /// <summary>How fast a lag behind the throw's planned rotation is made up (1/s).</summary>
         private const float ThrowAngleGain = 6f;
 
-        /// <summary>Least share of the thrower's strength that reaches the throw with no base under them.</summary>
+        /// <summary>Least share of the thrower's strength that can hold the thrown body up with no base under them.</summary>
         private const float UnsupportedShare = 0.3f;
+
+        /// <summary>Share of the thrower's strength their arms and trunk put into pulling and turning the thrown body, base or not.</summary>
+        private const float ArmsShare = 0.6f;
 
         private readonly List<GripLink> _throwLinks = new List<GripLink>();
         private readonly HashSet<GripLink> _traps = new HashSet<GripLink>();
@@ -1222,12 +1314,14 @@ namespace Wrestling.Presentation
             Vector3 pivot = _pivot.Body.transform.position;
             Quaternion plan = Quaternion.AngleAxis(targetAngle, _throwAxis);
             Vector3 target = pivot + (plan * _turnOffset);
-            Vector3 targetVelocity = Vector3.Cross(_throwAxis * (targetRate * Mathf.Deg2Rad), target - pivot) + _pivot.Body.GetPointVelocity(pivot);
+            Vector3 targetVelocity = Vector3.ClampMagnitude(Vector3.Cross(_throwAxis * (targetRate * Mathf.Deg2Rad), target - pivot), MaxCarrySpeed) + _pivot.Body.GetPointVelocity(pivot);
             Vector3 carry = _mass * ((CarryStiffness * (target - centre)) + (CarryDamping * (targetVelocity - velocity)) - Physics.gravity);
 
             // The turn: angular acceleration that brings the spin to the planned rate (plus catching
             // up any lag), as a pure couple: each segment pushed along its circle round the centre.
-            float wantedRate = targetRate + (ThrowAngleGain * (targetAngle - _throwAngle));
+            // A throw that has fallen behind its plan does not whip round to catch up: no faster than a
+            // real throw turns.
+            float wantedRate = Mathf.Clamp(targetRate + (ThrowAngleGain * (targetAngle - _throwAngle)), -MaxThrowSpin, MaxThrowSpin);
             float alpha = Mathf.Clamp(TurnGain * (wantedRate - spin), -MaxTurnAcceleration, MaxTurnAcceleration) * Mathf.Deg2Rad;
             float coupleEffort = 0f;
             var couple = new Vector3[_segments.Count];
@@ -1238,14 +1332,31 @@ namespace Wrestling.Presentation
                 coupleEffort += couple[i].magnitude * 0.5f;
             }
 
-            float available = _maxThrowForce * Mathf.Max(UnsupportedShare, _throwerBody.Support);
-            float demand = carry.magnitude + coupleEffort;
-            float scale = demand > available ? available / demand : 1f;
+            // Two efforts with different limits. Holding the body up against gravity needs a base: the
+            // legs push it through the thrower's support. Pulling it round and turning it over the
+            // fulcrum is the arms and trunk, which work whether or not the thrower is dropping under
+            // (in a hip or headlock throw the drop is part of the technique).
+            float lift = Mathf.Max(0f, carry.y);
+            Vector3 pull = carry - new Vector3(0f, lift, 0f);
+            float legs = _maxThrowForce * Mathf.Max(UnsupportedShare, _throwerBody.HeldSupport);
+            float arms = _maxThrowForce * ArmsShare;
+            float liftScale = lift > legs ? legs / lift : 1f;
+            float pullDemand = pull.magnitude + coupleEffort;
+            float pullScale = pullDemand > arms ? arms / pullDemand : 1f;
+            carry = (Vector3.up * (lift * liftScale)) + (pull * pullScale);
+            for (int i = 0; i < couple.Length; i++)
+            {
+                couple[i] *= pullScale;
+            }
+
+            float available = legs + arms;
+            float demand = lift + pullDemand;
+            float scale = 1f;
             _lastAvailable = available;
             _lastDemand = demand;
             if (Trace != null && (++_traceCount % 8) == 0)
             {
-                Trace(FormattableString.Invariant($"plan {targetAngle:F0}° got {_throwAngle:F0}° spin {spin:F0}°/s want {wantedRate:F0}°/s | com err {(target - centre).magnitude:F2} m | carry {carry.magnitude:F0} N couple {coupleEffort:F0} N avail {available:F0} N scale {scale:F2} | thrower support {_throwerBody.Support:F2} push {_throwerBody.GroundPush:F2} bw"));
+                Trace(FormattableString.Invariant($"plan {targetAngle:F0}° got {_throwAngle:F0}° spin {spin:F0}°/s want {wantedRate:F0}°/s | com err {(target - centre).magnitude:F2} m | carry {carry.magnitude:F0} N couple {coupleEffort:F0} N avail {available:F0} N scale {scale:F2} | thrower support {_throwerBody.HeldSupport:F2} push {_throwerBody.GroundPush:F2} bw"));
             }
 
             Vector3 torque = Vector3.zero;

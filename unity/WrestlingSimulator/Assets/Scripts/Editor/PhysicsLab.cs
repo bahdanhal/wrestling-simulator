@@ -38,6 +38,7 @@ namespace Wrestling.Editor
             public readonly Dictionary<string, int> WorstJoints = new Dictionary<string, int>();
             public readonly Dictionary<string, float> JointSums = new Dictionary<string, float>();
             public readonly Dictionary<string, int> Limits = new Dictionary<string, int>();
+            public readonly List<float> Feasibility = new List<float>();
             public float LowestFoot = float.MaxValue;
             public int Frames;
             public int ActiveFrames;
@@ -111,7 +112,18 @@ namespace Wrestling.Editor
                     };
                 }
 
-                viewer.FastForward(from);
+                if (Array.IndexOf(args, "-clipNoJump") >= 0)
+                {
+                    // Played live from the start rather than jumping there.
+                    for (int i = 0; i < from; i++)
+                    {
+                        viewer.FastForward(1);
+                    }
+                }
+                else
+                {
+                    viewer.FastForward(from);
+                }
 
                 bool asyncShaders = ShaderUtil.allowAsyncCompilation;
                 ShaderUtil.allowAsyncCompilation = false;
@@ -160,6 +172,7 @@ namespace Wrestling.Editor
             BoutViewer viewer = UnityEngine.Object.FindAnyObjectByType<BoutViewer>();
             GameContent content = ContentLocator.LoadDirect();
             viewer.Initialise(content);
+            PhysicalBody.MeasureFeasibility = true;
             var report = new StringBuilder("[lab] Physics lab: live presentation at 60 fps\n");
             report.AppendLine("[lab] style | frames | pelvis err mean/p95/max cm | lost % | collapsed % | overlap mean/max cm | joint err mean deg | lowest foot cm | standing support | overpowered % | grips held % | throw angle | ms/frame mean/max");
             var all = new Sample();
@@ -180,6 +193,7 @@ namespace Wrestling.Editor
             }
 
             report.AppendLine(Line("All", all));
+            report.AppendLine(FormattableString.Invariant($"[lab] contact feasibility: {(all.Feasibility.Count == 0 ? 1f : all.Feasibility.Average()) * 100f:F0}% of the balance force and turn the mat contacts could make themselves (the rest stands in for stepping and leaning on the opponent)"));
             float active = Mathf.Max(1, all.ActiveFrames);
             report.AppendLine("[lab] mean joint error (deg): " + string.Join(", ", all.JointSums.OrderByDescending(j => j.Value).Select(j => FormattableString.Invariant($"{j.Key} {j.Value / active:F0}"))));
             report.AppendLine("[lab] balance limits hit (% of active frames): " + string.Join(", ", all.Limits.OrderByDescending(j => j.Value).Select(j => FormattableString.Invariant($"{j.Key} {100f * j.Value / active:F0}"))));
@@ -225,6 +239,11 @@ namespace Wrestling.Editor
                     if (error > LostDistance)
                     {
                         into.LostFrames++;
+                    }
+
+                    if (body.Support > 0f)
+                    {
+                        into.Feasibility.Add(body.Feasibility);
                     }
 
                     if (body.Overpowered)
@@ -274,6 +293,7 @@ namespace Wrestling.Editor
             }
 
             into.Tracking.AddRange(from.Tracking);
+            into.Feasibility.AddRange(from.Feasibility);
             into.Overlap.AddRange(from.Overlap);
             into.JointError.AddRange(from.JointError);
             into.StandingSupport.AddRange(from.StandingSupport);
