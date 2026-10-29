@@ -115,8 +115,8 @@
       "throw": {
         "kind": "throw",
         "pivot": "Spine2",
-        "axis": "lateral",
-        "degrees": -120,
+        "axis": "over",
+        "degrees": 120,
         "from": 0.1,
         "to": 0.9,
         "grips": [
@@ -128,7 +128,8 @@
             "thrower": "LeftForeArm",
             "thrown": "Spine"
           }
-        ]
+        ],
+        "seatUp": 0.5
       }
     }
   ]

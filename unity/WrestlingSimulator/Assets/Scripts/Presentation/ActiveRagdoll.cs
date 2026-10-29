@@ -46,6 +46,7 @@ namespace Wrestling.Presentation
         private const float ThrowAngleGain = 6f;
 
         private readonly List<ConfigurableJoint> _gripJoints = new List<ConfigurableJoint>();
+        private readonly HashSet<ConfigurableJoint> _traps = new HashSet<ConfigurableJoint>();
 
         /// <summary>Grip and arm-wrap drives (stiffness N/m, damping) and their share of the thrower's strength.</summary>
         private const float GripSpring = 6000f;
@@ -58,16 +59,13 @@ namespace Wrestling.Presentation
         /// <summary>Share of the grip stiffness and of the thrower's strength the grips keep during the turn.</summary>
         private const float TurnContactShare = 0.1f;
 
-        /// <summary>Where the loaded trunk sits on the fulcrum: mostly on the opponent's side, partly on top.</summary>
-        private const float SeatSide = 0.85f;
-        private const float SeatUp = 0.5f;
-
         /// <summary>Planted feet or knees each add this share of the thrower's strength to the throw (none planted: <see cref="UnsupportedShare"/>).</summary>
         private const float PlantedShare = 0.35f;
         private const float UnsupportedShare = 0.3f;
         private const float PlantedHeight = 0.12f;
 
         private ConfigurableJoint _load;
+        private float _seatUp = 0.5f;
         private float _lastAvailable;
         private float _lastDemand;
         private Vector3 _turnOffset;
@@ -304,11 +302,12 @@ namespace Wrestling.Presentation
         /// this body's held segments, and the trunk is squeezed onto the thrower's <paramref name="pivot"/>
         /// segment (the fulcrum). The turn round the fulcrum starts with <see cref="StartTurn"/>.
         /// </summary>
-        public void BeginThrow(ActiveRagdoll thrower, string pivot, IEnumerable<(string Thrower, string Thrown)> grips, float maxForce)
+        public void BeginThrow(ActiveRagdoll thrower, string pivot, IEnumerable<(string Thrower, string Thrown)> grips, float maxForce, float seatUp)
         {
             EndGrips();
             _throwerBody = thrower;
             _maxThrowForce = maxForce;
+            _seatUp = Mathf.Clamp01(seatUp);
             _pivot = thrower.Find(pivot);
             _trunkRotation = Find("Spine").Body.rotation;
             _throwAngle = 0f;
@@ -322,8 +321,24 @@ namespace Wrestling.Presentation
                 joint.connectedBody = theirs.Body;
                 joint.autoConfigureConnectedAnchor = false;
                 joint.anchor = mine.Body.transform.InverseTransformPoint(mine.Body.GetComponent<Collider>().bounds.center);
-                var forearm = theirs.Body.GetComponent<CapsuleCollider>();
-                joint.connectedAnchor = forearm != null ? forearm.center * 2f : Vector3.zero;
+                bool trap = !holder.EndsWith("ForeArm", StringComparison.Ordinal);
+                if (trap)
+                {
+                    // Trapped against the thrower's body: held on their surface where it touches now,
+                    // fixed to that trunk segment, so it turns with the thrower.
+                    Vector3 heldCentre = mine.Body.GetComponent<Collider>().bounds.center;
+                    Vector3 holderCentre = theirs.Body.GetComponent<Collider>().bounds.center;
+                    Vector3 towards = heldCentre - holderCentre;
+                    towards = towards.sqrMagnitude > 1e-6f ? towards.normalized : Vector3.up;
+                    joint.connectedAnchor = theirs.Body.transform.InverseTransformPoint(holderCentre + (towards * (Radius(theirs) + Radius(mine))));
+                    _traps.Add(joint);
+                }
+                else
+                {
+                    var forearm = theirs.Body.GetComponent<CapsuleCollider>();
+                    joint.connectedAnchor = forearm != null ? forearm.center * 2f : Vector3.zero;
+                }
+
                 joint.xMotion = ConfigurableJointMotion.Free;
                 joint.yMotion = ConfigurableJointMotion.Free;
                 joint.zMotion = ConfigurableJointMotion.Free;
@@ -397,7 +412,7 @@ namespace Wrestling.Presentation
         }
 
         /// <summary>Offset from the fulcrum's centre to where the trunk rests on it, the two surfaces touching.</summary>
-        private Vector3 Seat(Vector3 side, Segment trunk) => ((side * SeatSide) + (Vector3.up * SeatUp)).normalized * (Radius(_pivot) + Radius(trunk));
+        private Vector3 Seat(Vector3 side, Segment trunk) => Vector3.Slerp(side, Vector3.up, _seatUp).normalized * (Radius(_pivot) + Radius(trunk));
 
         /// <summary>World point a grip holds on this body's segment (the middle of the segment's volume).</summary>
         public Vector3 GripPoint(string segment) => Find(segment).Body.GetComponent<Collider>().bounds.center;
@@ -565,7 +580,8 @@ namespace Wrestling.Presentation
                 var contact = new JointDrive { positionSpring = GripSpring * TurnContactShare, positionDamper = GripDamper * TurnContactShare, maximumForce = _maxThrowForce * TurnContactShare };
                 foreach (ConfigurableJoint joint in _gripJoints)
                 {
-                    if (joint != null)
+                    // Traps stay firm: an arm clamped under the armpit turns with the thrower's body.
+                    if (joint != null && !_traps.Contains(joint))
                     {
                         joint.xDrive = contact;
                         joint.yDrive = contact;
@@ -606,6 +622,7 @@ namespace Wrestling.Presentation
             }
 
             _gripJoints.Clear();
+            _traps.Clear();
             _load = null;
             _turning = false;
             _pivot = null;

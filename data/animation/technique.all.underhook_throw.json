@@ -163,7 +163,8 @@
             "thrower": "LeftForeArm",
             "thrown": "RightArm"
           }
-        ]
+        ],
+        "seatUp": 0.5
       }
     },
     {
@@ -243,9 +244,9 @@
         {
           "t": 0.45,
           "executor": {
-            "x": 0.34,
-            "z": 0.02,
-            "heading": 200,
+            "x": 0.3,
+            "z": 0.0,
+            "heading": 210,
             "level": 0.45,
             "posture": 0.3,
             "ground": "standing",
@@ -278,9 +279,9 @@
         {
           "t": 0.7,
           "executor": {
-            "x": 0.3,
-            "z": 0.0,
-            "heading": 215,
+            "x": 0.15,
+            "z": -0.1,
+            "heading": 245,
             "level": 0.3,
             "posture": 0.15,
             "ground": "oneKnee",
@@ -288,7 +289,7 @@
             "rollSide": 1,
             "lift": 0.0,
             "pitch": 0.0,
-            "bank": -25,
+            "bank": -20,
             "anchor": "none",
             "anchorWeight": 0.0,
             "contact": 0.0
@@ -313,11 +314,11 @@
         {
           "t": 1,
           "executor": {
-            "x": 0.3,
-            "z": 0.0,
-            "heading": 220,
-            "level": 0.3,
-            "posture": 0.25,
+            "x": 0.05,
+            "z": -0.28,
+            "heading": 270,
+            "level": 0.2,
+            "posture": 0.1,
             "ground": "bothKnees",
             "roll": 0.0,
             "rollSide": 1,
@@ -349,7 +350,7 @@
       "throw": {
         "kind": "throw",
         "pivot": "Hips",
-        "axis": "lateral",
+        "axis": "over",
         "degrees": 185,
         "from": 0.0,
         "to": 0.8,
@@ -362,7 +363,8 @@
             "thrower": "LeftForeArm",
             "thrown": "RightArm"
           }
-        ]
+        ],
+        "seatUp": 0.5
       }
     }
   ]

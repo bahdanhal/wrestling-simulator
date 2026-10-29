@@ -93,7 +93,8 @@
             "thrower": "LeftForeArm",
             "thrown": "Spine"
           }
-        ]
+        ],
+        "seatUp": 0.5
       }
     },
     {
@@ -257,7 +258,8 @@
             "thrower": "LeftForeArm",
             "thrown": "Spine"
           }
-        ]
+        ],
+        "seatUp": 0.5
       }
     }
   ]

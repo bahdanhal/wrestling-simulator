@@ -46,13 +46,30 @@ public class MoveAnimationTests
         MoveClip entry = Library.Get(Catalog.Get("technique.all.headlock_throw").Phases[0].Animation);
         MoveClip fireman = Library.Get(Catalog.Get("technique.fs.fireman_carry").Phases[1].Animation);
         Assert.Equal(ThrowKind.Throw, headlock.Throw.Kind);
-        Assert.Equal(ThrowAxis.Lateral, headlock.Throw.Axis);
+        Assert.Equal(ThrowAxis.Over, headlock.Throw.Axis);
         Assert.Contains(headlock.Throw.Grips, g => g.Thrown == "Head");
         Assert.Equal(ThrowKind.Load, entry.Throw.Kind);
         Assert.Equal(0f, entry.Throw.Degrees);
         Assert.Equal(ThrowAxis.Forward, fireman.Throw.Axis);
         Assert.NotSame(headlock.Throw, fireman.Throw);
         Assert.Equal(ThrowKind.None, ThrowSpec.NoThrow.Kind);
+        // The head is locked against the thrower's body, not only held in a hand.
+        Assert.Contains(headlock.Throw.Grips, g => g.Thrower == "Spine2" && g.Thrown == "Head");
+        // Carried across the shoulders: seated on top of the fulcrum.
+        Assert.True(fireman.Throw.SeatUp > 0.8f);
+        Assert.Equal(0.5f, ThrowSpec.NoThrow.SeatUp);
+    }
+
+    [Fact]
+    public void RejectsThrowSeatOutsideTheFulcrum()
+    {
+        var throwing = new ThrowSpec { Kind = ThrowKind.Throw, Pivot = "Hips", Degrees = 180f, SeatUp = 1.2f };
+        var clip = new MoveClip { Id = "anim.test", Keys = new[] { Key(0f), Key(1f) }, Throw = throwing };
+        Assert.Contains(clip.Validate(), e => e.Contains("seatUp"));
+        var seated = new MoveClip { Id = "anim.test", Keys = new[] { Key(0f), Key(1f) }, Throw = new ThrowSpec { Kind = ThrowKind.Throw, Pivot = "Hips", Degrees = 180f, SeatUp = 0.9f } };
+        Assert.Empty(seated.Validate());
+        var backwards = new MoveClip { Id = "anim.test", Keys = new[] { Key(0f), Key(1f) }, Throw = new ThrowSpec { Kind = ThrowKind.Throw, Pivot = "Hips", Axis = ThrowAxis.Over, Degrees = -120f } };
+        Assert.Contains(backwards.Validate(), e => e.Contains("positive degrees"));
     }
 
     [Fact]

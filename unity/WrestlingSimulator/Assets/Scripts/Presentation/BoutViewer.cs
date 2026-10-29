@@ -360,7 +360,10 @@ namespace Wrestling.Presentation
                     && (active || (throwing.Value.Spec.Kind == ThrowKind.Load && throwing.Value.Progress >= throwing.Value.Spec.To));
                 if (!same)
                 {
-                    figures[(int)_thrown].Ragdoll.EndThrow(0.8f);
+                    // Countered: the thrown wrestler is acting now, so they are loose only for a
+                    // moment as they twist out, then carry out their counter. Otherwise they land.
+                    bool countered = throwing != null && throwing.Value.Thrower == _thrown;
+                    figures[(int)_thrown].Ragdoll.EndThrow(countered ? CounterReleaseSeconds : LandingSeconds);
                     figures[1 - (int)_thrown].Ragdoll.SetCarrying(false);
                     _throwGrips = new List<(string, string)>();
                     _throwTechnique = null;
@@ -392,7 +395,7 @@ namespace Wrestling.Presentation
                 {
                     // Facing the opponent (chest or shoulders): the grips and squeeze draw them in
                     // physically from the start of the load.
-                    figures[(int)_thrown].Ragdoll.BeginThrow(figures[(int)t.Thrower].Ragdoll, t.Spec.Pivot, grips, ThrowStrength(_session.WrestlerOf(t.Thrower)));
+                    figures[(int)_thrown].Ragdoll.BeginThrow(figures[(int)t.Thrower].Ragdoll, Mirror(t.Spec.Pivot, t.Mirrored), grips, ThrowStrength(_session.WrestlerOf(t.Thrower)), t.Spec.SeatUp);
                 }
 
                 // Turning the back in under them (hip fulcrum): the opponent keeps following their
@@ -405,7 +408,7 @@ namespace Wrestling.Presentation
             {
                 if (!figures[(int)_thrown].Ragdoll.IsThrown)
                 {
-                    figures[(int)_thrown].Ragdoll.BeginThrow(figures[(int)t.Thrower].Ragdoll, t.Spec.Pivot, grips, ThrowStrength(_session.WrestlerOf(t.Thrower)));
+                    figures[(int)_thrown].Ragdoll.BeginThrow(figures[(int)t.Thrower].Ragdoll, Mirror(t.Spec.Pivot, t.Mirrored), grips, ThrowStrength(_session.WrestlerOf(t.Thrower)), t.Spec.SeatUp);
                 }
 
                 figures[(int)_thrown].Ragdoll.StartTurn(ThrowAxisFor(t, figures));
@@ -417,8 +420,14 @@ namespace Wrestling.Presentation
             _throwPhase = t.Technique.PhaseIndex;
         }
 
-        /// <summary>Horizontal offset (m) from the fulcrum below which a lateral throw takes its axis from the thrower's facing.</summary>
+        /// <summary>Horizontal offset (m) from the fulcrum below which a throw over it takes its axis from the thrower's facing.</summary>
         private const float FulcrumOffsetForAxis = 0.12f;
+
+        /// <summary>After a throw lets go, how long (s) the body falls freely and settles on the mat before recovering.</summary>
+        private const float LandingSeconds = 1.2f;
+
+        /// <summary>How long (s) a thrown wrestler who counters stays loose before following their counter.</summary>
+        private const float CounterReleaseSeconds = 0.15f;
 
         /// <summary>The fulcrum of throws where the thrower turns their back in under the opponent.</summary>
         private const string HipFulcrum = "Hips";
@@ -426,20 +435,19 @@ namespace Wrestling.Presentation
         private Vector3 ThrowAxisFor((TechniqueExecution Technique, Corner Thrower, ThrowSpec Spec, float Progress, float PhaseSeconds, bool Mirrored) t, WrestlerCharacter[] figures)
         {
             Vector3 offset = figures[(int)t.Thrower.Opponent()].Ragdoll.OffsetFromFulcrum;
-            if (t.Spec.Axis == ThrowAxis.Lateral && offset.magnitude > FulcrumOffsetForAxis)
+            if (t.Spec.Axis == ThrowAxis.Over && offset.magnitude > FulcrumOffsetForAxis)
             {
-                // Over the hip, back or chest the body goes over the top of the fulcrum, away from
-                // the side it is loaded on, whichever way the thrower is facing: the axis is square
-                // to the line from the fulcrum to the body's centre of mass. Positive degrees keep
-                // their meaning (towards the thrower's front), so the sign follows the spec.
-                Vector3 over = Vector3.Cross(Vector3.up, -offset.normalized);
-                return t.Spec.Degrees >= 0f ? over : -over;
+                // Over the top of the fulcrum, away from the side the body is loaded on, whichever
+                // way the thrower is facing: the axis is square to the line from the fulcrum to the
+                // body's centre of mass.
+                return Vector3.Cross(Vector3.up, -offset.normalized);
             }
 
             Vector3 forward = WrestlerFrame.OnMat(_shown[(int)t.Thrower].Facing).normalized;
             Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
             // ω = up × direction makes the body's top move along the direction (v = ω × r).
-            return t.Spec.Axis == ThrowAxis.Lateral
+            // Over a fulcrum the body sits right on top of: the thrower's left-right axis, towards their front.
+            return t.Spec.Axis != ThrowAxis.Forward
                 ? Vector3.Cross(Vector3.up, forward)
                 : Vector3.Cross(Vector3.up, right) * (t.Mirrored ? -1f : 1f);
         }
@@ -460,6 +468,12 @@ namespace Wrestling.Presentation
         {
             foreach ((string holder, string point) in _throwGrips)
             {
+                if (!holder.EndsWith("ForeArm", System.StringComparison.Ordinal))
+                {
+                    // Trapped against the body, not held in a hand.
+                    continue;
+                }
+
                 Vector3 target = held.GripPoint(point);
                 if (holder.StartsWith("Left"))
                 {

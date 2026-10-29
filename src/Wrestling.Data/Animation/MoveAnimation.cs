@@ -116,12 +116,24 @@ namespace Wrestling.Data.Animation
 
         /// <summary>Sideways about the thrower's facing (body-lock throws, lateral drops, fireman's carry).</summary>
         Forward,
+
+        /// <summary>
+        /// Over the top of the fulcrum, away from the side the thrown wrestler is loaded on, whichever
+        /// way the thrower faces (hip, headlock and shoulder throws, counters rolling the thrower
+        /// across). Degrees are positive.
+        /// </summary>
+        Over,
     }
 
-    /// <summary>A thrower's hand joined to a point of the thrown wrestler for the throw.</summary>
+    /// <summary>
+    /// A point of the thrown wrestler held by the thrower for the throw. Held by a forearm, it is in
+    /// the thrower's hand; held by a trunk segment ("Hips", "Spine", "Spine2"), it is trapped against
+    /// the thrower's body (an arm clamped under the armpit, a head locked against the chest) and turns
+    /// with the thrower's trunk.
+    /// </summary>
     public sealed class ThrowGrip
     {
-        /// <summary>Thrower's body segment holding (for example "RightForeArm").</summary>
+        /// <summary>Thrower's body segment holding (for example "RightForeArm", or "Spine2" for a trap).</summary>
         public string Thrower { get; init; } = string.Empty;
 
         /// <summary>Thrown wrestler's segment held (for example "Head", "Spine2", "LeftUpLeg").</summary>
@@ -133,7 +145,8 @@ namespace Wrestling.Data.Animation
     /// <see cref="Pivot"/> segment by <see cref="Degrees"/> between <see cref="From"/> and <see cref="To"/>
     /// of the phase, held by the grips, colliding with the thrower, under gravity; after
     /// <see cref="To"/> it flies free and lands. Positive degrees on the lateral axis take the thrown
-    /// wrestler's top towards the thrower's front; on the forward axis, towards the thrower's right.
+    /// wrestler's top towards the thrower's front; on the forward axis, towards the thrower's right;
+    /// over the fulcrum, away from the side the thrown wrestler is loaded on.
     /// </summary>
     public sealed class ThrowSpec
     {
@@ -152,6 +165,13 @@ namespace Wrestling.Data.Animation
         public float To { get; init; } = 1f;
 
         public IReadOnlyList<ThrowGrip> Grips { get; init; } = Array.Empty<ThrowGrip>();
+
+        /// <summary>
+        /// Where the thrown wrestler's trunk rests on the fulcrum, from 0 (level with it, on the side
+        /// facing the thrown wrestler) to 1 (on top of it): about 0.5 for a hip or chest, near 1 for a
+        /// body carried across the shoulders.
+        /// </summary>
+        public float SeatUp { get; init; } = 0.5f;
     }
 
     /// <summary>The paired motion for one technique phase, sampled by phase progress.</summary>
@@ -196,6 +216,16 @@ namespace Wrestling.Data.Animation
                 if (Throw.Kind == ThrowKind.Throw && (Math.Abs(Throw.Degrees) > 300f || Throw.Degrees == 0f))
                 {
                     errors.Add($"{path}: throw degrees must be non-zero and within ±300.");
+                }
+
+                if (Throw.Kind == ThrowKind.Throw && Throw.Axis == ThrowAxis.Over && Throw.Degrees < 0f)
+                {
+                    errors.Add($"{path}: a throw over the fulcrum turns by positive degrees.");
+                }
+
+                if (Throw.SeatUp < 0f || Throw.SeatUp > 1f)
+                {
+                    errors.Add($"{path}: throw seatUp must be within 0..1.");
                 }
 
                 if (Throw.Kind == ThrowKind.Load && Throw.Degrees != 0f)

@@ -128,7 +128,8 @@
             "thrower": "LeftForeArm",
             "thrown": "RightArm"
           }
-        ]
+        ],
+        "seatUp": 0.95
       }
     },
     {
@@ -280,7 +281,7 @@
         "kind": "throw",
         "pivot": "Spine2",
         "axis": "forward",
-        "degrees": 160,
+        "degrees": 180,
         "from": 0.0,
         "to": 0.8,
         "grips": [
@@ -292,7 +293,8 @@
             "thrower": "LeftForeArm",
             "thrown": "RightArm"
           }
-        ]
+        ],
+        "seatUp": 0.95
       }
     }
   ]
