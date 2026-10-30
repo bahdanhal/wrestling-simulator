@@ -366,13 +366,24 @@ namespace Wrestling.Presentation
         /// The segment of this body whose surface is nearest <paramref name="point"/>, the nearest point
         /// on it, and the distance (0 inside). Used to close a hand on whatever is under it.
         /// </summary>
-        public (ArticulationBody Body, Vector3 Point, float Distance) Nearest(Vector3 point)
+        public (ArticulationBody Body, Vector3 Point, float Distance) Nearest(Vector3 point) => Nearest(point, null);
+
+        /// <summary>
+        /// The nearest point on the surface of the named segments (all of them when
+        /// <paramref name="segmentNames"/> is null), with its body and distance.
+        /// </summary>
+        public (ArticulationBody Body, Vector3 Point, float Distance) Nearest(Vector3 point, IReadOnlyList<string> segmentNames)
         {
             Segment best = null;
             Vector3 bestPoint = point;
             float bestDistance = float.MaxValue;
             foreach (Segment segment in _segments)
             {
+                if (segmentNames != null && !Contains(segmentNames, segment.Name))
+                {
+                    continue;
+                }
+
                 Vector3 closest = ClosestOnSurface(segment, point);
                 float distance = (closest - point).magnitude;
                 if (distance < bestDistance)
@@ -696,6 +707,19 @@ namespace Wrestling.Presentation
             {
                 UnityEngine.Object.DestroyImmediate(_root);
             }
+        }
+
+        private static bool Contains(IReadOnlyList<string> names, string name)
+        {
+            for (int i = 0; i < names.Count; i++)
+            {
+                if (names[i] == name)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private Segment Find(string segmentName) =>

@@ -487,6 +487,11 @@ namespace Wrestling.Editor
             RenderTexture previousActive = RenderTexture.active;
             try
             {
+                // One render thrown away first: the first render after the scene loads can show new
+                // materials before their own colours apply (a blue singlet drawn red).
+                camera.targetTexture = target;
+                Canvas.ForceUpdateCanvases();
+                camera.Render();
                 for (int frame = 0; frame < ticks / 2; frame++)
                 {
                     viewer.FastForward(2);

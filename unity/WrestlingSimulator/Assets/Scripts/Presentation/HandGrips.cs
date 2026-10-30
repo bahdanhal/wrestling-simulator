@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Wrestling.Core.Match;
 using Wrestling.Core.Rules;
@@ -9,8 +10,10 @@ namespace Wrestling.Presentation
     /// an underhook, a body lock, a leg), that hand's palm is held on the part of the opponent's body
     /// under it by a <see cref="GripLink"/>, as strong as the grip is in the engine. So a collar tie
     /// pulls the opponent's head, a snap moves them, and the opponent's movement drags the arm. A hold
-    /// is made when the palm reaches the opponent's surface, and torn off if the bodies are pulled
-    /// apart past what a hand can keep. Display only: the engine decides every grip.
+    /// is made when the palm reaches a part of the opponent's body the grip can be on (the head or
+    /// upper back for a collar tie, an arm for wrist control), never whatever else the hand brushes on
+    /// the way there, and torn off if the bodies are pulled apart past what a hand can keep. Display
+    /// only: the engine decides every grip.
     /// </summary>
     public sealed class HandGrips
     {
@@ -26,10 +29,18 @@ namespace Wrestling.Presentation
         private const float ReachDistance = 0.06f;
         private const float BreakDistance = 0.3f;
 
+        /// <summary>
+        /// Engine ticks a hold is kept after the engine lets its grip go. A grip re-taken within this
+        /// (the engine re-gripping in the same place) keeps the same hold, rather than the hand letting
+        /// go and travelling back through the opponent's arms for a grip it never really lost.
+        /// </summary>
+        private const int GraceTicks = 15;
+
         private static readonly string[] Hands = { "LeftHand", "RightHand" };
 
         private readonly GripLink[] _links = new GripLink[4];
         private readonly Grip[] _grips = new Grip[4];
+        private readonly int[] _lastGripped = new int[4];
 
         /// <summary>Holds currently made (0–4).</summary>
         public int Holding
@@ -74,13 +85,32 @@ namespace Wrestling.Presentation
                 Grip grip = suspended ? null : GripOn(engine, corner, side);
                 if (grip == null)
                 {
-                    _links[i] = null;
-                    _grips[i] = null;
+                    bool lingering = !suspended && _links[i] != null && _links[i].Holding && engine.Tick - _lastGripped[i] <= GraceTicks;
+                    if (!lingering)
+                    {
+                        _links[i] = null;
+                        _grips[i] = null;
+                    }
+
                     continue;
                 }
 
                 Gripping++;
-                if (_links[i] != null && (!_links[i].Holding || !ReferenceEquals(_grips[i], grip)))
+                _lastGripped[i] = engine.Tick;
+                if (_links[i] != null && !ReferenceEquals(_grips[i], grip))
+                {
+                    if (_grips[i] != null && _grips[i].Type == grip.Type && _grips[i].Side == grip.Side)
+                    {
+                        // The same grip re-taken: the hand never let go.
+                        _grips[i] = grip;
+                    }
+                    else
+                    {
+                        _links[i] = null;
+                    }
+                }
+
+                if (_links[i] != null && !_links[i].Holding)
                 {
                     _links[i] = null;
                 }
@@ -98,7 +128,7 @@ namespace Wrestling.Presentation
                 ArticulationBody hand = holder.Link(handName);
                 Vector3 palm = holder.PalmAnchor(handName);
                 Vector3 palmWorld = hand.transform.TransformPoint(palm);
-                (ArticulationBody body, Vector3 point, float distance) = held.Nearest(palmWorld);
+                (ArticulationBody body, Vector3 point, float distance) = held.Nearest(palmWorld, HeldParts(grip, side));
                 if (distance <= ReachDistance)
                 {
                     _links[i] = new GripLink(hand, palm, body, body.transform.InverseTransformPoint(point), Spring, Damper, hold, BreakDistance);
@@ -122,6 +152,51 @@ namespace Wrestling.Presentation
                 link?.Apply(deltaTime);
             }
         }
+
+        /// <summary>
+        /// The opponent's segments a hand may hold for a grip: the head and upper back for a neck grip,
+        /// the trunk (and the arm it goes under or over) for a body grip, the arms for an arm grip, the
+        /// legs for a leg grip. A neck or body grip never takes hold of an arm the hand brushes on its
+        /// way, which would tie the two wrestlers' arms together.
+        /// </summary>
+        private static IReadOnlyList<string> HeldParts(Grip grip, GripSide hand)
+        {
+            bool armHand = hand != grip.Side;
+            switch (grip.Type)
+            {
+                case GripType.CollarTie:
+                case GripType.FrontHeadlock:
+                    return NeckParts;
+                case GripType.WristControl:
+                case GripType.TwoOnOne:
+                    return ArmParts;
+                case GripType.Underhook:
+                case GripType.Overhook:
+                    return grip.Side == GripSide.Left ? HookRightParts : HookLeftParts;
+                case GripType.BodyLock:
+                case GripType.GutWrenchLock:
+                case GripType.WaistFromBehind:
+                    return TrunkParts;
+                case GripType.HeadAndArm:
+                    // One hand round the neck, the other on an arm.
+                    return armHand ? ArmParts : NeckParts;
+                case GripType.Crotch:
+                    return CrotchParts;
+                default:
+                    return LegParts;
+            }
+        }
+
+        private static readonly string[] NeckParts = { "Head", "Spine2" };
+        private static readonly string[] TrunkParts = { "Hips", "Spine", "Spine2" };
+        private static readonly string[] ArmParts = { "LeftHand", "LeftForeArm", "LeftArm", "RightHand", "RightForeArm", "RightArm" };
+
+        // An underhook or overhook goes under or over the opponent's arm on the facing side (a left
+        // hook works on the right arm) and ends on their back or shoulder.
+        private static readonly string[] HookRightParts = { "Spine", "Spine2", "RightArm" };
+        private static readonly string[] HookLeftParts = { "Spine", "Spine2", "LeftArm" };
+        private static readonly string[] CrotchParts = { "Hips", "LeftUpLeg", "RightUpLeg" };
+        private static readonly string[] LegParts = { "Hips", "LeftUpLeg", "LeftLeg", "LeftFoot", "RightUpLeg", "RightLeg", "RightFoot" };
 
         private static Grip GripOn(BoutEngine engine, Corner corner, GripSide side)
         {
