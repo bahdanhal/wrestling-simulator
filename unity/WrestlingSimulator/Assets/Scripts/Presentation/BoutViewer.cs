@@ -56,6 +56,20 @@ namespace Wrestling.Presentation
         private Corner? _lastExecutor;
         private readonly Vector2[] _landingOffset = new Vector2[2];
         private readonly bool[] _followLanding = new bool[2];
+        private readonly LoadCompliance[] _compliance = { new LoadCompliance(), new LoadCompliance() };
+        private readonly Exertion[] _exertion = { new Exertion(), new Exertion() };
+
+        /// <summary>
+        /// Whether the bodies give under the loads they measure (on in the game; tools turn it off to
+        /// compare). See <see cref="LoadCompliance"/>.
+        /// </summary>
+        public static bool PhysicalCompliance = true;
+
+        /// <summary>How a corner's body is giving under load now (diagnostics).</summary>
+        public LoadCompliance Compliance(Corner corner) => _compliance[(int)corner];
+
+        /// <summary>How worked a corner's wrestler looks now, 0–1 (diagnostics).</summary>
+        public float ExertionOf(Corner corner) => _exertion[(int)corner].Value;
 
         /// <summary>The physical holds of the engine's grips (diagnostics).</summary>
         public HandGrips HandGrips => _handGrips;
@@ -186,6 +200,12 @@ namespace Wrestling.Presentation
             _landingOffset[1] = Vector2.zero;
             _followLanding[0] = false;
             _followLanding[1] = false;
+            for (int i = 0; i < 2; i++)
+            {
+                _compliance[i].Reset();
+                _exertion[i].Reset();
+            }
+
             _redFigure = Figure(_redFigure, "Red", Corner.Red, _redSinglet);
             _blueFigure = Figure(_blueFigure, "Blue", Corner.Blue, _blueSinglet);
             _scoreboard.ResetFor(_session);
@@ -348,6 +368,21 @@ namespace Wrestling.Presentation
                 }
             }
 
+            if (!snapped && deltaTime > 0f && PhysicalCompliance)
+            {
+                // The bodies give under what they bore last frame; a body held on the other goes down with its carrier.
+                bool engaged = engine.ActiveTechnique != null && !engine.IsStopped;
+                Comply(Corner.Red, ref redPose, _redFigure, engaged, deltaTime);
+                Comply(Corner.Blue, ref bluePose, _blueFigure, engaged, deltaTime);
+                PoseSolver.Translate(ref redPose, Vector3.down * (_compliance[1].Sink * Mathf.Clamp01(redAnchor.Weight)));
+                PoseSolver.Translate(ref bluePose, Vector3.down * (_compliance[0].Sink * Mathf.Clamp01(blueAnchor.Weight)));
+            }
+            else
+            {
+                _compliance[0].Reset();
+                _compliance[1].Reset();
+            }
+
             if (!snapped && deltaTime > 0f)
             {
                 PlantFeet(ref redPose, _redFigure);
@@ -362,6 +397,15 @@ namespace Wrestling.Presentation
             SimulateFalls(deltaTime, snapped);
             _redFigure.ApplyExpression(in redPose);
             _blueFigure.ApplyExpression(in bluePose);
+            _mat.ShowContacts(_redFigure.Physical, _blueFigure.Physical);
+
+            // Sweat and strain follow the stamina spent and the bout time gone.
+            _redFigure.SetExertion(_exertion[0].Update(engine.Wrestler(Corner.Red), engine.Clock, deltaTime));
+            _blueFigure.SetExertion(_exertion[1].Update(engine.Wrestler(Corner.Blue), engine.Clock, deltaTime));
+
+            // Twist bones and corrective shapes follow the final bones, after posing, contact and physics.
+            _redFigure.UpdateDeformation();
+            _blueFigure.UpdateDeformation();
 
             Vector3 focus = WrestlerFrame.OnMat((_shown[0].Position + _shown[1].Position) * 0.5f);
             bool grounded = engine.Position != BoutPosition.Neutral;
@@ -376,6 +420,39 @@ namespace Wrestling.Presentation
 
             _scoreboard.Refresh(_session);
             Presented?.Invoke(this);
+        }
+
+        /// <summary>Gives a wrestler's pose under the loads their physical body measured; hands that hold a grip keep their hold.</summary>
+        private void Comply(Corner corner, ref Pose pose, WrestlerCharacter figure, bool engaged, float deltaTime)
+        {
+            LoadCompliance compliance = _compliance[(int)corner];
+            compliance.Update(figure.Physical, engaged, deltaTime);
+            compliance.Apply(ref pose, figure.Body, Holds(corner, GripSide.Left), Holds(corner, GripSide.Right));
+        }
+
+        /// <summary>True when a hand is on a physical hold: an engine grip or, for a thrower, the throw's grip.</summary>
+        private bool Holds(Corner corner, GripSide side)
+        {
+            if (_handGrips.HeldPoint(corner, side).HasValue)
+            {
+                return true;
+            }
+
+            if (_throwTechnique == null || _thrown == corner)
+            {
+                return false;
+            }
+
+            string arm = side == GripSide.Left ? "LeftForeArm" : "RightForeArm";
+            foreach ((string holder, string _) in _throwGrips)
+            {
+                if (holder == arm)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void SolveExpressions(BoutEngine engine, ref Pose redPose, ref Pose bluePose)

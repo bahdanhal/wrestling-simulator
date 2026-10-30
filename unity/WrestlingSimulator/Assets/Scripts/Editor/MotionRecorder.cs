@@ -57,7 +57,6 @@ namespace Wrestling.Editor
             viewer.StartBout(seed);
             viewer.FastForward(Math.Max(1, start - Lead));
             var frames = new List<IReadOnlyList<IReadOnlyList<float>>>();
-            const float tick = 1f / BoutClock.TicksPerSecond;
             WrestlerCharacter executorFigure = executor == Corner.Red ? viewer.RedFigure : viewer.BlueFigure;
             WrestlerCharacter opponentFigure = executor == Corner.Red ? viewer.BlueFigure : viewer.RedFigure;
             for (int t = start - Lead; t <= end + Tail; t++)

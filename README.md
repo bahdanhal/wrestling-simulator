@@ -77,6 +77,8 @@ The wrestler models in `unity/WrestlingSimulator/Assets/Characters` are built fr
 
 Then run **Wrestling → Build Character Library** in Unity (the scene builder does this too).
 
+On import, `CharacterImport` adds forearm, upper-arm and thigh twist bones, corrective shoulder and hip blend shapes, and a raised singlet with smooth seams to the models. After changing it, run **Wrestling → Reimport Characters** (`-executeMethod Wrestling.Editor.CharacterImport.ReimportFromCommandLine`). **Wrestling → Diagnostics → Render Deformation Sheet** (`-executeMethod Wrestling.Editor.DeformationSheet.RenderFromCommandLine -deformationOutput DIR`, without `-nographics`) renders stress poses with and without these corrections, side by side.
+
 ## Recorded motion
 
 Real motion (motion capture, or extracted from video with a tool that allows commercial use) replaces the keyed clips phase by phase. Import two people's BVH files (or a keypoint JSON) as a take, then assign a frame range to a technique phase:
@@ -105,7 +107,7 @@ Any stretch of a bout can be rendered as video, with the animation's pelvis targ
 /Applications/Unity/Hub/Editor/6000.6.7f1/Unity.app/Contents/MacOS/Unity -batchmode -projectPath unity/WrestlingSimulator -executeMethod Wrestling.Editor.PhysicsLab.ClipFromCommandLine -clipStyle gr -clipSeed 6 -clipFrom 2380 -clipTicks 150 -clipOutput clip.mp4 -logFile -
 ```
 
-Latest lab run (2 bouts × 45 s per style, the defaults): pelvis 8.9 cm from its animated place on average, a body off its motion (over 25 cm) in 10.4% of frames (mostly recovering from scrambles and throws), standing collapses 1.5%, mean overlap 0.1 cm, 75% of gripping hands holding the opponent, and 78% of the balance force and turn the bodies use could be made by their mat contacts alone (the rest stands in for stepping and leaning on the opponent). The same run on the previous grip handling gave 14.2 cm, 15.6% and 2.0%. The physics costs about 1 ms per frame for both wrestlers on an Apple Silicon Mac (about 2 ms in the lab, which also solves the contact forces). Add `-clipSide` to a clip for a profile camera.
+Latest lab run (4 bouts × 45 s per style, `-labBouts 4`): pelvis 8.3 cm from its animated place on average, a body off its motion (over 25 cm) in 9.8% of frames (mostly recovering from scrambles and throws), standing collapses 0.5%, mean overlap 0.1 cm, 80% of gripping hands holding the opponent, and 74% of the balance force and turn the bodies use could be made by their mat contacts alone (the rest stands in for stepping and leaning on the opponent). The same run before the production refactoring (spine torsion, wrist and hand poses, grip sockets, load compliance) gave 11.2 cm, 14.5% and 67% of grips held. Bodies give under what they bear (`-labNoCompliance` turns that off to compare). The physics costs about 1 ms per frame for both wrestlers on an Apple Silicon Mac (about 2 ms in the lab, which also solves the contact forces). Add `-clipSide` to a clip for a profile camera.
 
 ## Determinism check
 

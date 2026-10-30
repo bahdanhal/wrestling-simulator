@@ -80,6 +80,7 @@ namespace Wrestling.Editor
                 {
                     m.SetFloat("_SkinSmoothness", 0.34f);
                     m.SetFloat("_SingletSmoothness", 0.26f);
+                    m.SetFloat("_FoldDepth", 0.0018f);
                 }),
             };
 

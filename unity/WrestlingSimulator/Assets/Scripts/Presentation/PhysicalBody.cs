@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 
 namespace Wrestling.Presentation
@@ -275,6 +276,7 @@ namespace Wrestling.Presentation
             MeasureInertia();
             var colliders = _root.GetComponentsInChildren<Collider>();
             _colliders = colliders;
+            Register();
             // A wrestler's own segments never collide with each other; only with the mat and the opponent.
             for (int i = 0; i < colliders.Length; i++)
             {
@@ -406,6 +408,46 @@ namespace Wrestling.Presentation
             SetMuscle(ModeMuscle());
         }
 
+        /// <summary>Capsules <see cref="GetContactCapsules"/> gives: one per segment.</summary>
+        public const int ContactCapsules = 16;
+
+        /// <summary>
+        /// The body's parts as capsules for contact shading, at <paramref name="offset"/>: each end's
+        /// world position, with the radius in w of <paramref name="ends"/> (a foot runs heel to toe
+        /// along its sole, the head is a sphere). They are the physical body, which is what is shown.
+        /// </summary>
+        public void GetContactCapsules(Vector4[] ends, Vector4[] otherEnds, int offset)
+        {
+            for (int i = 0; i < _segments.Count; i++)
+            {
+                Segment segment = _segments[i];
+                Vector3 a;
+                Vector3 b;
+                if (segment.Shape is BoxCollider box)
+                {
+                    Transform shape = box.transform;
+                    float sole = (-box.size.y * 0.5f) + segment.Radius;
+                    float reach = box.size.z * 0.45f;
+                    a = shape.TransformPoint(box.center + new Vector3(0f, sole, -reach));
+                    b = shape.TransformPoint(box.center + new Vector3(0f, sole, reach));
+                }
+                else
+                {
+                    Transform link = segment.Body.transform;
+                    a = link.TransformPoint(segment.CapsuleA);
+                    b = link.TransformPoint(segment.CapsuleB);
+                }
+
+                ends[offset + i] = new Vector4(a.x, a.y, a.z, segment.Radius);
+                otherEnds[offset + i] = new Vector4(b.x, b.y, b.z, 0f);
+            }
+        }
+
+        /// <summary>Strength of the arms and trunk, and of the legs, relative to an average athlete (0.75–1.25).</summary>
+        public float UpperStrength => _upperStrength;
+
+        public float LowerStrength => _lowerStrength;
+
         /// <summary>The engine's balance (0 falling, 1 stable): an off-balance wrestler cannot push off the mat as hard.</summary>
         public void SetBalance(float balance) => _balanceShare = Mathf.Lerp(0.45f, 1f, Mathf.Clamp01(balance));
 
@@ -481,6 +523,8 @@ namespace Wrestling.Presentation
             }
 
             _hasRootTarget = false;
+            ClearLoads();
+            FinishLoads();
             _carrier = null;
             _carried = 0f;
             _brace = 1f;
@@ -506,6 +550,7 @@ namespace Wrestling.Presentation
         public void BeforeStep(float deltaTime)
         {
             float dt = Mathf.Max(deltaTime, 1e-4f);
+            ClearLoads();
             // Muscles cannot change their pull instantly: what the animation asks for reaches them
             // through their activation time, so a clip that snaps a limb or drops the hips in a frame
             // is carried out as fast as a body can, not as a kick.
@@ -595,6 +640,7 @@ namespace Wrestling.Presentation
         public void Drive(float deltaTime)
         {
             _lastSubstep = Mathf.Max(deltaTime, 1e-4f);
+            _sensedSeconds += deltaTime;
             SenseSupport();
             if (_mode == Mode.Thrown)
             {
@@ -616,6 +662,7 @@ namespace Wrestling.Presentation
         /// <summary>After the physics step: the rig's bones take the physical body's pose (parents before children).</summary>
         public void AfterStep()
         {
+            FinishLoads();
             if (_weight <= 0f)
             {
                 return;
@@ -699,6 +746,7 @@ namespace Wrestling.Presentation
 
         public void Destroy()
         {
+            Unregister();
             if (Application.isPlaying)
             {
                 UnityEngine.Object.Destroy(_root);
@@ -893,6 +941,13 @@ namespace Wrestling.Presentation
                 ArticulationBody carrierRoot = _carrier.Root.Body;
                 carrierRoot.AddForceAtPosition(-push * fromCarrier, carrierRoot.transform.position);
                 _carrier.TurnAsOne(-torque * fromCarrier);
+                AddOpponentImpulse(0, push * (fromCarrier * _lastSubstep));
+                _carrier.AddOpponentImpulse(0, -push * (fromCarrier * _lastSubstep));
+                _groundImpulse += push * ((1f - fromCarrier) * _lastSubstep);
+            }
+            else
+            {
+                _groundImpulse += push * _lastSubstep;
             }
         }
 
@@ -1193,6 +1248,148 @@ namespace Wrestling.Presentation
             return distance <= segment.Radius ? point : axis + (outward * (segment.Radius / distance));
         }
 
+        // ---------------------------------------------------------------- Loads
+
+        /// <summary>Which body and segment each physical link and collider belongs to, for holds and contacts reporting their loads.</summary>
+        private static readonly Dictionary<ArticulationBody, (PhysicalBody Body, int Segment)> LinkOwners = new Dictionary<ArticulationBody, (PhysicalBody, int)>();
+        private static readonly Dictionary<Collider, (PhysicalBody Body, int Segment)> ColliderOwners = new Dictionary<Collider, (PhysicalBody, int)>();
+        private static bool _listening;
+
+        private readonly Vector3[] _segmentImpulse = new Vector3[Layout.Length];
+        private readonly Vector3[] _segmentForce = new Vector3[Layout.Length];
+        private Vector3 _opponentImpulse;
+        private Vector3 _groundImpulse;
+        private float _sensedSeconds;
+
+        /// <summary>
+        /// Mean force (N) the opponent put on this body over the last frame: holds, contact between the
+        /// bodies, a carry and a throw's drive. Measured, not planned (display only).
+        /// </summary>
+        public Vector3 OpponentForce { get; private set; }
+
+        /// <summary>Mean force (N) the mat put on this body over the last frame: the legs' push through the support and the contacts' reaction.</summary>
+        public Vector3 GroundForce { get; private set; }
+
+        /// <summary>Mean force (N) the opponent put on one segment over the last frame.</summary>
+        public Vector3 OpponentForceOn(string segmentName) => _segmentForce[Find(segmentName).Index];
+
+        /// <summary>How much the wrestler's own control is in charge (0 thrown or falling, rising to 1 as they recover).</summary>
+        public float Control => _weight <= 0f ? 0f : _mode == Mode.Active ? 1f : _mode == Mode.Recovering ? _authority : 0f;
+
+        /// <summary>A hold's force on a physical link this substep (N·s), credited to the body it belongs to.</summary>
+        internal static void AddHoldImpulse(ArticulationBody link, Vector3 impulse)
+        {
+            if (link != null && LinkOwners.TryGetValue(link, out (PhysicalBody Body, int Segment) owner))
+            {
+                owner.Body.AddOpponentImpulse(owner.Segment, impulse);
+            }
+        }
+
+        private void AddOpponentImpulse(int segment, Vector3 impulse)
+        {
+            _segmentImpulse[segment] += impulse;
+            _opponentImpulse += impulse;
+        }
+
+        private void Register()
+        {
+            foreach (Segment segment in _segments)
+            {
+                LinkOwners[segment.Body] = (this, segment.Index);
+                ColliderOwners[segment.Shape] = (this, segment.Index);
+                segment.Shape.providesContacts = true;
+            }
+
+            if (!_listening)
+            {
+                Physics.ContactEvent += OnContacts;
+                _listening = true;
+            }
+        }
+
+        private void Unregister()
+        {
+            foreach (Segment segment in _segments)
+            {
+                LinkOwners.Remove(segment.Body);
+                ColliderOwners.Remove(segment.Shape);
+            }
+        }
+
+        private void ClearLoads()
+        {
+            Array.Clear(_segmentImpulse, 0, _segmentImpulse.Length);
+            _opponentImpulse = Vector3.zero;
+            _groundImpulse = Vector3.zero;
+            _sensedSeconds = 0f;
+        }
+
+        private void FinishLoads()
+        {
+            if (_sensedSeconds <= 0f)
+            {
+                OpponentForce = Vector3.zero;
+                GroundForce = Vector3.zero;
+                Array.Clear(_segmentForce, 0, _segmentForce.Length);
+                return;
+            }
+
+            float perSecond = 1f / _sensedSeconds;
+            OpponentForce = _opponentImpulse * perSecond;
+            GroundForce = _groundImpulse * perSecond;
+            for (int i = 0; i < _segmentForce.Length; i++)
+            {
+                _segmentForce[i] = _segmentImpulse[i] * perSecond;
+            }
+        }
+
+        /// <summary>
+        /// Contact impulses from the physics step: between the two bodies (credited to both, pushing
+        /// them apart) and between a body and the mat (pushing it up).
+        /// </summary>
+        private static void OnContacts(PhysicsScene scene, NativeArray<ContactPairHeader>.ReadOnly headers)
+        {
+            for (int h = 0; h < headers.Length; h++)
+            {
+                ContactPairHeader header = headers[h];
+                for (int p = 0; p < header.pairCount; p++)
+                {
+                    ref readonly ContactPair pair = ref header.GetContactPair(p);
+                    Vector3 impulse = pair.impulseSum;
+                    if (impulse.sqrMagnitude < 1e-12f)
+                    {
+                        continue;
+                    }
+
+                    bool first = ColliderOwners.TryGetValue(pair.collider, out (PhysicalBody Body, int Segment) a);
+                    bool second = ColliderOwners.TryGetValue(pair.otherCollider, out (PhysicalBody Body, int Segment) b);
+                    if (first && second)
+                    {
+                        if (a.Body == b.Body)
+                        {
+                            continue;
+                        }
+
+                        // Contact only pushes: the impulse on the first body points away from the second.
+                        Vector3 apart = Centre(a.Body._segments[a.Segment]) - Centre(b.Body._segments[b.Segment]);
+                        if (Vector3.Dot(impulse, apart) < 0f)
+                        {
+                            impulse = -impulse;
+                        }
+
+                        a.Body.AddOpponentImpulse(a.Segment, impulse);
+                        b.Body.AddOpponentImpulse(b.Segment, -impulse);
+                    }
+                    else if (first || second)
+                    {
+                        // The mat or platform: it only pushes up.
+                        PhysicalBody body = first ? a.Body : b.Body;
+                        body._groundImpulse += impulse.y < 0f ? -impulse : impulse;
+                    }
+                }
+            }
+        }
+
         // ---------------------------------------------------------------- Throws
 
         /// <summary>Grip and arm-wrap holds (stiffness N/m, damping N·s/m) and their share of the thrower's strength.</summary>
@@ -1488,6 +1685,8 @@ namespace Wrestling.Presentation
             ArticulationBody throwerRoot = _throwerBody.Root.Body;
             _pivot.Body.AddForceAtPosition(-carry * scale, pivot);
             throwerRoot.AddTorque(-torque);
+            _throwerBody.AddOpponentImpulse(_pivot.Index, -carry * (scale * dt));
+            AddOpponentImpulse(0, carry * (scale * dt));
         }
 
         /// <summary>Lets go: the holds release and the body flies on with its momentum, then lands.</summary>

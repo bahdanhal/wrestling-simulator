@@ -37,9 +37,27 @@ namespace Wrestling.Presentation
         [SerializeField] private Material _redCorner;
         [SerializeField] private Material _blueCorner;
         [SerializeField] private Material _platform;
+        [SerializeField] private Material _contactShadow;
 
-        public void Configure(Material centralSurface, Material passivityZone, Material protectionArea, Material redCorner, Material blueCorner, Material platform)
+        /// <summary>Height (m) of the contact shadow overlay: just above the highest mat marking.</summary>
+        private const float ContactShadowHeight = 0.0055f;
+
+        /// <summary>How many radii from a body part its contact shadow reaches (matches the shader).</summary>
+        private const float ContactReach = 4f;
+
+        private static readonly int ContactAId = Shader.PropertyToID("_ContactA");
+        private static readonly int ContactBId = Shader.PropertyToID("_ContactB");
+        private static readonly int ContactBoundsId = Shader.PropertyToID("_ContactBounds");
+
+        private readonly Vector4[] _contactA = new Vector4[PhysicalBody.ContactCapsules * 2];
+        private readonly Vector4[] _contactB = new Vector4[PhysicalBody.ContactCapsules * 2];
+        private readonly Vector4[] _contactBounds = new Vector4[2];
+        private Material _contactShadowInstance;
+        private MeshRenderer _contactShadowRenderer;
+
+        public void Configure(Material centralSurface, Material passivityZone, Material protectionArea, Material redCorner, Material blueCorner, Material platform, Material contactShadow)
         {
+            _contactShadow = contactShadow;
             _centralSurface = centralSurface;
             _passivityZone = passivityZone;
             _protectionArea = protectionArea;
@@ -87,6 +105,90 @@ namespace Wrestling.Presentation
             Flat("Blue corner", ProceduralMesh.CornerTriangle(new Vector2(outer, outer), leg * 1.6f, 0.002f), _blueCorner);
 
             BuildArena(outer, platformSide);
+            BuildContactShadows();
+        }
+
+        /// <summary>
+        /// Shades the mat under both wrestlers from where their bodies are now (feet, knees, hips,
+        /// hands, shoulders and the segments between them): darker the closer and larger a part is.
+        /// Call after the bodies are posed each frame.
+        /// </summary>
+        public void ShowContacts(PhysicalBody red, PhysicalBody blue)
+        {
+            if (_contactShadowRenderer == null)
+            {
+                return;
+            }
+
+            Vector2 min = new Vector2(float.MaxValue, float.MaxValue);
+            Vector2 max = new Vector2(float.MinValue, float.MinValue);
+            for (int body = 0; body < 2; body++)
+            {
+                int offset = body * PhysicalBody.ContactCapsules;
+                (body == 0 ? red : blue).GetContactCapsules(_contactA, _contactB, offset);
+                Vector2 centre = Vector2.zero;
+                for (int i = 0; i < PhysicalBody.ContactCapsules; i++)
+                {
+                    centre += new Vector2(_contactA[offset + i].x + _contactB[offset + i].x, _contactA[offset + i].z + _contactB[offset + i].z) * 0.5f;
+                }
+
+                centre /= PhysicalBody.ContactCapsules;
+                float reach = 0f;
+                for (int i = 0; i < PhysicalBody.ContactCapsules; i++)
+                {
+                    float shadow = ContactReach * _contactA[offset + i].w;
+                    reach = Mathf.Max(reach, Mathf.Max(Distance(_contactA[offset + i], centre), Distance(_contactB[offset + i], centre)) + shadow);
+                }
+
+                _contactBounds[body] = new Vector4(centre.x, 0f, centre.y, reach);
+                min = Vector2.Min(min, centre - new Vector2(reach, reach));
+                max = Vector2.Max(max, centre + new Vector2(reach, reach));
+            }
+
+            _contactShadowInstance.SetVectorArray(ContactAId, _contactA);
+            _contactShadowInstance.SetVectorArray(ContactBId, _contactB);
+            _contactShadowInstance.SetVectorArray(ContactBoundsId, _contactBounds);
+            Transform overlay = _contactShadowRenderer.transform;
+            Vector2 middle = (min + max) * 0.5f;
+            Vector2 size = max - min;
+            overlay.position = new Vector3(middle.x, transform.position.y, middle.y);
+            overlay.localScale = new Vector3(size.x, 1f, size.y);
+            _contactShadowRenderer.enabled = true;
+
+            static float Distance(Vector4 point, Vector2 centre) => (new Vector2(point.x, point.z) - centre).magnitude;
+        }
+
+        private void BuildContactShadows()
+        {
+            Material source = _contactShadow;
+            if (source == null)
+            {
+                Shader shader = Shader.Find("Wrestling/MatContactShadow");
+                if (shader == null)
+                {
+                    Debug.LogError("MatView: the Wrestling/MatContactShadow shader is missing; build the bout viewer scene to include it.");
+                    return;
+                }
+
+                source = new Material(shader);
+            }
+
+            if (_contactShadowInstance != null)
+            {
+                DestroyImmediateOrLater(_contactShadowInstance);
+            }
+
+            _contactShadowInstance = new Material(source) { name = "Mat_ContactShadow (instance)" };
+            var part = new GameObject("Contact shadows");
+            part.transform.SetParent(transform, false);
+            // A unit square scaled each frame to cover the wrestlers.
+            part.AddComponent<MeshFilter>().sharedMesh = ProceduralMesh.Quad(Vector2.zero, Vector2.one, 0f, ContactShadowHeight);
+            _contactShadowRenderer = part.AddComponent<MeshRenderer>();
+            _contactShadowRenderer.sharedMaterial = _contactShadowInstance;
+            _contactShadowRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            _contactShadowRenderer.receiveShadows = false;
+            // Nothing to shade until the wrestlers are on the mat.
+            _contactShadowRenderer.enabled = false;
         }
 
         private void BuildArena(float outer, float platformSide)

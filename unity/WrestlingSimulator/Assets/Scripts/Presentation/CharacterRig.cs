@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Wrestling.Core.Match;
 
 namespace Wrestling.Presentation
 {
@@ -8,7 +9,9 @@ namespace Wrestling.Presentation
     /// Drives an imported character rig (MakeHuman's Mixamo-named skeleton) from a <see cref="Pose"/>.
     /// At build time it measures the model's bind pose, so the pose solver works with the model's
     /// own limb lengths; each frame it turns the pose's segment orientations into bone rotations
-    /// relative to the bind pose, and curls the fingers for grips.
+    /// relative to the bind pose (clavicles included) and shapes each hand for its grip: thumb
+    /// opposition and abduction apart from the flexion of each finger joint, wrapped to the radius
+    /// of what the hand holds.
     /// </summary>
     public sealed class CharacterRig
     {
@@ -21,9 +24,11 @@ namespace Wrestling.Presentation
             (Bone.Chest, "Spine2"),
             (Bone.Neck, "Neck"),
             (Bone.Head, "Head"),
+            (Bone.LeftShoulder, "LeftShoulder"),
             (Bone.LeftUpperArm, "LeftArm"),
             (Bone.LeftLowerArm, "LeftForeArm"),
             (Bone.LeftHand, "LeftHand"),
+            (Bone.RightShoulder, "RightShoulder"),
             (Bone.RightUpperArm, "RightArm"),
             (Bone.RightLowerArm, "RightForeArm"),
             (Bone.RightHand, "RightHand"),
@@ -44,8 +49,9 @@ namespace Wrestling.Presentation
         private readonly Transform _spine1;
         private readonly Dictionary<string, Transform> _byName = new Dictionary<string, Transform>(StringComparer.Ordinal);
         private readonly Vector3 _pelvisToHips;
-        private readonly List<(Transform Bone, Quaternion Bind, Vector3 Axis, float Scale)> _leftFingers = new List<(Transform, Quaternion, Vector3, float)>();
-        private readonly List<(Transform Bone, Quaternion Bind, Vector3 Axis, float Scale)> _rightFingers = new List<(Transform, Quaternion, Vector3, float)>();
+        private readonly List<FingerJoint> _leftFingers = new List<FingerJoint>();
+        private readonly List<FingerJoint> _rightFingers = new List<FingerJoint>();
+        private readonly SkeletonCalibration _calibration;
         private readonly Transform _jaw;
         private readonly Quaternion _jawBind;
         private readonly Transform _leftEye;
@@ -82,10 +88,21 @@ namespace Wrestling.Presentation
             Transform toeL = Required("LeftToeBase");
             Transform toeR = Required("RightToeBase");
             Pose bind = MeasureBindPose(root, toeL, toeR);
+            (bind.HandDirL, bind.PalmNormalL) = MeasureHand(byName, "Left", _bones[(int)Bone.LeftHand]);
+            (bind.HandDirR, bind.PalmNormalR) = MeasureHand(byName, "Right", _bones[(int)Bone.RightHand]);
             Bind = bind;
             Body = BodyProportions.FromBindPose(in bind, HeightOf(root));
 
+            // The clavicles start where the rig's clavicle bones do, held in the chest's frame; the
+            // wrists' neutral is how the bind pose holds each palm on its forearm.
             Skeleton.Compute(in bind, _positions, _rotations);
+            Quaternion chestInverse = Quaternion.Inverse(_rotations[(int)Bone.Chest]);
+            _calibration = new SkeletonCalibration(
+                chestInverse * (_bones[(int)Bone.LeftShoulder].position - bind.Neck),
+                chestInverse * (_bones[(int)Bone.RightShoulder].position - bind.Neck),
+                Quaternion.Inverse(_rotations[(int)Bone.LeftLowerArm]) * bind.PalmNormalL,
+                Quaternion.Inverse(_rotations[(int)Bone.RightLowerArm]) * bind.PalmNormalR);
+            Skeleton.Compute(in bind, _positions, _rotations, null, in _calibration);
             for (int i = 0; i < Skeleton.BoneCount; i++)
             {
                 // Rig bone rotation = segment rotation × (inverse bind segment rotation × bind bone rotation).
@@ -142,10 +159,13 @@ namespace Wrestling.Presentation
         /// <summary>Segment lengths measured from the model, for the pose solver.</summary>
         public BodyProportions Body { get; }
 
-        /// <summary>Poses the rig. <paramref name="leftGrip"/> and <paramref name="rightGrip"/> curl the fingers (0 relaxed, 1 closed).</summary>
+        /// <summary>
+        /// Poses the rig. <paramref name="leftGrip"/> and <paramref name="rightGrip"/> are how firmly
+        /// each hand takes the shape of its grip (0 open, 1 fully in the pose's grip style).
+        /// </summary>
         public void Apply(in Pose pose, float leftGrip, float rightGrip)
         {
-            Skeleton.Compute(in pose, _positions, _rotations);
+            Skeleton.Compute(in pose, _positions, _rotations, null, in _calibration);
             Transform hips = _bones[(int)Bone.Hips];
             hips.SetPositionAndRotation(pose.Pelvis + (_rotations[(int)Bone.Hips] * _pelvisToHips), _rotations[(int)Bone.Hips] * _bindOffsets[(int)Bone.Hips]);
             for (int i = 1; i < Skeleton.BoneCount; i++)
@@ -159,8 +179,8 @@ namespace Wrestling.Presentation
                 _bones[i].rotation = _rotations[i] * _bindOffsets[i];
             }
 
-            Curl(_leftFingers, leftGrip);
-            Curl(_rightFingers, rightGrip);
+            ApplyHandGrip(GripSide.Left, pose.LeftGripStyle, leftGrip, pose.LeftGripAperture);
+            ApplyHandGrip(GripSide.Right, pose.RightGripStyle, rightGrip, pose.RightGripAperture);
             ApplyFace(in pose);
         }
 
@@ -242,47 +262,272 @@ namespace Wrestling.Presentation
             eye.localRotation = bindLocal * Quaternion.Euler(pitch, yaw, 0f);
         }
 
-        private static void Curl(List<(Transform Bone, Quaternion Bind, Vector3 Axis, float Scale)> fingers, float amount)
+        /// <summary>
+        /// Shapes one hand: from the open guard towards <paramref name="style"/> by
+        /// <paramref name="weight"/> (0–1). Wrapping styles bend each finger joint by its phalanx's
+        /// length over the radius it wraps (<paramref name="aperture"/>, see <see cref="GripAperture"/>;
+        /// zero takes the style's own); the thumb opposes, abducts and flexes on its own.
+        /// </summary>
+        public void ApplyHandGrip(GripSide side, HandGripStyle style, float weight, float aperture)
         {
-            float relaxed = 0.25f;
-            float curl = Mathf.Lerp(relaxed, 1f, Mathf.Clamp01(amount));
-            foreach ((Transform bone, Quaternion bind, Vector3 axis, float scale) in fingers)
+            weight = Mathf.Clamp01(weight);
+            if (weight > 0f && style == HandGripStyle.OpenGuard)
             {
-                bone.localRotation = bind * Quaternion.AngleAxis(curl * scale, axis);
+                // A grip with no socket shape (recorded motion): a plain wrap round an arm.
+                style = HandGripStyle.TricepsHook;
+            }
+
+            float openAperture = style == HandGripStyle.OpenGuard ? aperture : 0f;
+            HandShape open = HandShape.For(HandGripStyle.OpenGuard);
+            HandShape grip = HandShape.For(style);
+            float radius = GripAperture.ToRadius(aperture > 0f ? aperture : GripAperture.Default(style));
+            foreach (FingerJoint joint in side == GripSide.Left ? _leftFingers : _rightFingers)
+            {
+                (float flex, float spread, float opposition, float abduction) = open.Angles(joint, 0f, openAperture);
+                if (weight > 0f)
+                {
+                    (float f, float s, float o, float a) = grip.Angles(joint, radius, 0f);
+                    flex = Mathf.Lerp(flex, f, weight);
+                    spread = Mathf.Lerp(spread, s, weight);
+                    opposition = Mathf.Lerp(opposition, o, weight);
+                    abduction = Mathf.Lerp(abduction, a, weight);
+                }
+
+                joint.Bone.localRotation = joint.Bind * Turn(opposition, joint.Opposition) * Turn(abduction + spread, joint.Spread) * Turn(flex, joint.Flex);
             }
         }
 
-        /// <summary>
-        /// Finger bones with their curl axis: perpendicular to the finger and the palm normal, signed
-        /// so positive angles close the hand towards the palm.
-        /// </summary>
-        private static void CollectFingers(Dictionary<string, Transform> byName, string side, List<(Transform, Quaternion, Vector3, float)> into, Transform hand)
+        /// <summary>One finger or thumb joint with its axes in its own bind frame, each signed so positive closes, spreads or opposes.</summary>
+        private readonly struct FingerJoint
         {
-            if (!byName.TryGetValue(side + "HandIndex1", out Transform index1) || !byName.TryGetValue(side + "HandPinky1", out Transform pinky1))
+            public FingerJoint(Transform bone, int finger, int joint, Vector3 flex, Vector3 spread, Vector3 opposition, float length)
+            {
+                Bone = bone;
+                Bind = bone.localRotation;
+                Finger = finger;
+                Joint = joint;
+                Flex = flex;
+                Spread = spread;
+                Opposition = opposition;
+                Length = length;
+            }
+
+            public Transform Bone { get; }
+
+            public Quaternion Bind { get; }
+
+            /// <summary>0 the thumb, 1–4 index to little finger.</summary>
+            public int Finger { get; }
+
+            /// <summary>1 the knuckle (or the thumb's base), 2 and 3 the outer joints.</summary>
+            public int Joint { get; }
+
+            public Vector3 Flex { get; }
+
+            public Vector3 Spread { get; }
+
+            public Vector3 Opposition { get; }
+
+            /// <summary>The phalanx's length (m).</summary>
+            public float Length { get; }
+        }
+
+        /// <summary>Joint angles (degrees) of one hand shape.</summary>
+        private readonly struct HandShape
+        {
+            /// <summary>Half a finger's thickness (m): fingers wrap with their centre line this far outside the held surface.</summary>
+            private const float FingerHalfThickness = 0.009f;
+
+            private static readonly float[] MaxFlex = { 0f, 90f, 105f, 80f };
+
+            private readonly bool _wrap;
+            private readonly float _tightness;
+            private readonly float _distalShare;
+            private readonly float _proximal;
+            private readonly float _middle;
+            private readonly float _distal;
+            private readonly float _spread;
+            private readonly float _thumbOpposition;
+            private readonly float _thumbAbduction;
+            private readonly float _thumbFlex;
+
+            private HandShape(bool wrap, float tightness, float distalShare, float proximal, float middle, float distal, float spread, float thumbOpposition, float thumbAbduction, float thumbFlex)
+            {
+                _wrap = wrap;
+                _tightness = tightness;
+                _distalShare = distalShare;
+                _proximal = proximal;
+                _middle = middle;
+                _distal = distal;
+                _spread = spread;
+                _thumbOpposition = thumbOpposition;
+                _thumbAbduction = thumbAbduction;
+                _thumbFlex = thumbFlex;
+            }
+
+            public static HandShape For(HandGripStyle style)
+            {
+                switch (style)
+                {
+                    case HandGripStyle.CollarCup:
+                        return Wrap(0.75f, 0.8f, spread: 9f, opposition: 8f, abduction: -14f, thumbFlex: 12f);
+                    case HandGripStyle.WristCClamp:
+                        return Wrap(1f, 1f, spread: 1f, opposition: 62f, abduction: 6f, thumbFlex: 30f);
+                    case HandGripStyle.TricepsHook:
+                        return Wrap(1f, 0.85f, spread: 2f, opposition: 38f, abduction: 12f, thumbFlex: 22f);
+                    case HandGripStyle.HookWrap:
+                        return Wrap(1.25f, 1f, spread: 5f, opposition: 12f, abduction: -16f, thumbFlex: 18f);
+                    case HandGripStyle.GableClasped:
+                        return Wrap(1f, 1f, spread: 0f, opposition: 40f, abduction: -4f, thumbFlex: 35f);
+                    case HandGripStyle.LegWrap:
+                        return Wrap(1f, 1f, spread: 2f, opposition: 10f, abduction: -18f, thumbFlex: 12f);
+                    default:
+                        // Athletic open hand: fingers softly curved, thumb a little away from the palm.
+                        return new HandShape(false, 0f, 0f, 16f, 20f, 10f, 6f, 18f, 22f, 10f);
+                }
+            }
+
+            private static HandShape Wrap(float tightness, float distalShare, float spread, float opposition, float abduction, float thumbFlex) =>
+                new HandShape(true, tightness, distalShare, 0f, 0f, 0f, spread, opposition, abduction, thumbFlex);
+
+            /// <summary>
+            /// Flexion, spread, opposition and abduction (degrees) for a joint: wrapping a cylinder of
+            /// <paramref name="radius"/>, or the fixed open shape flattened by <paramref name="flatten"/> (0–1).
+            /// </summary>
+            public (float Flex, float Spread, float Opposition, float Abduction) Angles(FingerJoint joint, float radius, float flatten)
+            {
+                if (joint.Finger == 0)
+                {
+                    float open = 1f - (0.6f * Mathf.Clamp01(flatten));
+                    return joint.Joint == 1
+                        ? (0f, 0f, _thumbOpposition * open, _thumbAbduction)
+                        : (_thumbFlex * open, 0f, 0f, 0f);
+                }
+
+                float spread = joint.Joint == 1 ? _spread : 0f;
+                if (!_wrap)
+                {
+                    float open = 1f - (0.75f * Mathf.Clamp01(flatten));
+                    float angle = joint.Joint == 1 ? _proximal : joint.Joint == 2 ? _middle : _distal;
+                    return (angle * open, spread, 0f, 0f);
+                }
+
+                // A phalanx of length L laid round a cylinder turns by L / r radians.
+                float share = joint.Joint == 3 ? _distalShare : 1f;
+                float wrapped = _tightness * share * (joint.Length / (radius + FingerHalfThickness)) * Mathf.Rad2Deg;
+                return (Mathf.Min(wrapped, MaxFlex[joint.Joint]), spread, 0f, 0f);
+            }
+        }
+
+        /// <summary>The hand's direction (wrist to middle knuckle) and palm normal in the bind pose, or zero when the rig has no fingers.</summary>
+        private static (Vector3 Direction, Vector3 Palm) MeasureHand(Dictionary<string, Transform> byName, string side, Transform hand)
+        {
+            if (!byName.TryGetValue(side + "HandIndex1", out Transform index1) || !byName.TryGetValue(side + "HandPinky1", out Transform pinky1)
+                || !byName.TryGetValue(side + "HandMiddle1", out Transform middle1))
+            {
+                return (Vector3.zero, Vector3.zero);
+            }
+
+            Vector3 along = (middle1.position - hand.position).normalized;
+            Vector3 across = (index1.position - pinky1.position).normalized;
+            // The palm: along × across for the left hand, across × along for the right (checked
+            // against the mesh: the other side is the back of the hand).
+            Vector3 palm = Vector3.Cross(across, along).normalized * (side == "Left" ? 1f : -1f);
+            return (along, palm);
+        }
+
+        /// <summary>
+        /// Finger and thumb joints with their axes: flexion perpendicular to the phalanx and the palm
+        /// normal, spread about the palm normal (away from the middle finger), and for the thumb's
+        /// base opposition (across in front of the palm) and abduction (away from the index).
+        /// </summary>
+        private static void CollectFingers(Dictionary<string, Transform> byName, string side, List<FingerJoint> into, Transform hand)
+        {
+            (Vector3 along, Vector3 palm) = MeasureHand(byName, side, hand);
+            if (palm == Vector3.zero)
             {
                 return;
             }
 
-            Vector3 along = (byName[side + "HandMiddle1"].position - hand.position).normalized;
-            Vector3 across = (index1.position - pinky1.position).normalized;
-            // The palm faces the side the fingers curl to; for both hands this is along × across with handedness by side.
-            Vector3 palm = Vector3.Cross(across, along).normalized * (side == "Left" ? -1f : 1f);
-            foreach (string finger in Fingers)
+            Vector3 middle = byName[side + "HandMiddle1"].position;
+            Vector3 index = byName[side + "HandIndex1"].position;
+            Vector3 towardsPinky = Vector3.ProjectOnPlane(byName[side + "HandPinky1"].position - index, palm).normalized;
+            for (int finger = 0; finger < Fingers.Length; finger++)
             {
+                string name = Fingers[finger];
                 for (int joint = 1; joint <= 3; joint++)
                 {
-                    if (!byName.TryGetValue($"{side}Hand{finger}{joint}", out Transform bone))
+                    if (!byName.TryGetValue($"{side}Hand{name}{joint}", out Transform bone))
                     {
                         continue;
                     }
 
-                    Vector3 direction = bone.childCount > 0 ? (bone.GetChild(0).position - bone.position).normalized : along;
-                    Vector3 axisWorld = Vector3.Cross(direction, palm).normalized;
-                    Vector3 axisLocal = bone.InverseTransformDirection(axisWorld);
-                    float scale = finger == "Thumb" ? 35f : (joint == 1 ? 75f : 80f);
-                    into.Add((bone, bone.localRotation, axisLocal, scale));
+                    Transform next = PhalanxEnd(bone);
+                    Vector3 direction = next != null ? next.position - bone.position : along * 0.03f;
+                    float length = direction.magnitude;
+                    direction = length > 1e-5f ? direction / length : along;
+                    Vector3 flex = Signed(Vector3.Cross(direction, palm), direction, palm);
+                    if (flex.sqrMagnitude < 1e-6f)
+                    {
+                        flex = Signed(Vector3.Cross(direction, towardsPinky), direction, palm);
+                    }
+
+                    Vector3 spread = Vector3.zero;
+                    Vector3 opposition = Vector3.zero;
+                    if (finger == 0 && joint == 1)
+                    {
+                        // Thumb base: abduction swings it away from the index in the palm's plane,
+                        // opposition brings it round in front of the palm towards the little finger.
+                        Vector3 away = Vector3.ProjectOnPlane(bone.position - index, palm);
+                        spread = Signed(palm, direction, away.sqrMagnitude > 1e-8f ? away.normalized : -towardsPinky);
+                        Vector3 across = ((palm * 0.75f) + (towardsPinky * 0.35f)).normalized;
+                        opposition = Signed(Vector3.Cross(direction, across), direction, across);
+                    }
+                    else if (finger > 0 && joint == 1)
+                    {
+                        Vector3 outward = Vector3.ProjectOnPlane(bone.position - middle, palm);
+                        if (outward.sqrMagnitude > 1e-8f)
+                        {
+                            spread = Signed(palm, direction, outward.normalized);
+                        }
+                    }
+
+                    into.Add(new FingerJoint(bone, finger, joint, Local(bone, flex), Local(bone, spread), Local(bone, opposition), length));
                 }
             }
+        }
+
+        /// <summary>The axis signed so a small positive turn of <paramref name="direction"/> about it moves the tip towards <paramref name="towards"/>.</summary>
+        private static Vector3 Signed(Vector3 axis, Vector3 direction, Vector3 towards)
+        {
+            if (axis.sqrMagnitude < 1e-8f)
+            {
+                return Vector3.zero;
+            }
+
+            axis.Normalize();
+            Vector3 turned = Quaternion.AngleAxis(10f, axis) * direction;
+            return Vector3.Dot(turned - direction, towards) >= 0f ? axis : -axis;
+        }
+
+        private static Vector3 Local(Transform bone, Vector3 world) => world.sqrMagnitude > 1e-8f ? bone.InverseTransformDirection(world).normalized : Vector3.zero;
+
+        /// <summary>A turn about a joint axis; a joint without that axis does not turn.</summary>
+        private static Quaternion Turn(float degrees, Vector3 axis) => axis == Vector3.zero || degrees == 0f ? Quaternion.identity : Quaternion.AngleAxis(degrees, axis);
+
+        /// <summary>The next joint along a phalanx: its first child that is a rig bone (procedural twist bones are skipped).</summary>
+        private static Transform PhalanxEnd(Transform bone)
+        {
+            for (int i = 0; i < bone.childCount; i++)
+            {
+                Transform child = bone.GetChild(i);
+                if (!child.name.EndsWith("Twist", StringComparison.Ordinal))
+                {
+                    return child;
+                }
+            }
+
+            return null;
         }
 
         private Pose MeasureBindPose(Transform root, Transform toeL, Transform toeR)

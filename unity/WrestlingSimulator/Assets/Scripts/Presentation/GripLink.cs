@@ -60,7 +60,7 @@ namespace Wrestling.Presentation
         /// <summary>Distance between the two anchor points (m).</summary>
         public float Gap => (HolderPoint - HeldPoint).magnitude;
 
-        /// <summary>Force the hold applied in the last step (N).</summary>
+        /// <summary>Size of the force the hold applied in the last step (N).</summary>
         public float Load { get; private set; }
 
         public Vector3 HolderPoint => _holder.transform.TransformPoint(HolderAnchor);
@@ -107,6 +107,8 @@ namespace Wrestling.Presentation
             Vector3 force = Vector3.ClampMagnitude((spring * gap) + (damper * closing), _maxForce);
             _held.AddForceAtPosition(force, b);
             _holder.AddForceAtPosition(-force, a);
+            PhysicalBody.AddHoldImpulse(_held, force * dt);
+            PhysicalBody.AddHoldImpulse(_holder, -force * dt);
             Load = force.magnitude;
             return true;
         }

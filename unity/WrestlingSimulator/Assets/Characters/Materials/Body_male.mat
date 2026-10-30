@@ -35,12 +35,16 @@ Material:
     m_Ints: []
     m_Floats:
     - _BumpScale: 1
+    - _CurvatureScale: 0.03
+    - _Exertion: 0
+    - _FoldDepth: 0.0018
     - _ScatterStrength: 0.5
     - _ScatterWrap: 0.45
     - _SingletOn: 1
     - _SingletSmoothness: 0.26
     - _SkinSmoothness: 0.34
     m_Colors:
+    - _FoldDrive: {r: 0, g: 0, b: 0, a: 0}
     - _HairColor: {r: 0.11999995, g: 0.089999996, b: 0.06999998, a: 1}
     - _ScatterColor: {r: 0.85, g: 0.27999997, b: 0.17999998, a: 1}
     - _SingletColor: {r: 0.8, g: 0.07999996, b: 0.09999997, a: 1}

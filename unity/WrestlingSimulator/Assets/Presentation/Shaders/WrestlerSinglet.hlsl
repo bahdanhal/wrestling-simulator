@@ -1,88 +1,77 @@
 #ifndef WRESTLER_SINGLET_INCLUDED
 #define WRESTLER_SINGLET_INCLUDED
 
-// Wrestling singlet, evaluated per pixel from the importer's data (CharacterImport):
-// position = bind-pose position normalised by height (feet at y = 0, +z the front);
-// regions  = skin-weight share of (Torso, ShoulderGirdle, Thigh, Arm).
-// The cut uses a single C1-continuous arch curve from the chest/back scoop up over the
-// shoulder straps and down into the underarm crease (finishing before the hanging upper arm),
-// so the straps are unbroken over the shoulders and never leave islands on the deltoid or armpit.
+// Wrestling singlet, from the data the importer bakes into the body mesh (CharacterImport,
+// SingletSeam): the seam distance is the signed distance in metres to the singlet's edge along
+// the skin (positive on the fabric), measured to a smooth curve and exact on the subdivided
+// seam triangles, so the edge is crisp at any zoom. Body positions are bind-pose positions
+// normalised by height (feet at y = 0, +x the wrestler's left, +z the front).
 
-#define SINGLET_OUTSIDE 0.06
+#define SINGLET_TRIM_WIDTH 0.008
 
-float SingletCut(float3 p, float4 regions)
+// 1 on the fabric, 0 on skin, anti-aliased over one pixel.
+half SingletCoverage(float seam)
 {
-    float x = abs(p.x);
-    float y = p.y;
-    float front = smoothstep(-0.035, 0.035, p.z);
-
-    float strapInner = 0.062;
-    float strapOuter = 0.092;
-    float scoopY = lerp(0.752, 0.726, front);
-    float armpitY = 0.706;
-    float peakY = 0.892;
-
-    float u = saturate(x / strapInner);
-    float su = u * u * (3.0 - 2.0 * u);
-    float dsu = 6.0 * u * (1.0 - u) / strapInner;
-
-    float armSpan = 0.118 - strapOuter;
-    float v = saturate((x - strapOuter) / armSpan);
-    float sv = v * v * (3.0 - 2.0 * v);
-    float dsv = -6.0 * v * (1.0 - v) / armSpan;
-
-    float upperY = x < strapInner ? lerp(scoopY, peakY, su) : (x <= strapOuter ? peakY : lerp(peakY, armpitY, sv));
-    float slopeX = x < strapInner ? (peakY - scoopY) * dsu : (x <= strapOuter ? 0.0 : (peakY - armpitY) * dsv);
-
-    float bodyWeight = regions.x + regions.y + regions.z;
-    float otherWeight = saturate(1.0 - bodyWeight - regions.w);
-    float headWeight = otherWeight * smoothstep(0.865, 0.895, y);
-    float armThreshold = lerp(0.20, 0.62, smoothstep(0.76, 0.82, y));
-    float armMask = smoothstep(armThreshold, armThreshold + 0.22, regions.w) * smoothstep(0.075, 0.092, x);
-    upperY -= 0.44 * armMask + 0.35 * smoothstep(0.08, 0.38, headWeight);
-
-    float upper = (upperY - y) * rsqrt(1.0 + slopeX * slopeX);
-
-    float legY = 0.382 + 0.014 * smoothstep(0.025, 0.095, x);
-    float lowerLegWeight = otherWeight * smoothstep(0.36, 0.26, y);
-    float lower = (y - legY) - 0.25 * lowerLegWeight;
-
-    return min(upper, lower);
+    float width = max(fwidth(seam), 1e-5);
+    return saturate(0.5 + seam / width);
 }
 
-float SingletCut(float3 p)
+// The elastic binding along the neckline, straps, armholes and leg openings.
+half SingletTrim(float seam)
 {
-    return SingletCut(p, float4(1.0, 0.0, 0.0, 0.0));
+    float width = max(fwidth(seam), 1e-5);
+    return saturate(0.5 + seam / width) * saturate(0.5 + (SINGLET_TRIM_WIDTH - seam) / width);
 }
 
-half SingletMask(float3 position, float4 regions)
+// Two coverstitch rows holding the binding, as thin recessed lines.
+half SingletStitches(float seam)
 {
-    float distance = SingletCut(position, regions);
-    float width = max(fwidth(distance), 1e-5);
-    return saturate(0.5 + distance / width);
+    float width = max(fwidth(seam), 2e-4);
+    float row1 = abs(seam - 0.0016);
+    float row2 = abs(seam - (SINGLET_TRIM_WIDTH - 0.0016));
+    float nearest = min(row1, row2);
+    return saturate(1.0 - (nearest - 0.00018) / width);
 }
 
-// Stitched border piping along the neckline, shoulder straps, armholes and leg openings.
-half SingletTrimMask(float3 position, float4 regions)
-{
-    float distance = SingletCut(position, regions);
-    float width = max(fwidth(distance), 1e-5);
-    half inside = saturate(0.5 + distance / width);
-    half innerEdge = saturate(0.5 + (0.0038 - distance) / max(width, 0.0007));
-    return inside * innerEdge;
-}
-
-// Subtle ergonomic side panel along the ribcage, hip and outer thigh.
-half2 SingletSidePanel(float3 position, float4 regions)
+// Darker side panel along the ribcage, hip and outer thigh.
+half SingletSidePanel(float3 position, half armShare)
 {
     float x = abs(position.x);
     float y = position.y;
     float seamX = 0.078 + 0.012 * saturate((y - 0.42) / 0.28);
     float d = x - seamX;
     float w = max(fwidth(d), 0.001);
-    float verticalFade = smoothstep(0.38, 0.41, y) * smoothstep(0.72, 0.67, y) * (1.0 - smoothstep(0.10, 0.35, regions.w));
-    half panel = saturate(0.5 + d / w) * verticalFade;
-    return half2(panel, 0.0h);
+    float verticalFade = smoothstep(0.38, 0.41, y) * smoothstep(0.72, 0.67, y) * (1.0 - smoothstep(0.10, 0.35, armShare));
+    return saturate(0.5 + d / w) * verticalFade;
+}
+
+// One family of parallel folds: phase runs across them, envelope is a soft ellipse.
+float FoldFamily(float2 p, float2 centre, float2 across, float2 radius, float wavelength)
+{
+    float2 d = p - centre;
+    float2 along = float2(-across.y, across.x);
+    float u = dot(d, across);
+    float v = dot(d, along);
+    float envelope = exp(-(u * u) / (radius.x * radius.x) - (v * v) / (radius.y * radius.y));
+    return sin(u * (6.2831853 / wavelength)) * envelope;
+}
+
+// Height of the fabric's tension folds (metres) from how far each hip and shoulder is bent
+// (drive = hip left, hip right, shoulder left, shoulder right): crease folds in the groin and
+// across the lower belly when the hips flex, and fan folds under the armpit when the arm lifts.
+float SingletFolds(float3 position, float4 drive, float depth)
+{
+    float side = position.x >= 0.0 ? 1.0 : -1.0;
+    float hip = side > 0.0 ? drive.x : drive.y;
+    float shoulder = side > 0.0 ? drive.z : drive.w;
+    float2 p = float2(abs(position.x), position.y);
+    float frontFace = smoothstep(0.0, 0.035, position.z);
+    float sideFace = 1.0 - smoothstep(0.03, 0.07, abs(position.z));
+
+    float groin = FoldFamily(p, float2(0.062, 0.468), float2(0.6, 0.8), float2(0.03, 0.05), 0.011) * frontFace * hip;
+    float belly = FoldFamily(p, float2(0.0, 0.545), float2(0.0, 1.0), float2(0.03, 0.075), 0.013) * frontFace * min(drive.x, drive.y);
+    float armpit = FoldFamily(p, float2(0.098, 0.672), float2(0.86, -0.5), float2(0.028, 0.045), 0.012) * sideFace * shoulder;
+    return depth * (groin + 0.8 * belly + armpit);
 }
 
 #endif

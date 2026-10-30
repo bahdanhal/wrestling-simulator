@@ -6,9 +6,11 @@ namespace Wrestling.Editor
 {
     /// <summary>
     /// Import rules for the MakeHuman wrestler models in Assets/Characters: keep blend shapes and the
-    /// rig, no imported materials (the library builder makes them), normal maps flagged, and UV2
-    /// and UV3 filled with each body vertex's bind position and body regions, which the skin shader
-    /// uses to draw the singlet.
+    /// rig, no imported materials (the library builder makes them), normal maps flagged. The body
+    /// mesh gets the singlet baked in (subdivided seams, raised fabric), twist bones, pose-space
+    /// corrective shapes, and the per-vertex data the skin shader reads:
+    /// UV2 = (bind position normalised by height, feet at y = 0, +x the left, +z the front; sweat affinity),
+    /// UV3 = (torso share, arm share, signed distance to the singlet seam in metres, curvature 1/m).
     /// </summary>
     public sealed class CharacterImport : AssetPostprocessor
     {
@@ -16,7 +18,7 @@ namespace Wrestling.Editor
         public const string Models = Root + "Models/";
         public const string Textures = Root + "Textures/";
 
-        /// <summary>Body regions written to UV2.w; the skin shader's singlet rules use the same ids.</summary>
+        /// <summary>Body regions by skin weight, used to place the singlet's cut.</summary>
         public enum Region
         {
             Torso = 0,
@@ -29,7 +31,31 @@ namespace Wrestling.Editor
         }
 
         /// <summary>Bumped whenever the import rules change, so Unity re-imports the character models.</summary>
-        public override uint GetVersion() => 15;
+        public override uint GetVersion() => 16;
+
+        /// <summary>Re-imports the character models (after changing the import rules or the models).</summary>
+        [MenuItem("Wrestling/Reimport Characters")]
+        public static void Reimport()
+        {
+            foreach (string guid in AssetDatabase.FindAssets("t:Model", new[] { Models.TrimEnd('/') }))
+            {
+                AssetDatabase.ImportAsset(AssetDatabase.GUIDToAssetPath(guid), ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+            }
+        }
+
+        public static void ReimportFromCommandLine()
+        {
+            try
+            {
+                Reimport();
+                EditorApplication.Exit(0);
+            }
+            catch (System.Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorApplication.Exit(1);
+            }
+        }
 
         private void OnPreprocessModel()
         {
@@ -98,6 +124,17 @@ namespace Wrestling.Editor
             }
 
             AddExpressionBlendShapes(root.transform, body);
+
+            Mesh bodyMesh = body.sharedMesh;
+            Matrix4x4 toRoot = root.transform.worldToLocalMatrix * body.transform.localToWorldMatrix;
+            EditableMesh editable = EditableMesh.Read(bodyMesh);
+            List<float> curvature = SkinMaps.Curvature(editable, toRoot);
+            SingletSeam.Build(editable, toRoot, height, curvature, Armholes(root.transform, bottom, height));
+            TwistRig.Build(body, editable);
+            CorrectiveShapeBaker.Build(root.transform, body, editable, toRoot);
+            SkinMaps.SweatAffinity(root.transform, body, editable, bottom, height);
+            editable.Write(bodyMesh);
+
             OffsetHairCap(root.transform, body, bottom, height);
         }
 
@@ -489,10 +526,39 @@ namespace Wrestling.Editor
             }
         }
 
+        /// <summary>The singlet's armhole planes from the bind-pose shoulder and elbow joints, in UV2's coordinates.</summary>
+        private static (SingletSeam.Armhole Left, SingletSeam.Armhole Right) Armholes(Transform root, float bottom, float height)
+        {
+            var joints = new Dictionary<string, Vector3>();
+            float front = 1f;
+            foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+            {
+                string name = TwistRig.Strip(t.name);
+                joints[name] = root.InverseTransformPoint(t.position);
+                if (name == "LeftToeBase" && t.parent != null)
+                {
+                    front = root.InverseTransformPoint(t.position).z - root.InverseTransformPoint(t.parent.position).z >= 0f ? 1f : -1f;
+                }
+            }
+
+            Vector3 Normalised(string joint)
+            {
+                if (!joints.TryGetValue(joint, out Vector3 p))
+                {
+                    throw new System.InvalidOperationException($"{joint} is missing from the rig.");
+                }
+
+                return new Vector3(-front * p.x / height, (p.y - bottom) / height, front * p.z / height);
+            }
+
+            return (SingletSeam.MakeArmhole(Normalised("LeftArm"), Normalised("LeftForeArm")),
+                SingletSeam.MakeArmhole(Normalised("RightArm"), Normalised("RightForeArm")));
+        }
+
         /// <summary>
-        /// UV2: bind-pose position normalised by height (feet at 0, +z the front). UV3: how much of
-        /// the vertex belongs to the torso, shoulder girdle, thighs, and arms (summed skin weights). The skin
-        /// shader evaluates the singlet's cut per pixel from these, so its edges are smooth and sharp.
+        /// UV2: bind-pose position normalised by height (feet at 0, +x the left, +z the front). UV3: how much of
+        /// the vertex belongs to the torso, shoulder girdle, thighs, and arms (summed skin weights),
+        /// from which <see cref="SingletSeam"/> places the singlet's cut and then repacks UV3.
         /// </summary>
         private static void WriteBodyCoordinates(Transform root, SkinnedMeshRenderer body, out float bottom, out float height)
         {
@@ -530,7 +596,8 @@ namespace Wrestling.Editor
             for (int i = 0; i < vertices.Length; i++)
             {
                 Vector3 p = positions[i];
-                position.Add(new Vector4(p.x / height, (p.y - bottom) / height, front * p.z / height, 0f));
+                // +x is the wrestler's left, +z the front.
+                position.Add(new Vector4(-front * p.x / height, (p.y - bottom) / height, front * p.z / height, 0f));
                 BoneWeight w = weights[i];
                 var regionShare = Vector4.zero;
                 void Add(int bone, float weight)

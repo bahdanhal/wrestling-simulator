@@ -86,8 +86,21 @@ namespace Wrestling.Presentation
                 ToeR = J(MotionJoint.ToeR),
             };
             pose.Spine = (pose.Neck - pose.Pelvis).normalized;
-            pose.Left = ((pose.HipL - pose.HipR) + (pose.ShoulderL - pose.ShoulderR)).normalized;
+            // The chest faces square to the recorded shoulder line and the pelvis square to the hip
+            // line, so the recorded twist of the spine is kept.
+            Vector3 shoulders = Vector3.ProjectOnPlane(pose.ShoulderL - pose.ShoulderR, pose.Spine);
+            if (shoulders.sqrMagnitude < 1e-8f)
+            {
+                shoulders = Vector3.ProjectOnPlane(pose.HipL - pose.HipR, pose.Spine);
+            }
+
+            pose.Left = shoulders.normalized;
             pose.ChestNormal = Vector3.Cross(pose.Spine, pose.Left).normalized;
+            Vector3 hips = pose.HipL - pose.HipR;
+            Vector3 pelvisAxis = pose.PelvisAxis;
+            pose.PelvisNormal = hips.sqrMagnitude > 1e-8f && pelvisAxis.sqrMagnitude > 1e-6f
+                ? Vector3.Cross(pelvisAxis, hips.normalized).normalized
+                : pose.ChestNormal;
             return pose;
         }
 

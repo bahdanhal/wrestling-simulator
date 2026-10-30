@@ -39,6 +39,12 @@ namespace Wrestling.Editor
             public readonly Dictionary<string, float> JointSums = new Dictionary<string, float>();
             public readonly Dictionary<string, int> Limits = new Dictionary<string, int>();
             public readonly List<float> Feasibility = new List<float>();
+            public readonly List<float> HipJerk = new List<float>();
+            public readonly List<float> HandJerk = new List<float>();
+            public readonly List<float> Give = new List<float>();
+            public readonly List<float> Sink = new List<float>();
+            public readonly List<float> Lean = new List<float>();
+            public readonly List<float> OpponentLoad = new List<float>();
             public float LowestFoot = float.MaxValue;
             public int Frames;
             public int ActiveFrames;
@@ -63,6 +69,8 @@ namespace Wrestling.Editor
                 float seconds = Argument(args, "-labSeconds", 45f);
                 int bouts = (int)Argument(args, "-labBouts", 2f);
                 Verbose = Array.IndexOf(args, "-labVerbose") >= 0;
+                // -labNoCompliance: the bodies do not give under load (to compare against).
+                BoutViewer.PhysicalCompliance = Array.IndexOf(args, "-labNoCompliance") < 0;
                 Debug.Log(Run(seconds, bouts));
                 EditorApplication.Exit(0);
             }
@@ -184,7 +192,7 @@ namespace Wrestling.Editor
             GameContent content = ContentLocator.LoadDirect();
             viewer.Initialise(content);
             PhysicalBody.MeasureFeasibility = true;
-            var report = new StringBuilder("[lab] Physics lab: live presentation at 60 fps\n");
+            var report = new StringBuilder(FormattableString.Invariant($"[lab] Physics lab: live presentation at 60 fps, load compliance {(BoutViewer.PhysicalCompliance ? "on" : "off")}\n"));
             report.AppendLine("[lab] style | frames | pelvis err mean/p95/max cm | lost % | collapsed % | overlap mean/max cm | joint err mean deg | lowest foot cm | standing support | overpowered % | grips held % | throw angle | ms/frame mean/max");
             var all = new Sample();
             foreach (WrestlingStyle style in new[] { WrestlingStyle.Freestyle, WrestlingStyle.GrecoRoman, WrestlingStyle.Womens })
@@ -206,6 +214,9 @@ namespace Wrestling.Editor
             report.AppendLine(Line("All", all));
             report.AppendLine(FormattableString.Invariant($"[lab] contact feasibility: {(all.Feasibility.Count == 0 ? 1f : all.Feasibility.Average()) * 100f:F0}% of the balance force and turn the mat contacts could make themselves (the rest stands in for stepping and leaning on the opponent)"));
             float active = Mathf.Max(1, all.ActiveFrames);
+            report.AppendLine(FormattableString.Invariant($"[lab] pelvis err median {Percentile(all.Tracking, 0.5f):F1} cm, p75 {Percentile(all.Tracking, 0.75f):F1} cm"));
+            report.AppendLine(FormattableString.Invariant($"[lab] shown jerk (mm per frame², mean/p99): hips {Mean(all.HipJerk):F2}/{Percentile(all.HipJerk, 0.99f):F2}, hands {Mean(all.HandJerk):F2}/{Percentile(all.HandJerk, 0.99f):F2}"));
+            report.AppendLine(FormattableString.Invariant($"[lab] load: opponent force on a body mean/p95 {Mean(all.OpponentLoad):F0}/{Percentile(all.OpponentLoad, 0.95f):F0} N; give: largest joint shift mean/p95/max {Mean(all.Give):F2}/{Percentile(all.Give, 0.95f):F2}/{(all.Give.Count == 0 ? 0f : all.Give.Max()):F2} cm, hips sink mean/max {Mean(all.Sink):F2}/{(all.Sink.Count == 0 ? 0f : all.Sink.Max()):F2} cm, lean mean/max {Mean(all.Lean):F1}/{(all.Lean.Count == 0 ? 0f : all.Lean.Max()):F1} deg"));
             report.AppendLine("[lab] mean joint error (deg): " + string.Join(", ", all.JointSums.OrderByDescending(j => j.Value).Select(j => FormattableString.Invariant($"{j.Key} {j.Value / active:F0}"))));
             report.AppendLine("[lab] balance limits hit (% of active frames): " + string.Join(", ", all.Limits.OrderByDescending(j => j.Value).Select(j => FormattableString.Invariant($"{j.Key} {100f * j.Value / active:F0}"))));
             return report.ToString();
@@ -216,6 +227,9 @@ namespace Wrestling.Editor
             int frames = Mathf.RoundToInt(seconds * BoutClock.TicksPerSecond);
             var watch = new Stopwatch();
             var thrown = new bool[2];
+            // The last two shown positions of each wrestler's hips and hands, for frame-to-frame jerk.
+            var history = new Vector3[2, 3, 2];
+            int tracked = 0;
             for (int frame = 0; frame < frames && !viewer.Session.Engine.IsFinished; frame++)
             {
                 watch.Restart();
@@ -241,6 +255,19 @@ namespace Wrestling.Editor
                     {
                         continue;
                     }
+
+                    if (tracked >= 2)
+                    {
+                        into.HipJerk.Add(Jerk(body.HipPosition, history[corner, 0, 0], history[corner, 0, 1]));
+                        into.HandJerk.Add(Jerk(body.Link("LeftHand").transform.position, history[corner, 1, 0], history[corner, 1, 1]));
+                        into.HandJerk.Add(Jerk(body.Link("RightHand").transform.position, history[corner, 2, 0], history[corner, 2, 1]));
+                    }
+
+                    LoadCompliance give = viewer.Compliance((Corner)corner);
+                    into.Give.Add(give.Displacement * 100f);
+                    into.Sink.Add(give.Sink * 100f);
+                    into.Lean.Add(give.LeanDegrees);
+                    into.OpponentLoad.Add(body.OpponentForce.magnitude);
 
                     into.ActiveFrames++;
                     float error = body.TrackingError;
@@ -285,7 +312,26 @@ namespace Wrestling.Editor
                         }
                     }
                 }
+
+                for (int corner = 0; corner < 2; corner++)
+                {
+                    PhysicalBody body = (corner == 0 ? viewer.RedFigure : viewer.BlueFigure).Physical;
+                    Remember(history, corner, 0, body.HipPosition);
+                    Remember(history, corner, 1, body.Link("LeftHand").transform.position);
+                    Remember(history, corner, 2, body.Link("RightHand").transform.position);
+                }
+
+                tracked++;
             }
+        }
+
+        /// <summary>Second difference of a shown point over the last three frames (mm): how hard it is shaking.</summary>
+        private static float Jerk(Vector3 now, Vector3 last, Vector3 before) => (now - (2f * last) + before).magnitude * 1000f;
+
+        private static void Remember(Vector3[,,] history, int corner, int point, Vector3 position)
+        {
+            history[corner, point, 1] = history[corner, point, 0];
+            history[corner, point, 0] = position;
         }
 
         /// <summary>Logs each frame a body has lost its motion (-labVerbose).</summary>
@@ -305,6 +351,12 @@ namespace Wrestling.Editor
 
             into.Tracking.AddRange(from.Tracking);
             into.Feasibility.AddRange(from.Feasibility);
+            into.HipJerk.AddRange(from.HipJerk);
+            into.HandJerk.AddRange(from.HandJerk);
+            into.Give.AddRange(from.Give);
+            into.Sink.AddRange(from.Sink);
+            into.Lean.AddRange(from.Lean);
+            into.OpponentLoad.AddRange(from.OpponentLoad);
             into.Overlap.AddRange(from.Overlap);
             into.JointError.AddRange(from.JointError);
             into.StandingSupport.AddRange(from.StandingSupport);
@@ -327,10 +379,12 @@ namespace Wrestling.Editor
             into.ThrowAngleSum += from.ThrowAngleSum;
         }
 
+        private static float Mean(List<float> values) => values.Count == 0 ? 0f : values.Average();
+
+        private static float Percentile(List<float> values, float p) => values.Count == 0 ? 0f : values.OrderBy(v => v).ElementAt(Mathf.Clamp(Mathf.FloorToInt(p * values.Count), 0, values.Count - 1));
+
         private static string Line(string label, Sample s)
         {
-            static float Mean(List<float> values) => values.Count == 0 ? 0f : values.Average();
-            static float Percentile(List<float> values, float p) => values.Count == 0 ? 0f : values.OrderBy(v => v).ElementAt(Mathf.Clamp(Mathf.FloorToInt(p * values.Count), 0, values.Count - 1));
             float active = Mathf.Max(1, s.ActiveFrames);
             string joints = string.Join(", ", s.WorstJoints.OrderByDescending(j => j.Value).Take(3).Select(j => $"{j.Key} {100f * j.Value / active:F0}%"));
             return string.Format(

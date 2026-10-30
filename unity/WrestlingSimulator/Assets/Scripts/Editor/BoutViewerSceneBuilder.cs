@@ -70,7 +70,8 @@ namespace Wrestling.Editor
                 Lit("Mat_ProtectionArea", new Color(0.09f, 0.25f, 0.56f), 0.26f),
                 Lit("Mat_RedCorner", new Color(0.80f, 0.11f, 0.13f), 0.28f),
                 Lit("Mat_BlueCorner", new Color(0.08f, 0.22f, 0.72f), 0.28f),
-                Lit("Platform", new Color(0.14f, 0.15f, 0.18f), 0.22f));
+                Lit("Platform", new Color(0.14f, 0.15f, 0.18f), 0.22f),
+                ContactShadow());
 
             var canvasObject = new GameObject("Scoreboard", typeof(RectTransform));
             Canvas canvas = canvasObject.AddComponent<Canvas>();
@@ -115,6 +116,21 @@ namespace Wrestling.Editor
             {
                 AssetDatabase.CreateFolder("Assets/Presentation", "Materials");
             }
+        }
+
+        /// <summary>The mat's contact shadow material (a saved asset, so player builds include its shader).</summary>
+        private static Material ContactShadow()
+        {
+            EnsureFolders();
+            string path = $"{MaterialFolder}/Mat_ContactShadow.mat";
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(Shader.Find("Wrestling/MatContactShadow"));
+                AssetDatabase.CreateAsset(material, path);
+            }
+
+            return material;
         }
 
         private static Material Lit(string materialName, Color colour, float smoothness)
