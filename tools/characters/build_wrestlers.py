@@ -45,7 +45,7 @@ BASES = {
         "macro": {"gender": 1.0, "age": 0.5, "muscle": 0.95, "weight": 0.64, "proportions": 0.85, "height": 0.5,
                   "cupsize": 0.5, "firmness": 0.5, "race": {"asian": 0.33, "caucasian": 0.34, "african": 0.33}},
         "skins": ["young_caucasian_male", "young_african_male", "young_asian_male", "middleage_caucasian_male",
-                  "mindfront_skin_male_african_middleage", "mindfront_aksel_skin", "toigo_light_skin_male_bronze"],
+                  "mindfront_skin_male_african_middleage", "toigo_light_skin_male_bronze"],
         "eyebrows": "eyebrow001",
         "hair": "short01",
         "physique": 1.0,

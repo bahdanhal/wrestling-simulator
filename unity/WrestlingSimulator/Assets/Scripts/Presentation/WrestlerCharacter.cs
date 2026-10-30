@@ -11,6 +11,9 @@ namespace Wrestling.Presentation
     {
         private GameObject _model;
         private Material _body;
+        private SkinnedMeshRenderer _bodyRenderer;
+        private int _browShapeIndex = -1;
+        private int _effortShapeIndex = -1;
         private CharacterRig _rig;
         private PhysicalBody _physical;
 
@@ -52,8 +55,19 @@ namespace Wrestling.Presentation
             CharacterLibrary.SkinSet skin = characterBase.Skins[Mathf.Clamp(look.Skin, 0, characterBase.Skins.Length - 1)];
             _body = new Material(characterBase.Body) { name = name + " body" };
             _body.SetTexture("_BaseMap", skin.Albedo);
-            _body.SetTexture("_BumpMap", skin.Normal);
+            if (skin.Normal != null)
+            {
+                _body.SetTexture("_BumpMap", skin.Normal);
+                _body.SetFloat("_BumpScale", 0.6f);
+            }
+            else
+            {
+                _body.SetFloat("_BumpScale", 0f);
+            }
+
             _body.SetColor("_SingletColor", singlet);
+            _body.SetColor("_HairColor", look.ScalpColor);
+            var propertyBlock = new MaterialPropertyBlock();
             foreach (SkinnedMeshRenderer renderer in _model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
                 if (renderer == bodyRenderer)
@@ -65,7 +79,10 @@ namespace Wrestling.Presentation
                     }
 
                     renderer.sharedMaterials = materials;
+                    _bodyRenderer = renderer;
                     Mesh mesh = renderer.sharedMesh;
+                    _browShapeIndex = mesh.GetBlendShapeIndex("Expr_BrowFurrow");
+                    _effortShapeIndex = mesh.GetBlendShapeIndex("Expr_Effort");
                     for (int i = 0; i < mesh.blendShapeCount; i++)
                     {
                         renderer.SetBlendShapeWeight(i, look.ShapeWeights.TryGetValue(mesh.GetBlendShapeName(i), out float weight) ? weight * 100f : 0f);
@@ -77,7 +94,21 @@ namespace Wrestling.Presentation
                 int part = System.Array.FindIndex(characterBase.PartNames, n => renderer.name.Contains(n));
                 if (part >= 0)
                 {
-                    renderer.sharedMaterial = characterBase.PartMaterials[part];
+                    Material partMaterial = characterBase.PartMaterials[part];
+                    renderer.sharedMaterial = partMaterial;
+                    string lower = renderer.name.ToLowerInvariant();
+                    if (lower.Contains("short") || lower.Contains("ponytail") || lower.Contains("hair") || lower.Contains("eyebrow"))
+                    {
+                        propertyBlock.Clear();
+                        propertyBlock.SetColor("_BaseColor", look.HairTint);
+                        renderer.SetPropertyBlock(propertyBlock);
+                    }
+                    else if (lower.Contains("shoes"))
+                    {
+                        propertyBlock.Clear();
+                        propertyBlock.SetColor("_BaseColor", Color.Lerp(new Color(0.11f, 0.12f, 0.14f), singlet, 0.16f));
+                        renderer.SetPropertyBlock(propertyBlock);
+                    }
                 }
             }
 
@@ -136,7 +167,28 @@ namespace Wrestling.Presentation
             };
         }
 
-        public void Apply(in Pose pose, float leftGrip, float rightGrip) => _rig.Apply(in pose, leftGrip, rightGrip);
+        public void Apply(in Pose pose, float leftGrip, float rightGrip)
+        {
+            _rig.Apply(in pose, leftGrip, rightGrip);
+            ApplyExpression(in pose);
+        }
+
+        public void ApplyExpression(in Pose pose)
+        {
+            _rig.ApplyFace(in pose);
+            if (_bodyRenderer != null)
+            {
+                if (_browShapeIndex >= 0)
+                {
+                    _bodyRenderer.SetBlendShapeWeight(_browShapeIndex, Mathf.Clamp01(pose.Focus + (pose.Effort * 0.45f)) * 100f);
+                }
+
+                if (_effortShapeIndex >= 0)
+                {
+                    _bodyRenderer.SetBlendShapeWeight(_effortShapeIndex, Mathf.Clamp01(pose.Effort) * 100f);
+                }
+            }
+        }
 
         private void OnDestroy() => Release();
 

@@ -44,9 +44,6 @@ MonoBehaviour:
     - Name: mindfront_skin_male_african_middleage
       Albedo: {fileID: 2800000, guid: c6ba023ec196d4da4b809f1de5f60f58, type: 3}
       Normal: {fileID: 2800000, guid: 26f229910c60c44e996919a75402806d, type: 3}
-    - Name: mindfront_aksel_skin
-      Albedo: {fileID: 2800000, guid: 85f3bd2bd7ca4413782cd50ca69b8184, type: 3}
-      Normal: {fileID: 2800000, guid: 8c9d8d2d4b9154c9093c10cd01527721, type: 3}
     - Name: toigo_light_skin_male_bronze
       Albedo: {fileID: 2800000, guid: da7ec06be0eb543188a2b0fbb6561371, type: 3}
       Normal: {fileID: 0}

@@ -46,6 +46,20 @@ namespace Wrestling.Presentation
         private readonly Vector3 _pelvisToHips;
         private readonly List<(Transform Bone, Quaternion Bind, Vector3 Axis, float Scale)> _leftFingers = new List<(Transform, Quaternion, Vector3, float)>();
         private readonly List<(Transform Bone, Quaternion Bind, Vector3 Axis, float Scale)> _rightFingers = new List<(Transform, Quaternion, Vector3, float)>();
+        private readonly Transform _jaw;
+        private readonly Quaternion _jawBind;
+        private readonly Transform _leftEye;
+        private readonly Quaternion _leftEyeBind;
+        private readonly Transform _rightEye;
+        private readonly Quaternion _rightEyeBind;
+        private readonly Transform _leftLidTop;
+        private readonly Quaternion _leftLidTopBind;
+        private readonly Transform _leftLidBottom;
+        private readonly Quaternion _leftLidBottomBind;
+        private readonly Transform _rightLidTop;
+        private readonly Quaternion _rightLidTopBind;
+        private readonly Transform _rightLidBottom;
+        private readonly Quaternion _rightLidBottomBind;
 
         /// <param name="root">The character's root (scaled to the wrestler's height, in its bind pose).</param>
         public CharacterRig(Transform root)
@@ -82,6 +96,40 @@ namespace Wrestling.Presentation
             _pelvisToHips = Quaternion.Inverse(_rotations[(int)Bone.Hips]) * (_bones[(int)Bone.Hips].position - bind.Pelvis);
             CollectFingers(byName, "Left", _leftFingers, _bones[(int)Bone.LeftHand]);
             CollectFingers(byName, "Right", _rightFingers, _bones[(int)Bone.RightHand]);
+            if (byName.TryGetValue("Jaw", out _jaw))
+            {
+                _jawBind = _jaw.localRotation;
+            }
+
+            if (byName.TryGetValue("LeftEye", out _leftEye))
+            {
+                _leftEyeBind = _leftEye.localRotation;
+            }
+
+            if (byName.TryGetValue("RightEye", out _rightEye))
+            {
+                _rightEyeBind = _rightEye.localRotation;
+            }
+
+            if (byName.TryGetValue("LeftOrbicularisTop", out _leftLidTop))
+            {
+                _leftLidTopBind = _leftLidTop.localRotation;
+            }
+
+            if (byName.TryGetValue("LeftOrbicularisBottom", out _leftLidBottom))
+            {
+                _leftLidBottomBind = _leftLidBottom.localRotation;
+            }
+
+            if (byName.TryGetValue("RightOrbicularisTop", out _rightLidTop))
+            {
+                _rightLidTopBind = _rightLidTop.localRotation;
+            }
+
+            if (byName.TryGetValue("RightOrbicularisBottom", out _rightLidBottom))
+            {
+                _rightLidBottomBind = _rightLidBottom.localRotation;
+            }
         }
 
         /// <summary>A rig bone by its Mixamo name without the prefix (for example "LeftForeArm").</summary>
@@ -113,6 +161,85 @@ namespace Wrestling.Presentation
 
             Curl(_leftFingers, leftGrip);
             Curl(_rightFingers, rightGrip);
+            ApplyFace(in pose);
+        }
+
+        public void ApplyFace(in Pose pose)
+        {
+            float focus = Mathf.Clamp01(pose.Focus);
+            float effort = Mathf.Clamp01(pose.Effort);
+            if (_jaw != null)
+            {
+                float jawOpen = (1.5f * focus) + (5.5f * effort);
+                _jaw.localRotation = _jawBind * Quaternion.Euler(jawOpen, 0f, 0f);
+            }
+
+            float squintTop = (2.8f * focus) + (2.5f * effort);
+            float squintBottom = (2.2f * focus) + (2.0f * effort);
+            if (_leftLidTop != null)
+            {
+                _leftLidTop.localRotation = _leftLidTopBind * Quaternion.Euler(squintTop, 0f, 0f);
+            }
+
+            if (_rightLidTop != null)
+            {
+                _rightLidTop.localRotation = _rightLidTopBind * Quaternion.Euler(squintTop, 0f, 0f);
+            }
+
+            if (_leftLidBottom != null)
+            {
+                _leftLidBottom.localRotation = _leftLidBottomBind * Quaternion.Euler(-squintBottom, 0f, 0f);
+            }
+
+            if (_rightLidBottom != null)
+            {
+                _rightLidBottom.localRotation = _rightLidBottomBind * Quaternion.Euler(-squintBottom, 0f, 0f);
+            }
+
+            if (pose.HasGazeTarget)
+            {
+                AimEye(_leftEye, _leftEyeBind, pose.GazeTarget);
+                AimEye(_rightEye, _rightEyeBind, pose.GazeTarget);
+            }
+            else
+            {
+                if (_leftEye != null)
+                {
+                    _leftEye.localRotation = _leftEyeBind;
+                }
+
+                if (_rightEye != null)
+                {
+                    _rightEye.localRotation = _rightEyeBind;
+                }
+            }
+        }
+
+        private void AimEye(Transform eye, Quaternion bindLocal, Vector3 targetWorld)
+        {
+            if (eye == null || eye.parent == null)
+            {
+                return;
+            }
+
+            Vector3 dirWorld = targetWorld - eye.position;
+            if (dirWorld.sqrMagnitude < 1e-4f)
+            {
+                eye.localRotation = bindLocal;
+                return;
+            }
+
+            Transform head = _bones[(int)Bone.Head];
+            Vector3 localDir = head.InverseTransformDirection(dirWorld.normalized);
+            if (localDir.z <= 0.1f)
+            {
+                eye.localRotation = bindLocal;
+                return;
+            }
+
+            float yaw = Mathf.Clamp(Mathf.Atan2(localDir.x, localDir.z) * Mathf.Rad2Deg, -15f, 15f);
+            float pitch = Mathf.Clamp(-Mathf.Asin(Mathf.Clamp(localDir.y, -1f, 1f)) * Mathf.Rad2Deg, -10f, 10f);
+            eye.localRotation = bindLocal * Quaternion.Euler(pitch, yaw, 0f);
         }
 
         private static void Curl(List<(Transform Bone, Quaternion Bind, Vector3 Axis, float Scale)> fingers, float amount)

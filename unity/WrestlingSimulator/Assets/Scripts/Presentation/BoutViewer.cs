@@ -354,11 +354,14 @@ namespace Wrestling.Presentation
                 PlantFeet(ref bluePose, _blueFigure);
             }
 
+            SolveExpressions(engine, ref redPose, ref bluePose);
             _lastPoses[0] = redPose;
             _lastPoses[1] = bluePose;
             _redFigure.Apply(in redPose, GripOn(engine, Corner.Red, GripSide.Left), GripOn(engine, Corner.Red, GripSide.Right));
             _blueFigure.Apply(in bluePose, GripOn(engine, Corner.Blue, GripSide.Left), GripOn(engine, Corner.Blue, GripSide.Right));
             SimulateFalls(deltaTime, snapped);
+            _redFigure.ApplyExpression(in redPose);
+            _blueFigure.ApplyExpression(in bluePose);
 
             Vector3 focus = WrestlerFrame.OnMat((_shown[0].Position + _shown[1].Position) * 0.5f);
             bool grounded = engine.Position != BoutPosition.Neutral;
@@ -373,6 +376,67 @@ namespace Wrestling.Presentation
 
             _scoreboard.Refresh(_session);
             Presented?.Invoke(this);
+        }
+
+        private void SolveExpressions(BoutEngine engine, ref Pose redPose, ref Pose bluePose)
+        {
+            if (engine.IsFinished)
+            {
+                redPose.Focus = 0.25f;
+                bluePose.Focus = 0.25f;
+                redPose.Effort = 0.1f;
+                bluePose.Effort = 0.1f;
+                redPose.HasGazeTarget = false;
+                bluePose.HasGazeTarget = false;
+                return;
+            }
+
+            float gripLoad = Mathf.Clamp01(engine.Grips.All.Count * 0.25f);
+            float baseFocus = 0.45f + (0.25f * gripLoad);
+            float redEffort = 0.18f + (0.22f * gripLoad);
+            float blueEffort = 0.18f + (0.22f * gripLoad);
+            if (engine.Position == BoutPosition.Danger)
+            {
+                redEffort = Mathf.Max(redEffort, 0.85f);
+                blueEffort = Mathf.Max(blueEffort, 0.85f);
+                baseFocus = 0.85f;
+            }
+            else if (engine.Position == BoutPosition.ParTerre)
+            {
+                redEffort = Mathf.Max(redEffort, 0.55f);
+                blueEffort = Mathf.Max(blueEffort, 0.55f);
+                baseFocus = 0.72f;
+            }
+
+            TechniqueExecution active = engine.ActiveTechnique;
+            if (active != null && !engine.IsStopped)
+            {
+                float progress = active.PhaseLength > 0 ? Mathf.Clamp01((float)active.PhaseTick / active.PhaseLength) : 1f;
+                float burst = Mathf.Sin(progress * Mathf.PI);
+                float executorEffort = 0.65f + (0.35f * burst);
+                float defenderEffort = 0.55f + (0.35f * burst);
+                if (active.Executor == Corner.Red)
+                {
+                    redEffort = Mathf.Max(redEffort, executorEffort);
+                    blueEffort = Mathf.Max(blueEffort, defenderEffort);
+                }
+                else
+                {
+                    blueEffort = Mathf.Max(blueEffort, executorEffort);
+                    redEffort = Mathf.Max(redEffort, defenderEffort);
+                }
+
+                baseFocus = Mathf.Max(baseFocus, 0.82f);
+            }
+
+            redPose.Focus = baseFocus;
+            bluePose.Focus = baseFocus;
+            redPose.Effort = redEffort;
+            bluePose.Effort = blueEffort;
+            redPose.GazeTarget = Vector3.Lerp(bluePose.Neck, bluePose.Head, 0.65f);
+            bluePose.GazeTarget = Vector3.Lerp(redPose.Neck, redPose.Head, 0.65f);
+            redPose.HasGazeTarget = true;
+            bluePose.HasGazeTarget = true;
         }
 
         /// <summary>
@@ -495,7 +559,9 @@ namespace Wrestling.Presentation
             {
                 // A load carries on into its throw within the same technique; anything else lets go.
                 bool same = throwing != null && ReferenceEquals(throwing.Value.Technique, _throwTechnique)
-                    && (active || (throwing.Value.Spec.Kind == ThrowKind.Load && throwing.Value.Progress >= throwing.Value.Spec.To));
+                    && (active
+                        || (throwing.Value.Spec.Kind == ThrowKind.Load && throwing.Value.Progress >= throwing.Value.Spec.To)
+                        || (throwing.Value.Spec.Kind == ThrowKind.Throw && throwing.Value.Progress < throwing.Value.Spec.From));
                 if (!same)
                 {
                     // Countered: the thrown wrestler is acting now, so they are loose only for a
@@ -633,7 +699,7 @@ namespace Wrestling.Presentation
         }
 
         /// <summary>Hips this much (m) above their animated height are still coming down.</summary>
-        private const float HighHips = 0.05f;
+        private const float HighHips = 0.025f;
 
         private static void PlantLeg(ref Vector3 hip, ref Vector3 knee, ref Vector3 ankle, ref Vector3 toe, Vector3 physicalHip, Vector3 physicalAnkle, BodyProportions proportions, bool hipsHigh)
         {
@@ -643,8 +709,11 @@ namespace Wrestling.Presentation
                 return;
             }
 
-            // From the hip as it physically is to where the foot should be.
-            Vector3 reach = ankle - physicalHip;
+            // From the hip as it physically is to where the foot should be: full vertical reach to the
+            // mat, but clamped horizontally so a displaced pelvis plants its feet under itself instead
+            // of pole-vaulting or doing the splits towards a distant target.
+            Vector3 flatOffset = Vector3.ClampMagnitude(new Vector3(offset.x, 0f, offset.z), 0.22f);
+            Vector3 reach = (ankle - hip) + new Vector3(flatOffset.x, offset.y, flatOffset.z);
             if (hipsHigh)
             {
                 // Coming down: the leg may fold or swing, but not lengthen, or it would push the body

@@ -76,7 +76,11 @@ namespace Wrestling.Editor
                 Name = name,
                 Model = AssetDatabase.LoadAssetAtPath<GameObject>(CharacterImport.Root + (string)meta["model"])
                     ?? throw new FileNotFoundException($"Model {(string)meta["model"]} is missing."),
-                Body = Material($"Body_{name}", Shader.Find("Wrestling/Wrestler Skin"), _ => { }),
+                Body = Material($"Body_{name}", Shader.Find("Wrestling/Wrestler Skin"), m =>
+                {
+                    m.SetFloat("_SkinSmoothness", 0.34f);
+                    m.SetFloat("_SingletSmoothness", 0.26f);
+                }),
             };
 
             var skins = new List<CharacterLibrary.SkinSet>();
@@ -85,6 +89,17 @@ namespace Wrestling.Editor
                 var files = (JObject)skin.Value;
                 string albedo = (string)files["diffuseTexture"] ?? throw new InvalidDataException($"{skin.Name}: no diffuse texture.");
                 string normal = (string)files["normalmapTexture"];
+                if (normal != null)
+                {
+                    string normalPath = textures + normal;
+                    if (AssetImporter.GetAtPath(normalPath) is TextureImporter importer && importer.textureType != TextureImporterType.NormalMap)
+                    {
+                        importer.textureType = TextureImporterType.NormalMap;
+                        importer.sRGBTexture = false;
+                        importer.SaveAndReimport();
+                    }
+                }
+
                 skins.Add(new CharacterLibrary.SkinSet
                 {
                     Name = skin.Name,
@@ -117,16 +132,22 @@ namespace Wrestling.Editor
                         m.EnableKeyword("_NORMALMAP");
                     }
 
-                    m.SetFloat("_Smoothness", kind == "Eyes" ? 0.85f : kind == "Hair" ? 0.3f : 0.25f);
+                    m.SetFloat("_Smoothness", kind == "Eyes" ? 0.88f : kind == "Hair" ? 0.34f : 0.25f);
                     if (kind == "Clothes")
                     {
                         // Sneaker and sock tinted one colour read as a high-top wrestling shoe.
                         m.SetColor("_BaseColor", new Color(0.13f, 0.13f, 0.15f));
                     }
+                    else
+                    {
+                        m.SetColor("_BaseColor", Color.white);
+                    }
+
                     if (cutout)
                     {
                         m.SetFloat("_AlphaClip", 1f);
-                        m.SetFloat("_Cutoff", 0.4f);
+                        m.SetFloat("_Cutoff", kind == "Hair" ? 0.18f : 0.12f);
+                        m.SetFloat("_AlphaToMask", 1f);
                         m.EnableKeyword("_ALPHATEST_ON");
                         m.SetFloat("_Cull", (float)CullMode.Off);
                         m.renderQueue = (int)RenderQueue.AlphaTest;

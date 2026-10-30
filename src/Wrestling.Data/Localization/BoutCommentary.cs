@@ -21,13 +21,80 @@ namespace Wrestling.Data.Localization
             switch (e.Type)
             {
                 case BoutEventType.PointsAwarded:
-                    return $"{who} +{e.Points} ({e.Detail})";
+                    return $"{who} +{e.Points} ({DetailLabel(e.Detail)})";
                 case BoutEventType.TechniqueCompleted:
-                    return $"{who} {technique} -> {e.Detail}";
+                    return $"{who}: {technique} ({DetailLabel(e.Detail)})";
                 case BoutEventType.CounterStarted:
                     return content.Techniques.Get(e.TechniqueId!).Role == TechniqueRole.Defence ? $"{who} defends: {technique}" : $"{who} counters: {technique}";
+                case BoutEventType.StepOut:
+                    return string.IsNullOrEmpty(e.Detail) ? $"{who} steps out of bounds" : $"{who} steps out ({DetailLabel(e.Detail)})";
+                case BoutEventType.PassivityCall:
+                    return $"{who} passivity call #{e.Detail}";
+                case BoutEventType.ActivityPeriodStarted:
+                    return $"{who} on 30s activity clock";
+                case BoutEventType.Warning:
+                    return string.IsNullOrEmpty(e.Detail) ? $"{who} warned" : $"{who} warned ({DetailLabel(e.Detail)})";
+                case BoutEventType.Caution:
+                    return string.IsNullOrEmpty(e.Detail) ? $"{who} cautioned" : $"{who} cautioned ({DetailLabel(e.Detail)})";
+                case BoutEventType.Escape:
+                    return string.IsNullOrEmpty(e.Detail) ? $"{who} returns to standing" : $"{who} escapes ({DetailLabel(e.Detail)})";
+                case BoutEventType.PeriodStarted:
+                    return $"Period {e.Detail} begins";
+                case BoutEventType.PeriodEnded:
+                    return $"End of period {e.Detail}";
+                case BoutEventType.BoutEnded:
+                    return string.IsNullOrEmpty(who) ? $"Bout ended ({e.Detail})" : $"{who} wins by {e.Detail}";
                 default:
-                    return $"{e.Type} {who} {e.Detail}".Trim();
+                    return $"{e.Type} {who} {DetailLabel(e.Detail)}".Trim();
+            }
+        }
+
+        private static string DetailLabel(string? detail)
+        {
+            if (string.IsNullOrEmpty(detail))
+            {
+                return string.Empty;
+            }
+
+            switch (detail)
+            {
+                case "ControlBehind":
+                    return "control behind";
+                case "DangerDirect":
+                    return "to danger";
+                case "DangerDelayed":
+                    return "exposure";
+                case "GrandAmplitudeToDanger":
+                    return "grand amplitude to danger";
+                case "GrandAmplitudeThroughDanger":
+                case "GrandAmplitude":
+                    return "grand amplitude";
+                case "StandingReset":
+                    return "standing";
+                case "Takedown":
+                    return "takedown";
+                case "Exposure":
+                    return "exposure";
+                case "Reversal":
+                    return "reversal";
+                case "StepOut":
+                    return "step-out";
+                case "ActivityClock":
+                    return "activity clock";
+                case "Passivity":
+                    return "passivity";
+                case "Caution":
+                    return "caution";
+                case "DeliberatePushOut":
+                    return "deliberate push-out";
+                case "FleeingTheMat":
+                    return "fleeing the mat";
+                case "FleeingTheHold":
+                    return "fleeing the hold";
+                case "IllegalHold":
+                    return "illegal hold";
+                default:
+                    return detail!;
             }
         }
 

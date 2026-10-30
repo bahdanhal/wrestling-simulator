@@ -15,7 +15,8 @@ Shader "Wrestling/Wrestler Skin"
         _ScatterWrap ("Subsurface wrap", Range(0, 1)) = 0.45
         _ScatterStrength ("Subsurface strength", Range(0, 1)) = 0.5
         _SingletColor ("Singlet", Color) = (0.8, 0.08, 0.1, 1)
-        _SingletSmoothness ("Singlet smoothness", Range(0, 1)) = 0.55
+        _SingletSmoothness ("Singlet smoothness", Range(0, 1)) = 0.26
+        _HairColor ("Hair colour", Color) = (0.12, 0.09, 0.07, 1)
         [Toggle] _SingletOn ("Singlet", Float) = 1
     }
 
@@ -36,6 +37,7 @@ Shader "Wrestling/Wrestler Skin"
             half _ScatterStrength;
             half4 _SingletColor;
             half _SingletSmoothness;
+            half4 _HairColor;
             half _SingletOn;
         CBUFFER_END
         ENDHLSL
@@ -105,15 +107,40 @@ Shader "Wrestling/Wrestler Skin"
 
             half4 Fragment(Varyings input) : SV_Target
             {
-                half singlet = _SingletOn * SingletMask(input.body.xyz, input.regions);
+                float3 bodyPos = input.body.xyz;
+                half singlet = _SingletOn * SingletMask(bodyPos, input.regions);
+                half trim = _SingletOn * SingletTrimMask(bodyPos, input.regions);
+                half2 sidePanel = SingletSidePanel(bodyPos, input.regions);
+
                 half3 skin = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).rgb * _SkinTint.rgb;
+
+                // Shade the cranial scalp under the hair cap with the wrestler's hair root colour so
+                // head blend shapes and semi-transparent hair strands never flash bright bare skin.
+                float hairlineY = 0.910 + 0.058 * smoothstep(-0.025, 0.035, bodyPos.z) + 0.010 * smoothstep(0.030, 0.046, abs(bodyPos.x));
+                half scalp = smoothstep(0.0, 0.012, bodyPos.y - hairlineY) * smoothstep(0.88, 0.91, bodyPos.y);
+                half3 scalpRoot = _HairColor.rgb * lerp(0.55h, 0.95h, saturate(Luminance(skin) * 1.8h));
+                skin = lerp(skin, scalpRoot, scalp * 0.88h);
+
                 half3 normalTS = UnpackNormalScale(SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, input.uv), _BumpScale);
-                normalTS = normalize(lerp(normalTS, half3(0, 0, 1), singlet * 0.85h));
+                normalTS = normalize(lerp(normalTS, half3(0, 0, 1), singlet * 0.94h));
                 float3 bitangent = input.tangentWS.w * cross(input.normalWS, input.tangentWS.xyz);
                 float3 normalWS = normalize(TransformTangentToWorld(normalTS, half3x3(input.tangentWS.xyz, bitangent, input.normalWS)));
 
-                // Lycra: fabric colour with a little of the skin's shading so muscle shapes still read.
-                half3 fabric = _SingletColor.rgb * lerp(1.0h, saturate(Luminance(skin) * 2.2h), 0.25h);
+                // Subtle anatomical muscle relief and ambient crease shading along the torso, deltoids, and thighs.
+                float3 geomNormalWS = normalize(input.normalWS);
+                half muscleRelief = saturate(dot(normalWS, float3(0, 1, 0)) * 0.5h + 0.5h) - saturate(dot(geomNormalWS, float3(0, 1, 0)) * 0.5h + 0.5h);
+                half centerlineGroove = exp(-pow(abs(bodyPos.x) / 0.018, 2.0)) * saturate(input.regions.x) * smoothstep(0.55, 0.80, bodyPos.y);
+                half muscleTone = clamp(1.0h + muscleRelief * 0.35h - centerlineGroove * 0.07h, 0.88h, 1.12h);
+                skin *= lerp(muscleTone, 1.0h, scalp);
+
+                // Opaque compression lycra: pure singlet colour shaded by 3D body contour, darker ergonomic side panel,
+                // and crisp white/accent border piping (never bleeding bare-skin pigment spots through the fabric).
+                half fabricContour = clamp(1.0h - centerlineGroove * 0.04h, 0.94h, 1.03h);
+                half3 baseFabric = _SingletColor.rgb * fabricContour;
+                half3 panelFabric = baseFabric * 0.78h;
+                half3 trimColour = lerp(_SingletColor.rgb, half3(0.95h, 0.96h, 0.98h), 0.72h);
+                half3 fabric = lerp(baseFabric, panelFabric, sidePanel.x * (1.0h - trim));
+                fabric = lerp(fabric, trimColour, saturate(sidePanel.y * 0.65h + trim * 0.85h));
                 half3 albedo = lerp(skin, fabric, singlet);
 
                 InputData inputData = (InputData)0;
@@ -130,18 +157,22 @@ Shader "Wrestling/Wrestler Skin"
                 SurfaceData surface = (SurfaceData)0;
                 surface.albedo = albedo;
                 surface.metallic = 0;
-                surface.smoothness = lerp(_SkinSmoothness, _SingletSmoothness, singlet);
+                half athleticSheen = smoothstep(0.45, 0.88, bodyPos.y) * (1.0h - scalp) * 0.06h;
+                half skinSmoothness = lerp(_SkinSmoothness + athleticSheen, 0.22h, scalp);
+                surface.smoothness = lerp(skinSmoothness, _SingletSmoothness, singlet);
                 surface.normalTS = normalTS;
-                surface.occlusion = 1;
+                surface.occlusion = lerp(1.0h, 0.92h, centerlineGroove);
                 surface.alpha = 1;
                 half4 colour = UniversalFragmentPBR(inputData, surface);
 
-                // Subsurface approximation: wrapped diffuse beyond the terminator, tinted warm.
+                // Subsurface approximation: wrapped diffuse beyond the terminator, tinted warm, plus subtle grazing rim.
                 Light mainLight = GetMainLight(inputData.shadowCoord);
                 half ndotl = dot(normalWS, mainLight.direction);
                 half wrapped = saturate((ndotl + _ScatterWrap) / (1.0h + _ScatterWrap)) - saturate(ndotl);
                 half shadow = lerp(1.0h, mainLight.shadowAttenuation, 0.5h);
-                colour.rgb += albedo * _ScatterColor.rgb * wrapped * _ScatterStrength * (1.0h - singlet) * mainLight.color * shadow;
+                colour.rgb += albedo * _ScatterColor.rgb * wrapped * _ScatterStrength * (1.0h - singlet) * (1.0h - scalp * 0.8h) * mainLight.color * shadow;
+                half fresnel = pow(1.0h - saturate(dot(normalWS, inputData.viewDirectionWS)), 4.0h) * saturate(normalWS.y * 0.5h + 0.5h);
+                colour.rgb += mainLight.color * fresnel * lerp(0.055h, 0.04h, singlet) * (1.0h - scalp) * shadow;
 
                 colour.rgb = MixFog(colour.rgb, inputData.fogCoord);
                 return colour;

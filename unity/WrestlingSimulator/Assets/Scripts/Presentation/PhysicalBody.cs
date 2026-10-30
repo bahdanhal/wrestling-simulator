@@ -86,31 +86,31 @@ namespace Wrestling.Presentation
         private static readonly (string Name, string Parent, string Bone, string End, float Mass, float Radius, float Torque, float Support)[] Layout =
         {
             ("Hips", null, "Hips", "Spine", 0.112f, 0.062f, 0f, 0.6f),
-            ("Spine", "Hips", "Spine", "Spine2", 0.163f, 0.058f, 450f, 0.6f),
-            ("Spine2", "Spine", "Spine2", "Neck", 0.160f, 0.063f, 400f, 0.6f),
-            ("Head", "Spine2", "Neck", null, 0.069f, 0.058f, 150f, 0.2f),
-            ("LeftArm", "Spine2", "LeftArm", "LeftForeArm", 0.027f, 0.028f, 200f, 0.1f),
-            ("LeftForeArm", "LeftArm", "LeftForeArm", "LeftHand", 0.016f, 0.023f, 130f, 0.2f),
-            ("LeftHand", "LeftForeArm", "LeftHand", "LeftHandMiddle1", 0.006f, 0.017f, 50f, 0.3f),
-            ("RightArm", "Spine2", "RightArm", "RightForeArm", 0.027f, 0.028f, 200f, 0.1f),
-            ("RightForeArm", "RightArm", "RightForeArm", "RightHand", 0.016f, 0.023f, 130f, 0.2f),
-            ("RightHand", "RightForeArm", "RightHand", "RightHandMiddle1", 0.006f, 0.017f, 50f, 0.3f),
-            ("LeftUpLeg", "Hips", "LeftUpLeg", "LeftLeg", 0.142f, 0.042f, 450f, 0.25f),
-            ("LeftLeg", "LeftUpLeg", "LeftLeg", "LeftFoot", 0.043f, 0.03f, 400f, 0.45f),
-            ("LeftFoot", "LeftLeg", "LeftFoot", null, 0.014f, 0f, 220f, 0.5f),
-            ("RightUpLeg", "Hips", "RightUpLeg", "RightLeg", 0.142f, 0.042f, 450f, 0.25f),
-            ("RightLeg", "RightUpLeg", "RightLeg", "RightFoot", 0.043f, 0.03f, 400f, 0.45f),
-            ("RightFoot", "RightLeg", "RightFoot", null, 0.014f, 0f, 220f, 0.5f),
+            ("Spine", "Hips", "Spine", "Spine2", 0.163f, 0.058f, 560f, 0.6f),
+            ("Spine2", "Spine", "Spine2", "Neck", 0.160f, 0.063f, 500f, 0.6f),
+            ("Head", "Spine2", "Neck", null, 0.069f, 0.058f, 170f, 0.2f),
+            ("LeftArm", "Spine2", "LeftArm", "LeftForeArm", 0.027f, 0.028f, 285f, 0.15f),
+            ("LeftForeArm", "LeftArm", "LeftForeArm", "LeftHand", 0.016f, 0.023f, 185f, 0.25f),
+            ("LeftHand", "LeftForeArm", "LeftHand", "LeftHandMiddle1", 0.006f, 0.017f, 75f, 0.35f),
+            ("RightArm", "Spine2", "RightArm", "RightForeArm", 0.027f, 0.028f, 285f, 0.15f),
+            ("RightForeArm", "RightArm", "RightForeArm", "RightHand", 0.016f, 0.023f, 185f, 0.25f),
+            ("RightHand", "RightForeArm", "RightHand", "RightHandMiddle1", 0.006f, 0.017f, 75f, 0.35f),
+            ("LeftUpLeg", "Hips", "LeftUpLeg", "LeftLeg", 0.142f, 0.042f, 480f, 0.3f),
+            ("LeftLeg", "LeftUpLeg", "LeftLeg", "LeftFoot", 0.043f, 0.03f, 420f, 0.45f),
+            ("LeftFoot", "LeftLeg", "LeftFoot", null, 0.014f, 0f, 240f, 0.5f),
+            ("RightUpLeg", "Hips", "RightUpLeg", "RightLeg", 0.142f, 0.042f, 480f, 0.3f),
+            ("RightLeg", "RightUpLeg", "RightLeg", "RightFoot", 0.043f, 0.03f, 420f, 0.45f),
+            ("RightFoot", "RightLeg", "RightFoot", null, 0.014f, 0f, 240f, 0.5f),
         };
 
         /// <summary>Joint error (radians) at which a muscle pulls with its full torque.</summary>
-        private const float FullTorqueAngle = 0.35f;
+        private const float FullTorqueAngle = 0.28f;
 
         /// <summary>Muscle activation time (s): how quickly a change in what the animation asks for reaches the muscles.</summary>
-        private const float ActivationSeconds = 0.05f;
+        private const float ActivationSeconds = 0.035f;
 
         /// <summary>Fastest the hips rise (m/s) when the animation stands a wrestler up.</summary>
-        private const float MaxRiseSpeed = 1f;
+        private const float MaxRiseSpeed = 1.35f;
 
         /// <summary>Fastest a joint target may move (degrees per second; a pitcher's elbow peaks near 2000).</summary>
         private const float MaxJointSpeed = 900f;
@@ -135,8 +135,8 @@ namespace Wrestling.Presentation
         private const float GyrationRadius = 0.3f;
 
         /// <summary>Most the legs can push, in body weights, at average strength, nearly straight (sprinters and lifters reach 2.5–3) and from a deep crouch or the mat.</summary>
-        private const float LegCapacity = 2.6f;
-        private const float DeepLegCapacity = 1.1f;
+        private const float LegCapacity = 2.8f;
+        private const float DeepLegCapacity = 1.6f;
 
         /// <summary>
         /// Legs push hardest nearly straight and weakest deeply bent (the muscles' force–length
@@ -149,7 +149,7 @@ namespace Wrestling.Presentation
         }
 
         /// <summary>Friction between shoes, knees or skin and the mat.</summary>
-        private const float MatFriction = 0.9f;
+        private const float MatFriction = 1.05f;
 
         /// <summary>
         /// Torque the support can turn the body with, per newton pressing on the mat (m): the centre
@@ -159,7 +159,7 @@ namespace Wrestling.Presentation
         private const float SupportLever = 0.95f;
 
         /// <summary>A segment closer than this to the mat (m) bears weight.</summary>
-        private const float ContactHeight = 0.035f;
+        private const float ContactHeight = 0.042f;
 
         private const float RecoverSeconds = 0.5f;
 
@@ -826,7 +826,8 @@ namespace Wrestling.Presentation
             Overpowered = false;
             Limit = string.Empty;
             float carried = _carrier != null && _mode != Mode.Thrown ? _carried * CarrierContact() : 0f;
-            float support = Mathf.Max(Support, carried);
+            float effectiveSupport = Mathf.Max(Support, HeldSupport * 0.65f);
+            float support = Mathf.Max(effectiveSupport, carried);
             float share = support * _authority * _balanceShare;
             if (!_hasRootTarget || share <= 0f)
             {
@@ -840,7 +841,8 @@ namespace Wrestling.Presentation
             Vector3 wanted = _mass * (acceleration - Physics.gravity);
 
             float weight = _mass * -Physics.gravity.y;
-            float lifting = Mathf.Max(LimbSupport, carried) * _authority * _balanceShare;
+            float groundLift = _rootTarget.y > position.y + 0.06f ? Mathf.Max(LimbSupport, effectiveSupport * 0.8f) : Mathf.Max(LimbSupport, effectiveSupport * 0.5f);
+            float lifting = Mathf.Max(groundLift, carried) * _authority * _balanceShare;
             float most = lifting * weight * LegCapacityAt(position.y) * _lowerStrength * _brace;
             float up = Mathf.Clamp(wanted.y, 0f, most);
             if (wanted.y > most)
@@ -1225,27 +1227,28 @@ namespace Wrestling.Presentation
         }
 
         /// <summary>Centre-of-mass carry gains (1/s², 1/s) and the turn gain (1/s) with its cap (deg/s²).</summary>
-        private const float CarryStiffness = 60f;
-        private const float CarryDamping = 14f;
-        private const float TurnGain = 12f;
-        private const float MaxTurnAcceleration = 4000f;
+        private const float CarryStiffness = 75f;
+        private const float CarryDamping = 16f;
+        private const float TurnGain = 16f;
+        private const float MaxTurnAcceleration = 4800f;
 
         /// <summary>Fastest a thrown body is turned (deg/s) and carried round the fulcrum (m/s): high-amplitude throws turn the body over in about a third of a second.</summary>
-        private const float MaxThrowSpin = 540f;
-        private const float MaxCarrySpeed = 4f;
+        private const float MaxThrowSpin = 620f;
+        private const float MaxCarrySpeed = 4.5f;
 
         /// <summary>How fast a lag behind the throw's planned rotation is made up (1/s).</summary>
-        private const float ThrowAngleGain = 6f;
+        private const float ThrowAngleGain = 8f;
 
         /// <summary>Least share of the thrower's strength that can hold the thrown body up with no base under them.</summary>
-        private const float UnsupportedShare = 0.3f;
+        private const float UnsupportedShare = 0.35f;
 
         /// <summary>Share of the thrower's strength their arms and trunk put into pulling and turning the thrown body, base or not.</summary>
-        private const float ArmsShare = 0.6f;
+        private const float ArmsShare = 0.75f;
 
         private readonly List<GripLink> _throwLinks = new List<GripLink>();
         private readonly HashSet<GripLink> _traps = new HashSet<GripLink>();
         private GripLink _load;
+        private Vector3 _loadSide = Vector3.forward;
         private float _seatUp = 0.5f;
         private float _lastAvailable;
         private float _lastDemand;
@@ -1324,6 +1327,7 @@ namespace Wrestling.Presentation
             Vector3 side = Vector3.ProjectOnPlane(trunkCentre - pivotCentre, Vector3.up);
             side = side.sqrMagnitude > 1e-6f ? side.normalized : Vector3.ProjectOnPlane(trunkCentre - thrower.Root.Body.transform.position, Vector3.up).normalized;
             Vector3 seat = Seat(side, trunk);
+            _loadSide = side;
             _load = new GripLink(_pivot.Body, _pivot.Body.transform.InverseTransformPoint(pivotCentre + seat), trunk.Body, trunk.Body.transform.InverseTransformPoint(trunkCentre), LoadSpring, LoadDamper, maxForce * LoadShare);
             _throwLinks.Add(_load);
 
@@ -1345,7 +1349,8 @@ namespace Wrestling.Presentation
             Vector3 side = Vector3.ProjectOnPlane(Centre(trunk) - centre, Vector3.up);
             if (side.sqrMagnitude > 1e-6f)
             {
-                _load.HolderAnchor = _pivot.Body.transform.InverseTransformPoint(centre + Seat(side.normalized, trunk));
+                _loadSide = side.normalized;
+                _load.HolderAnchor = _pivot.Body.transform.InverseTransformPoint(centre + Seat(_loadSide, trunk));
             }
         }
 
@@ -1363,12 +1368,20 @@ namespace Wrestling.Presentation
             _turnOffset = CentreOfMass() - _pivot.Body.transform.position;
             _turning = true;
             // From here the carry is what the thrower's arms and hips apply (strength-capped, pushed
-            // back on the thrower); the hand grips only keep contact. Traps and the seat stay firm.
+            // back on the thrower); the hand grips and load yield enough to travel over the fulcrum.
             foreach (GripLink link in _throwLinks)
             {
-                if (link != _load && !_traps.Contains(link))
+                if (link == _load)
+                {
+                    link.SetDrive(LoadSpring * TurnContactShare, LoadDamper * TurnContactShare, _maxThrowForce * LoadShare * TurnContactShare);
+                }
+                else if (!_traps.Contains(link))
                 {
                     link.SetDrive(GripSpring * TurnContactShare, GripDamper * TurnContactShare, _maxThrowForce * TurnContactShare);
+                }
+                else
+                {
+                    link.SetDrive(GripSpring * 0.65f, GripDamper * 0.65f, _maxThrowForce * GripShare * 0.65f);
                 }
             }
         }
@@ -1404,6 +1417,13 @@ namespace Wrestling.Presentation
             // turned by the planned angle. The fulcrum moves with the thrower (rising, bending, kneeling).
             Vector3 pivot = _pivot.Body.transform.position;
             Quaternion plan = Quaternion.AngleAxis(targetAngle, _throwAxis);
+            if (_load != null)
+            {
+                Segment trunk = Find("Spine");
+                Vector3 rotatedSeat = plan * Seat(_loadSide, trunk);
+                _load.HolderAnchor = _pivot.Body.transform.InverseTransformPoint(Centre(_pivot) + rotatedSeat);
+            }
+
             Vector3 target = pivot + (plan * _turnOffset);
             Vector3 targetVelocity = Vector3.ClampMagnitude(Vector3.Cross(_throwAxis * (targetRate * Mathf.Deg2Rad), target - pivot), MaxCarrySpeed) + _pivot.Body.GetPointVelocity(pivot);
             Vector3 carry = _mass * ((CarryStiffness * (target - centre)) + (CarryDamping * (targetVelocity - velocity)) - Physics.gravity);
@@ -1435,12 +1455,13 @@ namespace Wrestling.Presentation
             // standing off to the side takes far more than a thrower has.
             legs *= Mathf.Max(MinimumLoad, Loaded());
             float liftScale = lift > legs ? legs / lift : 1f;
+            float pullScale = pull.magnitude > arms ? arms / pull.magnitude : 1f;
+            float coupleScale = coupleEffort > arms ? arms / coupleEffort : 1f;
             float pullDemand = pull.magnitude + coupleEffort;
-            float pullScale = pullDemand > arms ? arms / pullDemand : 1f;
             carry = (Vector3.up * (lift * liftScale)) + (pull * pullScale);
             for (int i = 0; i < couple.Length; i++)
             {
-                couple[i] *= pullScale;
+                couple[i] *= coupleScale;
             }
 
             float available = legs + arms;

@@ -26,8 +26,8 @@ namespace Wrestling.Presentation
         private const float SpentShare = 0.35f;
 
         /// <summary>The palm takes hold within this distance (m) of the opponent's surface, and loses it past the break distance.</summary>
-        private const float ReachDistance = 0.06f;
-        private const float BreakDistance = 0.3f;
+        private const float ReachDistance = 0.09f;
+        private const float BreakDistance = 0.34f;
 
         /// <summary>
         /// Engine ticks a hold is kept after the engine lets its grip go. A grip re-taken within this

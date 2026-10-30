@@ -18,6 +18,16 @@ namespace Wrestling.Presentation
             "Nose_Large", "Nose_Hump", "Nose_Broken", "Chin_Prominent", "Jaw_Wide", "Cheekbones_High", "Ears_Out",
         };
 
+        private static readonly (Color Tint, Color Scalp)[] HairPalette =
+        {
+            (new Color(0.32f, 0.30f, 0.30f), new Color(0.08f, 0.07f, 0.07f)),
+            (new Color(0.55f, 0.46f, 0.40f), new Color(0.13f, 0.10f, 0.08f)),
+            (new Color(0.82f, 0.68f, 0.56f), new Color(0.18f, 0.13f, 0.10f)),
+            (new Color(1.05f, 0.76f, 0.58f), new Color(0.24f, 0.15f, 0.10f)),
+            (new Color(0.95f, 0.85f, 0.74f), new Color(0.22f, 0.18f, 0.14f)),
+            (new Color(1.22f, 1.02f, 0.76f), new Color(0.28f, 0.21f, 0.14f)),
+        };
+
         public WrestlerLook(Wrestler wrestler, int skinCount)
         {
             uint hash = Hash(wrestler.Id + "|" + wrestler.Name.Full + "|" + wrestler.Country);
@@ -43,6 +53,12 @@ namespace Wrestling.Presentation
                 weights[feature] = random.NextFloat() < 0.5f ? 0.2f + (0.7f * random.NextFloat()) : 0f;
             }
 
+            bool darkHairOnly = Skin == 1 || Skin == 2 || (!Female && Skin == 4);
+            int hairChoices = darkHairOnly ? 3 : HairPalette.Length;
+            (Color tint, Color scalp) = HairPalette[random.Next(hairChoices)];
+            HairTint = tint;
+            ScalpColor = scalp;
+
             ShapeWeights = weights;
         }
 
@@ -54,6 +70,12 @@ namespace Wrestling.Presentation
         public float HeightMetres { get; }
 
         public float MassKg { get; }
+
+        /// <summary>Multiplier applied to the hair and eyebrow base textures.</summary>
+        public Color HairTint { get; }
+
+        /// <summary>Root colour used to shade the cranial scalp beneath the hair cap.</summary>
+        public Color ScalpColor { get; }
 
         /// <summary>Blend-shape weights 0–1 by shape-key name.</summary>
         public IReadOnlyDictionary<string, float> ShapeWeights { get; }

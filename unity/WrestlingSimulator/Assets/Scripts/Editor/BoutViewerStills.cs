@@ -81,6 +81,9 @@ namespace Wrestling.Editor
         public static void Render(string folder)
         {
             Directory.CreateDirectory(folder);
+            AssetDatabase.ImportAsset("Assets/Presentation/Shaders/WrestlerSinglet.hlsl", ImportAssetOptions.ForceUpdate);
+            AssetDatabase.ImportAsset("Assets/Presentation/Shaders/WrestlerSkin.shader", ImportAssetOptions.ForceUpdate);
+            BoutViewerSceneBuilder.Build();
             EditorSceneManager.OpenScene(BoutViewerSceneBuilder.ScenePath, OpenSceneMode.Single);
             BoutViewer viewer = UnityEngine.Object.FindAnyObjectByType<BoutViewer>();
             Camera camera = UnityEngine.Object.FindAnyObjectByType<BroadcastCamera>().GetComponent<Camera>();
@@ -308,6 +311,12 @@ namespace Wrestling.Editor
             Vector3 position = camera.transform.position;
             Quaternion rotation = camera.transform.rotation;
             float fieldOfView = camera.fieldOfView;
+            Canvas[] canvases = UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsInactive.Exclude);
+            foreach (Canvas canvas in canvases)
+            {
+                canvas.enabled = false;
+            }
+
             try
             {
                 camera.transform.SetPositionAndRotation(eye, Quaternion.LookRotation(target - eye, Vector3.up));
@@ -317,6 +326,11 @@ namespace Wrestling.Editor
             }
             finally
             {
+                foreach (Canvas canvas in canvases)
+                {
+                    canvas.enabled = true;
+                }
+
                 camera.transform.SetPositionAndRotation(position, rotation);
                 camera.fieldOfView = fieldOfView;
             }
@@ -342,6 +356,12 @@ namespace Wrestling.Editor
             Vector3 position = camera.transform.position;
             Quaternion rotation = camera.transform.rotation;
             float fieldOfView = camera.fieldOfView;
+            Canvas[] canvases = UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsInactive.Exclude);
+            foreach (Canvas canvas in canvases)
+            {
+                canvas.enabled = false;
+            }
+
             foreach (SkinnedMeshRenderer skinned in UnityEngine.Object.FindObjectsByType<SkinnedMeshRenderer>(FindObjectsInactive.Exclude))
             {
                 skinned.forceMatrixRecalculationPerRender = true;
@@ -375,7 +395,6 @@ namespace Wrestling.Editor
                         camera.transform.SetPositionAndRotation(eye, Quaternion.LookRotation(focus - eye, Vector3.up));
                         camera.fieldOfView = 38f;
                         camera.targetTexture = target;
-                        Canvas.ForceUpdateCanvases();
                         camera.Render();
                         camera.Render();
                         RenderTexture.active = target;
@@ -388,6 +407,11 @@ namespace Wrestling.Editor
             }
             finally
             {
+                foreach (Canvas canvas in canvases)
+                {
+                    canvas.enabled = true;
+                }
+
                 camera.transform.SetPositionAndRotation(position, rotation);
                 camera.fieldOfView = fieldOfView;
                 camera.targetTexture = previousTarget;

@@ -132,6 +132,17 @@ namespace Wrestling.Presentation
         public Vector3 ToeL;
         public Vector3 ToeR;
 
+        /// <summary>Athletic facial focus (0 relaxed, 1 intense brow furrow and eye squint).</summary>
+        public float Focus;
+
+        /// <summary>Physical exertion (0 calm, 1 maximum effort grimace and jaw clench/breathing).</summary>
+        public float Effort;
+
+        /// <summary>World-space point the wrestler's eyes track when <see cref="HasGazeTarget"/> is true.</summary>
+        public Vector3 GazeTarget;
+
+        public bool HasGazeTarget;
+
         /// <summary>
         /// Share of the bend between thighs and trunk taken by the pelvis; the lumbar and thoracic
         /// spine take the rest. A wrestler leans by bending at the hips and rounding the back, with

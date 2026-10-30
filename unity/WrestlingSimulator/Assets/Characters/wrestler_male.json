@@ -38,11 +38,6 @@
       "normalmapTexture": "skin_male_african_middleage_NRM.png",
       "specularTexture": "skin_male_african_middleage_SPEC.png"
     },
-    "mindfront_aksel_skin": {
-      "diffuseTexture": "Aksel_Skin_diffuse.png",
-      "normalmapTexture": "Aksel_Skin_NRM.png",
-      "specularTexture": "Aksel_Skin_SPEC.png"
-    },
     "toigo_light_skin_male_bronze": {
       "diffuseTexture": "young_lightskinned_male_diffuse_Bronze.png"
     }
