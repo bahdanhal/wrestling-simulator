@@ -127,8 +127,19 @@ namespace Wrestling.Presentation
             }
         }
 
-        /// <summary>Physics substep for the ragdolls (display only).</summary>
+        /// <summary>
+        /// Physics step for the bodies (display only). Always exactly this long, whatever the frame
+        /// rate, so the bodies behave the same on every device: a frame takes as many whole steps as
+        /// its time holds and carries the rest over to the next frame.
+        /// </summary>
         private const float PhysicsStep = 1f / 240f;
+
+        /// <summary>Most steps one frame takes (1/15 s); a longer stall drops the backlog instead of stretching the step.</summary>
+        private const int MaxStepsPerFrame = 16;
+
+        /// <summary>Frame time not yet stepped (less than one step), and time since the bodies last took their targets.</summary>
+        private float _unstepped;
+        private float _sinceTargets;
 
         /// <summary>Ticks of real-time presentation run before a fast-forwarded frame, so falls are in motion.</summary>
         private const int FastForwardWarmUp = 45;
@@ -262,7 +273,13 @@ namespace Wrestling.Presentation
                 }
             }
 
-            _session.Advance(Time.deltaTime * _playbackSpeed);
+            PlayFrame(Time.deltaTime);
+        }
+
+        /// <summary>Plays one displayed frame of <paramref name="deltaTime"/> seconds, as the live view does (also the physics lab at other frame rates).</summary>
+        public void PlayFrame(float deltaTime)
+        {
+            _session.Advance(deltaTime * _playbackSpeed);
             foreach (BoutEvent e in _session.TakeNewEvents())
             {
                 _scoreboard.Push(e, _session);
@@ -272,7 +289,7 @@ namespace Wrestling.Presentation
                 }
             }
 
-            Present(_session.Alpha, Time.deltaTime);
+            Present(_session.Alpha, deltaTime);
         }
 
         private void Present(float alpha, float deltaTime)
@@ -539,7 +556,8 @@ namespace Wrestling.Presentation
                 }
 
                 PhysicalBody.Settle();
-
+                _unstepped = 0f;
+                _sinceTargets = 0f;
                 return;
             }
 
@@ -592,10 +610,29 @@ namespace Wrestling.Presentation
 
             _redFigure.Physical.SetBalance(_shown[0].Balance);
             _blueFigure.Physical.SetBalance(_shown[1].Balance);
-            _redFigure.Physical.BeforeStep(deltaTime);
-            _blueFigure.Physical.BeforeStep(deltaTime);
-            int steps = Mathf.Clamp(Mathf.CeilToInt(deltaTime / PhysicsStep), 1, 8);
-            float substep = deltaTime / steps;
+            _unstepped += deltaTime;
+            _sinceTargets += deltaTime;
+            // The small allowance keeps a 60 fps frame at exactly four steps despite rounding.
+            int steps = Mathf.Min(Mathf.FloorToInt((_unstepped / PhysicsStep) + 1e-3f), MaxStepsPerFrame);
+            _unstepped = Mathf.Max(0f, _unstepped - (steps * PhysicsStep));
+            if (steps == MaxStepsPerFrame)
+            {
+                _unstepped = Mathf.Min(_unstepped, PhysicsStep);
+            }
+
+            if (steps == 0)
+            {
+                // Too short a frame for a step: the bodies stay as they are until the next one.
+                _redFigure.Physical.ShowPose();
+                _blueFigure.Physical.ShowPose();
+                return;
+            }
+
+            _redFigure.Physical.BeforeStep(_sinceTargets);
+            _blueFigure.Physical.BeforeStep(_sinceTargets);
+            _sinceTargets = 0f;
+            const float substep = PhysicsStep;
+            float stepped = steps * PhysicsStep;
             for (int s = 0; s < steps; s++)
             {
                 _redFigure.Physical.Drive(substep);
@@ -609,7 +646,7 @@ namespace Wrestling.Presentation
                 if (throwing != null && _throwTechnique != null && _turning)
                 {
                     var t = throwing.Value;
-                    float progress = t.Progress + ((s + 0.5f) / steps * deltaTime / Mathf.Max(t.PhaseSeconds, 1e-3f));
+                    float progress = t.Progress + ((s + 0.5f) / steps * stepped / Mathf.Max(t.PhaseSeconds, 1e-3f));
                     (float angle, float rate) = ThrowPlan(t.Spec, progress, t.PhaseSeconds);
                     figures[(int)_thrown].Physical.DriveThrow(angle, rate, substep);
                 }

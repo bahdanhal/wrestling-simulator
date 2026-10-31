@@ -16,12 +16,14 @@ using Debug = UnityEngine.Debug;
 namespace Wrestling.Editor
 {
     /// <summary>
-    /// Measures the physical bodies over real bouts, played live at 60 frames per second: how closely
+    /// Measures the physical bodies over real bouts, played live (60 frames per second unless set): how closely
     /// they follow what the wrestlers are trying to do, how often a body loses it while the engine
     /// has it on its feet, how deep the bodies overlap and sink into the mat, how many of the engine's
     /// grips are physically held, and what the physics costs per frame. For tuning and regressions:
     /// Unity -batchmode -nographics -projectPath unity/WrestlingSimulator -executeMethod Wrestling.Editor.PhysicsLab.RunFromCommandLine -logFile -
-    /// Optional: -labSeconds N (per bout, default 45), -labBouts N (per style, default 2).
+    /// Optional: -labSeconds N (per bout, default 45), -labBouts N (per style, default 2), -labFps N
+    /// (frame rate, default 60) and -labJitter F (each frame's time varied by up to ±F of it, as on a
+    /// device that stutters): the bodies must behave the same at any frame rate.
     /// </summary>
     public static class PhysicsLab
     {
@@ -69,6 +71,8 @@ namespace Wrestling.Editor
                 float seconds = Argument(args, "-labSeconds", 45f);
                 int bouts = (int)Argument(args, "-labBouts", 2f);
                 Verbose = Array.IndexOf(args, "-labVerbose") >= 0;
+                FramesPerSecond = Mathf.Max(10f, Argument(args, "-labFps", 60f));
+                Jitter = Mathf.Clamp(Argument(args, "-labJitter", 0f), 0f, 0.9f);
                 // -labNoCompliance: the bodies do not give under load (to compare against).
                 BoutViewer.PhysicalCompliance = Array.IndexOf(args, "-labNoCompliance") < 0;
                 Debug.Log(Run(seconds, bouts));
@@ -192,7 +196,7 @@ namespace Wrestling.Editor
             GameContent content = ContentLocator.LoadDirect();
             viewer.Initialise(content);
             PhysicalBody.MeasureFeasibility = true;
-            var report = new StringBuilder(FormattableString.Invariant($"[lab] Physics lab: live presentation at 60 fps, load compliance {(BoutViewer.PhysicalCompliance ? "on" : "off")}\n"));
+            var report = new StringBuilder(FormattableString.Invariant($"[lab] Physics lab: live presentation at {FramesPerSecond:F0} fps (frame time ±{Jitter * 100f:F0}%), load compliance {(BoutViewer.PhysicalCompliance ? "on" : "off")}\n"));
             report.AppendLine("[lab] style | frames | pelvis err mean/p95/max cm | lost % | collapsed % | overlap mean/max cm | joint err mean deg | lowest foot cm | standing support | overpowered % | grips held % | throw angle | ms/frame mean/max");
             var all = new Sample();
             foreach (WrestlingStyle style in new[] { WrestlingStyle.Freestyle, WrestlingStyle.GrecoRoman, WrestlingStyle.Womens })
@@ -224,7 +228,9 @@ namespace Wrestling.Editor
 
         private static void Measure(BoutViewer viewer, float seconds, Sample into)
         {
-            int frames = Mathf.RoundToInt(seconds * BoutClock.TicksPerSecond);
+            int frames = Mathf.RoundToInt(seconds * FramesPerSecond);
+            // Editor diagnostics only: a fixed seed so a jittery run repeats exactly.
+            var jitter = new System.Random(17);
             var watch = new Stopwatch();
             var thrown = new bool[2];
             // The last two shown positions of each wrestler's hips and hands, for frame-to-frame jerk.
@@ -233,7 +239,8 @@ namespace Wrestling.Editor
             for (int frame = 0; frame < frames && !viewer.Session.Engine.IsFinished; frame++)
             {
                 watch.Restart();
-                viewer.FastForward(1);
+                float frameSeconds = (1f / FramesPerSecond) * (1f + (Jitter * (((float)jitter.NextDouble() * 2f) - 1f)));
+                viewer.PlayFrame(frameSeconds);
                 into.FrameMs.Add(watch.Elapsed.TotalMilliseconds);
                 into.Frames++;
                 into.Overlap.Add(viewer.RedFigure.Physical.DeepestOverlap(viewer.BlueFigure.Physical) * 100f);
@@ -336,6 +343,10 @@ namespace Wrestling.Editor
 
         /// <summary>Logs each frame a body has lost its motion (-labVerbose).</summary>
         private static bool Verbose;
+
+        /// <summary>Frame rate the lab plays at (-labFps), and how much each frame's time varies (-labJitter).</summary>
+        private static float FramesPerSecond = 60f;
+        private static float Jitter;
 
         private static void Merge(Sample from, Sample into)
         {

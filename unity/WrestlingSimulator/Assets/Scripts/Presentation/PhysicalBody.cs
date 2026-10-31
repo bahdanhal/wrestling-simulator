@@ -659,10 +659,19 @@ namespace Wrestling.Presentation
             }
         }
 
-        /// <summary>After the physics step: the rig's bones take the physical body's pose (parents before children).</summary>
+        /// <summary>After the physics steps of a frame: the loads they bore are measured and the rig shows the physical pose.</summary>
         public void AfterStep()
         {
             FinishLoads();
+            ShowPose();
+        }
+
+        /// <summary>
+        /// The rig's bones take the physical body's pose (parents before children). Also for a frame
+        /// too short for a physics step, where the animation has just been put on the bones.
+        /// </summary>
+        public void ShowPose()
+        {
             if (_weight <= 0f)
             {
                 return;
