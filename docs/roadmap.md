@@ -1,86 +1,71 @@
-# Roadmap: from keyed clips to real wrestling
+# Roadmap: everything the best version needs
 
-31 October 2026. The goal is that bouts **look like real wrestling**, judged against real athletes rather than against our own animation. This sets the order of the work after the biomechanics pass (`production-grade-biomechanics-and-visual-plan.md`) and the first real-motion import (`research/real-motion-comparison.md`). Game systems that do not depend on it run in parallel (last section).
+31 October 2026. Everything still needed for the full product, by area. Not staged: each item is built to its final quality. Target for presentation: bouts that look like real wrestling, judged against real athletes, not against our own clips. Built so far: `implementation-status.md`. Harmony4D's MIT licence is confirmed.
 
-## Where we are
+## Real motion data
 
-- The simulation decides every outcome; the viewer shows it with hand-keyed clips (80 phases), a procedural stance and hand fight, and physically simulated bodies that follow them.
-- Clips are now physically feasible (`ClipFeasibility`), but they are still our guess at wrestling, and the physics lab only measures how well the bodies follow that guess.
-- Real two-person 3D motion exists in the repo for the first time: three checked Harmony4D takes (a double-leg penetration, a snap-down, a body lock), plus tools to find and convert more (`tools/motion/harmony4d/`).
-- **The main blocker is timing.** Real movements take 3–8 times longer than our technique phases (snap-down 1.4 s against 0.17–0.27 s). Squeezed into a phase, real motion throws the bodies about, so none of it is in play yet.
-- Real stances are about 10 cm taller at the hips and half as bent as ours; shots start from 1.15 m apart, not 0.80 m (recreational athletes, so elite figures will sit in between).
+1. **All of Harmony4D:** every useful segment in the 127 grappling and MMA sequences (stance, circling, hand fighting, collar ties, pummelling, shots, snap-downs, body locks, takedowns, scrambles, clinches), checked against the camera images and imported as takes with attribution.
+2. **Elite Olympic capture with a partner club:** every phase of all 51 techniques plus counters and transitions, both sides, several repetitions, in all three styles (Greco-Roman, freestyle, women's), including par terre and big throws; neutral wrestling at elite level; referee restarts, handshakes, walk-ons, celebrations, ceremonies. Written consent and licence from every athlete (design open item 7).
+3. **Capture rig:** 8–12 synchronised, calibrated cameras round a mat.
+4. **Multi-view reconstruction tool:** whole-body 2D keypoints per camera (body, hands, feet, face), identity tracking through contact, triangulation, floor fit, smoothing. Validated against Harmony4D's own images and 3D poses, which are ground truth for this.
+5. **Hands, feet and head from the data:** grip hand shapes, toes and head orientation, rather than placed from the facing.
+6. **Timing references for elite throws** from the 2018 Worlds footage (single camera gives timing even without 3D).
+7. **Licence records:** attribution for every take; share-alike handling for CC BY-SA sources.
 
-## Decisions needed first
+## Simulation matched to reality
 
-| Decision | Options | Recommendation |
-|---|---|---|
-| Phase timing | Keep the engine's short phases (and only ever show compressed motion), or give phases real durations | Real durations. It changes simulation timing, so it comes with a rebalance (step 1). |
-| Harmony4D licence | Rely on the MIT tags, or get written confirmation | Ask the authors to confirm commercial use of the 3D keypoints before shipping anything built on them. |
-| Elite and Olympic-specific motion | Harmony4D only (recreational, no big throws, no par terre); coaching footage with permission; our own multi-camera session with a club; a commercial mocap studio day | Own multi-camera session with a club (step 4): it covers what no open source has, and the pipeline is mostly built. |
+8. **Real phase durations** for all 80 technique phases, measured per technique; counter windows scaled with them.
+9. **Neutral tempo and spacing:** level-change rates, stance distance (real shots start 1.15 m apart, our clips 0.80 m), movement speeds.
+10. **Calibration against real competition statistics:** victory types, points per bout and period, points by type, passivity and cautions, upset rates (design 15.1, open item 3).
+11. **Balance tools** reporting against those targets: attribute sensitivity, technique reports, career reports (design 15.2).
 
-## Step 1. Real timing (1–2 weeks)
+## Animation
 
-Give technique phases the durations real wrestlers take, then let real motion play.
+12. **Recorded motion for every technique phase**, replacing all 80 keyed clips. The keyed clips are removed once every phase is covered.
+13. **Recorded neutral wrestling** driven by the engine's state: stance, circling, hand fighting, ties, pressure, edge play, step-outs, restarts, par terre start positions.
+14. **Motion matching** over all takes: pose, velocity, contact and engine-state features, paired search for both wrestlers, inertialized transitions, so any phase flows into the next from the current pose.
+15. **Retargeting** to each wrestler's own proportions (per segment, not just height), with contacts preserved by IK.
+16. **Recorded contacts matched to engine grips**, so hands go where the engine's grips are.
+17. **Mirroring** checked for every take and side.
 
-1. Measure real durations per technique family: Harmony4D for shots, snap-downs, ties, locks and takedowns; the 2018 Worlds footage for throw timing (flight about 0.75 s).
-2. Retime the phases in `data/techniques/` (minimum and maximum ticks, counter windows scaled with them), keeping the clips feasible (`ClipFeasibility` runs on load).
-3. Rebalance with `Wrestling.Sim balance` and, if needed, `data/engine/tuning.json` so win types, points and attack success stay where they were or move towards real statistics.
-4. Assign the three checked takes (`tools/motion/harmony4d/segments.json`), render them and run the physics lab.
+## Physics
 
-**Done when** every phase with a take plays it at no more than 1.3× real speed, balance stays within its current spread, and the lab shows no regression (lost-motion frames ≤ 8%).
+18. **Contact-only balance** (`ContactSolver` driving it) and a **footwork controller** on real motion; both failed only because keyed stances lean on the opponent.
+19. **Throw physics** checked against real throw kinematics (flight about 0.75 s, rotation and carry speeds).
+20. **Imitation-learned controllers** (`tools/imitation`, on GPU) for throws the bodies cannot follow by tracking.
+21. **Open defects:** lost-motion frames 8.2% (up from 6.2% after the loaded-wrist change, mostly women's bouts), worst sunk foot −7 cm.
+22. **Mobile physics cost** within the frame budget.
 
-## Step 2. Real neutral wrestling (2–4 weeks)
+## Realism validation
 
-Most of a bout is stance, circling, hand fighting and ties, and all of it is procedural today; recorded motion can only reach technique phases.
+23. **Realism benchmark** in the physics lab: shown motion against held-out real takes (hip height over time, trunk lean, body distances, contacts, timing, speeds), with targets.
+24. **Expert review** by a coach or wrestler, side by side with real footage.
+25. **Visual regression stills** for every technique.
 
-1. A neutral-motion library from Harmony4D: about 14 minutes of stance and 54 collar ties, more after step 4. Segments indexed by what the engine knows: distance, ties held, levels, facing, who is pressing.
-2. A neutral playback in the viewer that picks the segment matching the engine's state each moment and blends between segments (the first, simple form of motion matching).
-3. Recalibrate the procedural fallback (`ClipKinematics` stance height and lean) to the measured stances, for moments no segment covers.
+## Visuals and presentation (design 11)
 
-**Done when** standing neutral plays recorded motion for most of its time and the procedural stance matches real hip height and lean within 3 cm and 5°.
+26. **Characters:** a parametric body system covering real athlete builds per weight class, ears (including cauliflower ears), body hair, hair, shoes, singlets; faces with the effort expressions checked against reference photos; eye gaze.
+27. **Close-ups:** hands in grips and on the mat, skin, sweat.
+28. **Venues:** club gym, national hall, Ranking Series, continental, world and Olympic arenas, with crowds scaled to the event.
+29. **Cameras:** broadcast camera with closer angles for par terre and throws, player camera for Play mode, replay cameras, automatic instant replays, Replay Theatre.
+30. **Audio:** mat sounds, breathing, referee whistle and official calls, coaches, crowd, music.
+31. **Commentary** templates with variants, localised (design 11.5).
+32. **Ceremonies:** medals, World Championship belt, Olympic podium.
 
-## Step 3. Realism benchmark (1 week, then ongoing)
+## Game systems (design 5–10, 12–14)
 
-Replace "how well the bodies follow our clips" as the acceptance gate with "how close the bout looks to real wrestling".
+33. **Officials model:** observation noise, wrong calls, challenge decisions.
+34. **Engine performance:** under 5 ms per bout on a mid-range phone; world week under 2 s; scouting under 3 s.
+35. **Event scheduling:** sessions, mats, 20-minute rest, two-day categories; tournament day for the player.
+36. **Career:** wrestler creation, training, weight management, injuries, ageing, selection, rankings and seeding, finances, morale and relationships, fame, coach role, federation role.
+37. **World simulation:** world database, yearly cycle, background competitions.
+38. **Play mode:** gesture controls with assist levels.
+39. **Coach mode:** tactics during stoppages and the break.
+40. **UI:** every screen in design 12.2, bout HUD, accessibility, localisation (right-to-left, non-Latin names).
+41. **Saves, replays, cloud sync**, crash reporting and opt-in telemetry.
+42. **Builds** for iOS, Android, macOS and Windows within store limits (Addressables).
 
-1. Hold out real takes (the Harmony4D test split) as references.
-2. Measure the viewer's shown motion against them in matching situations: hip height over time, trunk lean, distance between the bodies, hand-to-opponent contacts, movement timing and speeds.
-3. Report it from the physics lab next to the existing figures; set targets per measure.
-4. Expert review: a wrestler or coach scores stills and clips side by side with real footage, at each milestone.
+## Open items to settle (design 16)
 
-**Done when** the benchmark runs in the lab and has targets agreed with an expert reviewer.
-
-## Step 4. Elite and Olympic-specific capture (4–8 weeks, needs a partner club)
-
-What open data cannot give: elite stances and speed, Greco-Roman throws, lifts, par terre turns and counters.
-
-1. A shot list from the catalogue: every phase of the 51 techniques, both sides, the counters, several repetitions.
-2. A multi-camera session with a club: 8–12 synchronised cameras round the mat, calibrated; written consent and licence for the footage and the motion.
-3. A multi-view reconstruction tool: 2D pose per camera (RTMPose, already used in the Commons pilot) triangulated across cameras, the same approach as Harmony4D, written into `tools/motion/`.
-4. Takes for every phase, checked by eye and assigned; the keyed clip stays as a fallback only where a phase has no take.
-
-**Done when** every technique phase used in Greco-Roman and freestyle plays recorded elite motion.
-
-## Step 5. Motion matching and physics on real motion (3–6 weeks)
-
-1. Full motion matching: a database of all takes with pose, velocity and contact features, searched every frame so any phase flows into the next from the current pose (design section 7).
-2. Revisit physics features that failed on keyed clips because their stances only balance by leaning on the opponent: contact-only balance (`ContactSolver` driving it) and the footwork controller. Real motion is balanced, so they should now work.
-3. Investigate the lost-frames rise after the loaded-wrist change (6.2% → 8.2%, mostly women's bouts) and the worst sunk foot (−7 cm).
-4. Physics imitation training (`tools/imitation`) on the real takes, on GPU, for throws the articulated bodies cannot follow by tracking alone.
-
-**Done when** contact feasibility is above 90%, lost-motion frames are under 5%, and phase transitions show no visible pops.
-
-## Step 6. Close-up finish (ongoing, lower priority)
-
-Faces (validate the effort expressions against reference photos), hands on the mat and in grips, skin, hair and sweat, judged in the broadcast stills and close-ups at each milestone.
-
-## In parallel: game systems
-
-These do not wait for the motion work (detail in `implementation-status.md`, "Next systems"):
-
-1. Calibration against real competition statistics (the retimed phases from step 1 feed into it).
-2. Officials model: observation noise, wrong calls, challenge decisions.
-3. Engine performance: under 5 ms per bout on a mid-range phone.
-4. Event scheduling.
-5. Wrestler creation, ageing and training.
-6. Play mode gestures and Coach mode controls.
+43. LA 2028 qualification system, UWW ranking points and seeding, real statistics, fall confirmation time, launch languages, business model, veterans categories, official bracket charts, the activity period across a period's end.
+44. The two remaining rule gaps: a double disqualification in a semi-final, and medal reassignment after doping.
