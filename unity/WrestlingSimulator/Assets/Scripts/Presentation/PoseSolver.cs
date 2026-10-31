@@ -165,6 +165,13 @@ namespace Wrestling.Presentation
         public float LeftGripAperture;
         public float RightGripAperture;
 
+        /// <summary>Degrees the chest has turned towards a reach behind the back (thoracic counter-torsion), towards the left when positive.</summary>
+        public float ReachTorsion;
+
+        /// <summary>Metres each shoulder blade is drawn back for a reach behind the back.</summary>
+        public float RetractionL;
+        public float RetractionR;
+
         /// <summary>Unit vector the pelvis faces, square to its axis: <see cref="PelvisNormal"/>, else from the hip line, else the chest's.</summary>
         public Vector3 PelvisFront
         {
@@ -253,8 +260,8 @@ namespace Wrestling.Presentation
     /// </summary>
     public static class PoseSolver
     {
-        private const float AnkleHeight = 0.07f;
-        private const float KneeOnMatHeight = 0.06f;
+        private const float AnkleHeight = ClipKinematics.AnkleHeight;
+        private const float KneeOnMatHeight = ClipKinematics.KneeOnMatHeight;
 
         /// <summary>Body and legs, with arms in their default place; hands are solved afterwards.</summary>
         public static Pose SolveBody(WrestlerFrame frame, BodyProportions body, PoseRole role)
@@ -361,8 +368,25 @@ namespace Wrestling.Presentation
 
             (Vector3 targetL, FreeHand kindL) = left.HasValue ? (left.Value.Wrist, FreeHand.Gripping) : DefaultHand(pose.ShoulderL, 1f);
             (Vector3 targetR, FreeHand kindR) = right.HasValue ? (right.Value.Wrist, FreeHand.Gripping) : DefaultHand(pose.ShoulderR, -1f);
-            Vector3 elbowPoleL = (-Vector3.up * 0.7f) + (pose.Left * 0.6f) - (reachForward * 0.2f);
-            Vector3 elbowPoleR = (-Vector3.up * 0.7f) - (pose.Left * 0.6f) - (reachForward * 0.2f);
+            Vector3 elbowPoleL = ElbowPole(in pose, true, targetL);
+            Vector3 elbowPoleR = ElbowPole(in pose, false, targetR);
+            float compact = lying ? 0f : CompactBase(frame, role);
+            if (compact > 0f)
+            {
+                // The compact base: free forearms flat on the mat, elbows tucked in under the shoulders.
+                if (!left.HasValue)
+                {
+                    CompactForearm(in pose, body, true, reachForward, compact, ref targetL, ref elbowPoleL, ref kindL);
+                }
+
+                if (!right.HasValue)
+                {
+                    CompactForearm(in pose, body, false, reachForward, compact, ref targetR, ref elbowPoleR, ref kindR);
+                }
+            }
+
+            // A reach behind the back turns the chest towards it before the arm takes the rest.
+            TwistForReach(ref pose, targetL, targetR);
             float otherScale = hasOpponent ? OpponentScale(in pose, in opponent) : 1f;
             SolveArm(ref pose, body, true, targetL, elbowPoleL, in opponent, otherScale, hasOpponent);
             SolveArm(ref pose, body, false, targetR, elbowPoleR, in opponent, otherScale, hasOpponent);
@@ -414,6 +438,23 @@ namespace Wrestling.Presentation
         private const float MaxProtraction = 30f;
         private const float MaxRetraction = 10f;
 
+        /// <summary>
+        /// The glenohumeral reach cone in the chest's frame (degrees): how far the upper arm can go
+        /// behind the body's coronal plane, across the midline and up from hanging. Past them a
+        /// person turns the thoracic spine and draws the shoulder blade back rather than forcing the
+        /// humerus further.
+        /// </summary>
+        public const float MaxPosteriorExtension = 42f;
+        public const float MaxCrossBody = 50f;
+        public const float MaxArmElevation = 145f;
+
+        /// <summary>Most the chest turns (degrees) to bring a reach behind the back into the cone, and how far (m) the shoulder retracts and drops for the rest.</summary>
+        public const float MaxCounterTorsion = 18f;
+        public const float MaxReachRetraction = 0.035f;
+
+        /// <summary>Posterior excess (degrees) over which the shoulder blade retracts fully.</summary>
+        private const float RetractionRange = 30f;
+
         /// <summary>Where along the shoulder line (share from the midline) the clavicle starts.</summary>
         private const float ClavicleRoot = 0.18f;
 
@@ -428,12 +469,15 @@ namespace Wrestling.Presentation
             pose.ShoulderR = shoulderBase - (pose.Left * body.ShoulderHalfWidth);
             KeepAboveMat(ref pose.ShoulderL, body.LimbRadius);
             KeepAboveMat(ref pose.ShoulderR, body.LimbRadius);
+            pose.RetractionL = 0f;
+            pose.RetractionR = 0f;
         }
 
         /// <summary>
         /// One arm towards its target: solved from the rest shoulder, the clavicle then lifts and
-        /// reaches with the upper arm, the arm is solved again from the moved shoulder, and the elbow
-        /// swings about the shoulder-hand line to clear both bodies.
+        /// reaches with the upper arm (and retracts for a reach behind the back), the target is
+        /// brought into the shoulder's reach cone, the arm is solved again from the moved shoulder,
+        /// and the elbow swings about the shoulder-hand line to clear both bodies.
         /// </summary>
         private static void SolveArm(ref Pose pose, BodyProportions body, bool left, Vector3 target, Vector3 pole, in Pose opponent, float otherScale, bool hasOpponent)
         {
@@ -443,10 +487,12 @@ namespace Wrestling.Presentation
             Vector3 root = shoulderBase + (lateral * (body.ShoulderHalfWidth * ClavicleRoot));
             Vector3 elbow = TwoBone(rest, target, body.UpperArm, body.Forearm, pole, out _);
             Vector3 shoulder = Clavicle(rest, root, elbow, pose.Spine, pose.ChestNormal, lateral);
+            shoulder = Retract(ref pose, left, shoulder, target, lateral);
+            target = IntoCone(in pose, shoulder, target, lateral);
             elbow = TwoBone(shoulder, target, body.UpperArm, body.Forearm, pole, out Vector3 hand);
             elbow = Swivel(shoulder, elbow, hand, in pose, body, in opponent, otherScale, hasOpponent);
-            KeepAboveMat(ref elbow, body.LimbRadius);
-            KeepAboveMat(ref hand, body.LimbRadius);
+            KeepAboveMat(ref elbow, ClipKinematics.ForearmElbowHeight);
+            KeepAboveMat(ref hand, ClipKinematics.ForearmWristHeight);
             if (left)
             {
                 pose.ShoulderL = shoulder;
@@ -458,6 +504,235 @@ namespace Wrestling.Presentation
                 pose.ShoulderR = shoulder;
                 pose.ElbowR = elbow;
                 pose.HandR = hand;
+            }
+        }
+
+        /// <summary>
+        /// One arm to a target from where its shoulder is now (a hold re-aimed after the arms are
+        /// placed): the shoulder retracts for a reach behind, the target comes into the reach cone,
+        /// and the elbow bends towards <paramref name="pole"/>.
+        /// </summary>
+        public static void ReachArm(ref Pose pose, BodyProportions body, bool left, Vector3 target, Vector3 pole)
+        {
+            Vector3 lateral = left ? pose.Left : -pose.Left;
+            Vector3 shoulder = Retract(ref pose, left, left ? pose.ShoulderL : pose.ShoulderR, target, lateral);
+            target = IntoCone(in pose, shoulder, target, lateral);
+            Vector3 elbow = TwoBone(shoulder, target, body.UpperArm, body.Forearm, pole, out Vector3 hand);
+            if (left)
+            {
+                pose.ShoulderL = shoulder;
+                pose.ElbowL = elbow;
+                pose.HandL = hand;
+            }
+            else
+            {
+                pose.ShoulderR = shoulder;
+                pose.ElbowR = elbow;
+                pose.HandR = hand;
+            }
+        }
+
+        /// <summary>
+        /// The elbow's bend direction for a reach, continuous over every direction the arm can
+        /// point: from the target's elevation and how far behind the chest it lies, in the chest's
+        /// frame. The point of the elbow faces down and back (towards the hips) for low and forward
+        /// reaches, swings out and back as the arm rises overhead, and drops straight down for a
+        /// reach behind, so it never flips across the shoulder.
+        /// </summary>
+        public static Vector3 ElbowPole(in Pose pose, bool left, Vector3 target)
+        {
+            Vector3 up = pose.Spine.sqrMagnitude > 1e-6f ? pose.Spine.normalized : Vector3.up;
+            Vector3 front = pose.ChestNormal.sqrMagnitude > 1e-6f ? pose.ChestNormal.normalized : Vector3.forward;
+            Vector3 lateral = (left ? pose.Left : -pose.Left).normalized;
+            Vector3 shoulder = left ? pose.ShoulderL : pose.ShoulderR;
+            Vector3 reach = target - shoulder;
+            Vector3 direction = reach.sqrMagnitude > 1e-8f ? reach.normalized : -up;
+            float elevation = Mathf.Acos(Mathf.Clamp(-Vector3.Dot(direction, up), -1f, 1f)) * Mathf.Rad2Deg;
+            float overhead = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(60f, 150f, elevation));
+            float behind = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.1f, 0.7f, -Vector3.Dot(direction, front)));
+            Vector3 pole = (-up * (0.8f * (1f - overhead))) + (up * (0.35f * overhead)) + (lateral * (0.6f + (0.3f * overhead))) - (front * (0.2f + (0.3f * overhead)));
+            pole = Vector3.Lerp(pole, (-up * 0.9f) + (lateral * 0.3f), behind);
+            return pole.sqrMagnitude > 1e-8f ? pole.normalized : -up;
+        }
+
+        /// <summary>
+        /// Brings a target inside the shoulder's reach cone (<see cref="MaxPosteriorExtension"/>,
+        /// <see cref="MaxCrossBody"/>, <see cref="MaxArmElevation"/>), keeping its distance. Returns
+        /// the target unchanged when it is already inside.
+        /// </summary>
+        public static Vector3 IntoCone(in Pose pose, Vector3 shoulder, Vector3 target, Vector3 lateral)
+        {
+            Vector3 reach = target - shoulder;
+            float distance = reach.magnitude;
+            if (distance < 1e-5f || pose.Spine.sqrMagnitude < 1e-6f || pose.ChestNormal.sqrMagnitude < 1e-6f)
+            {
+                return target;
+            }
+
+            Vector3 clamped = ConeDirection(reach / distance, pose.Spine.normalized, pose.ChestNormal.normalized, lateral.normalized, out _);
+            return shoulder + (clamped * distance);
+        }
+
+        /// <summary>
+        /// A unit arm direction brought inside the reach cone, and how far (degrees) it was behind
+        /// the coronal plane past <see cref="MaxPosteriorExtension"/>.
+        /// </summary>
+        public static Vector3 ConeDirection(Vector3 direction, Vector3 up, Vector3 front, Vector3 lateral, out float posteriorExcess)
+        {
+            Vector3 d = direction;
+            float behind = Mathf.Asin(Mathf.Clamp(-Vector3.Dot(d, front), -1f, 1f)) * Mathf.Rad2Deg;
+            posteriorExcess = Mathf.Max(0f, behind - MaxPosteriorExtension);
+            if (posteriorExcess > 0f)
+            {
+                d = TowardsPlane(d, front, posteriorExcess, lateral);
+            }
+
+            float across = Mathf.Asin(Mathf.Clamp(-Vector3.Dot(d, lateral), -1f, 1f)) * Mathf.Rad2Deg;
+            if (across > MaxCrossBody)
+            {
+                d = TowardsPlane(d, lateral, across - MaxCrossBody, front);
+            }
+
+            float elevation = Mathf.Acos(Mathf.Clamp(-Vector3.Dot(d, up), -1f, 1f)) * Mathf.Rad2Deg;
+            if (elevation > MaxArmElevation)
+            {
+                d = Vector3.RotateTowards(d, -up, (elevation - MaxArmElevation) * Mathf.Deg2Rad, 0f);
+            }
+
+            return d.normalized;
+        }
+
+        /// <summary>Turns <paramref name="d"/> by <paramref name="degrees"/> towards the plane square to <paramref name="normal"/> (to <paramref name="fallback"/> if it points along the normal).</summary>
+        private static Vector3 TowardsPlane(Vector3 d, Vector3 normal, float degrees, Vector3 fallback)
+        {
+            Vector3 onPlane = Vector3.ProjectOnPlane(d, normal);
+            if (onPlane.sqrMagnitude < 1e-8f)
+            {
+                onPlane = fallback;
+            }
+
+            return Vector3.RotateTowards(d, onPlane.normalized, degrees * Mathf.Deg2Rad, 0f);
+        }
+
+        /// <summary>
+        /// Thoracic counter-torsion: when a hand's target lies further behind the chest than the
+        /// shoulder can reach, the chest turns towards that side (by up to
+        /// <see cref="MaxCounterTorsion"/>) about the spine, carrying the shoulders (and any arm not
+        /// being re-aimed) with it. Opposite pulls cancel.
+        /// </summary>
+        public static void TwistForReach(ref Pose pose, Vector3? targetL, Vector3? targetR)
+        {
+            if (pose.Spine.sqrMagnitude < 1e-6f || pose.ChestNormal.sqrMagnitude < 1e-6f)
+            {
+                return;
+            }
+
+            Vector3 up = pose.Spine.normalized;
+            Vector3 front = pose.ChestNormal.normalized;
+
+            // Turning the chest towards the reaching arm's side swings that shoulder back.
+            float turn = PosteriorExcess(targetL, pose.ShoulderL, up, front, pose.Left) - PosteriorExcess(targetR, pose.ShoulderR, up, front, -pose.Left);
+            // However often the arms are solved, the chest turns no further than the limit in all.
+            turn = Mathf.Clamp(pose.ReachTorsion + turn, -MaxCounterTorsion, MaxCounterTorsion) - pose.ReachTorsion;
+            if (Mathf.Abs(turn) < 0.01f)
+            {
+                return;
+            }
+
+            // Positive turns the chest towards its left: about the spine, the front swings to the left side.
+            pose.ReachTorsion += turn;
+            Vector3 axis = pose.Spine.normalized;
+            Quaternion rotation = Quaternion.AngleAxis(Vector3.Dot(Vector3.Cross(pose.ChestNormal, pose.Left), axis) >= 0f ? turn : -turn, axis);
+            Vector3 pivot = pose.Neck;
+            Vector3 Turn(Vector3 p) => pivot + (rotation * (p - pivot));
+            pose.ShoulderL = Turn(pose.ShoulderL);
+            pose.ShoulderR = Turn(pose.ShoulderR);
+            if (!targetL.HasValue)
+            {
+                pose.ElbowL = Turn(pose.ElbowL);
+                pose.HandL = Turn(pose.HandL);
+            }
+
+            if (!targetR.HasValue)
+            {
+                pose.ElbowR = Turn(pose.ElbowR);
+                pose.HandR = Turn(pose.HandR);
+            }
+
+            pose.ChestNormal = (rotation * pose.ChestNormal).normalized;
+            pose.Left = (rotation * pose.Left).normalized;
+            pose.HandDirL = rotation * pose.HandDirL;
+            pose.HandDirR = rotation * pose.HandDirR;
+            pose.PalmNormalL = rotation * pose.PalmNormalL;
+            pose.PalmNormalR = rotation * pose.PalmNormalR;
+        }
+
+        /// <summary>How far (degrees) a reach from <paramref name="shoulder"/> lies behind the coronal plane past the cone.</summary>
+        private static float PosteriorExcess(Vector3? target, Vector3 shoulder, Vector3 up, Vector3 front, Vector3 lateral)
+        {
+            if (!target.HasValue || (target.Value - shoulder).sqrMagnitude < 1e-8f)
+            {
+                return 0f;
+            }
+
+            ConeDirection((target.Value - shoulder).normalized, up, front, lateral.normalized, out float excess);
+            return excess;
+        }
+
+        /// <summary>
+        /// The shoulder blade drawn back and down for a reach the counter-torsion could not bring
+        /// inside the cone: up to <see cref="MaxReachRetraction"/> along the back in all, however
+        /// often the arm is re-aimed (the pose keeps how far it is drawn back).
+        /// </summary>
+        private static Vector3 Retract(ref Pose pose, bool left, Vector3 shoulder, Vector3 target, Vector3 lateral)
+        {
+            Vector3 reach = target - shoulder;
+            if (reach.sqrMagnitude < 1e-8f || pose.Spine.sqrMagnitude < 1e-6f || pose.ChestNormal.sqrMagnitude < 1e-6f)
+            {
+                return shoulder;
+            }
+
+            Vector3 front = pose.ChestNormal.normalized;
+            float applied = left ? pose.RetractionL : pose.RetractionR;
+            // Measured from where the shoulder sits before any retraction.
+            Vector3 back = ((front * 0.9f) + (pose.Spine.normalized * 0.4f)).normalized;
+            Vector3 unretracted = shoulder + (back * applied);
+            ConeDirection((target - unretracted).normalized, pose.Spine.normalized, front, lateral.normalized, out float excess);
+            float wanted = MaxReachRetraction * Mathf.SmoothStep(0f, 1f, excess / RetractionRange);
+            if (left)
+            {
+                pose.RetractionL = wanted;
+            }
+            else
+            {
+                pose.RetractionR = wanted;
+            }
+
+            return unretracted - (back * wanted);
+        }
+
+        /// <summary>
+        /// A free forearm in the compact base: the elbow on the mat just in front of and inside the
+        /// shoulder (the upper arm near vertical), the forearm flat along the mat angled in towards
+        /// the head, blended in by <paramref name="weight"/>.
+        /// </summary>
+        private static void CompactForearm(in Pose pose, BodyProportions body, bool left, Vector3 reachForward, float weight, ref Vector3 target, ref Vector3 pole, ref FreeHand kind)
+        {
+            Vector3 shoulder = left ? pose.ShoulderL : pose.ShoulderR;
+            Vector3 inward = Vector3.ProjectOnPlane(left ? -pose.Left : pose.Left, Vector3.up);
+            inward = inward.sqrMagnitude > 1e-6f ? inward.normalized : Vector3.zero;
+            float drop = shoulder.y - ClipKinematics.ForearmElbowHeight;
+            float run = Mathf.Sqrt(Mathf.Max(0f, (body.UpperArm * body.UpperArm) - (drop * drop)));
+            Vector3 elbowWay = ((reachForward * 0.6f) + (inward * 0.6f)).normalized;
+            Vector3 elbow = Flat(shoulder, ClipKinematics.ForearmElbowHeight) + (elbowWay * Mathf.Max(run, 0.04f));
+            Vector3 along = ((reachForward * 0.9f) + (inward * 0.35f)).normalized;
+            float rise = ClipKinematics.ForearmWristHeight - ClipKinematics.ForearmElbowHeight;
+            Vector3 hand = elbow + (along * Mathf.Sqrt(Mathf.Max(0f, (body.Forearm * body.Forearm) - (rise * rise)))) + (Vector3.up * rise);
+            target = Vector3.Lerp(target, hand, weight);
+            pole = Vector3.Lerp(pole, elbow - Vector3.Lerp(shoulder, hand, 0.5f), weight);
+            if (weight >= 0.5f)
+            {
+                kind = FreeHand.Forearms;
             }
         }
 
@@ -568,10 +843,10 @@ namespace Wrestling.Presentation
             switch (kind)
             {
                 case FreeHand.Posted:
-                    // Flat on the mat, fingers forward and a little out.
-                    return (Vector3.ProjectOnPlane(reachForward + (Vector3.ProjectOnPlane(along, Vector3.up) * 0.4f), Vector3.up).normalized, Vector3.down, 1f);
+                    // Flat on the mat, fingers forward along the forearm's line.
+                    return (Skeleton.PostedHandDirection(along, reachForward), Vector3.down, 1f);
                 case FreeHand.Forearms:
-                    return (Vector3.ProjectOnPlane(along, Vector3.up).normalized, Vector3.down, 0.85f);
+                    return (Skeleton.PostedHandDirection(along, reachForward), Vector3.down, 0.85f);
                 case FreeHand.Framing:
                 {
                     Vector3 push = other.Spine.sqrMagnitude > 1e-6f ? other.Chest - hand : Vector3.up;
@@ -628,9 +903,9 @@ namespace Wrestling.Presentation
             float legLength = body.Thigh + body.Shin;
             // A wrestling stance sinks the hips on bent knees (over the toes) rather than folding at
             // the hips with straight legs, which pushes the buttocks out behind the feet.
-            float hipHeight = Mathf.Min(AnkleHeight + (legLength * (0.4f + (0.5f * frame.Level))), AnkleHeight + (legLength * 0.985f));
+            float hipHeight = ClipKinematics.StandingHipHeight(frame.Level, legLength);
             // A wrestling stance leans in even at full posture: chest over the knees, ready to react.
-            float lean = Mathf.Lerp(62f, 24f, frame.Posture) + ((1f - frame.Level) * 14f) + ((1f - frame.Balance) * 12f);
+            float lean = ClipKinematics.StandingLean(frame.Posture, frame.Level, frame.Balance);
             pose.Pelvis = WrestlerFrame.OnMat(frame.Position, hipHeight) - (forward * (Mathf.Sin(lean * Mathf.Deg2Rad) * 0.04f));
             pose.Spine = Tilt(forward, lean);
             pose.ChestNormal = Vector3.Cross(pose.Spine, left).normalized;
@@ -688,15 +963,35 @@ namespace Wrestling.Presentation
         /// <summary>A kneeling or seated wrestler being turned rolls the chest first; the hips stay on the mat.</summary>
         private const float GroundTwistShare = 0.85f;
 
+        /// <summary>
+        /// How far a wrestler is in the compact defensive par terre base (see
+        /// <see cref="ClipKinematics.CompactBase"/>): only the bottom wrestler on both knees with a
+        /// low posture; attacking or rising from the knees, or on top, is active kneeling.
+        /// </summary>
+        public static float CompactBase(WrestlerFrame frame, PoseRole role) =>
+            role == PoseRole.Bottom && frame.Ground == GroundState.BothKnees && frame.TorsoRotation < 45f ? ClipKinematics.CompactBase(frame.Posture) : 0f;
+
+        /// <summary>Knees this far (m) out from the hip joints: a little for kneeling up, wide for the compact base.</summary>
+        private const float KneeSpread = 0.04f;
+        private const float CompactKneeSpread = 0.09f;
+
+        /// <summary>
+        /// On the knees. Kneeling up (one knee, or attacking from both) the hips stand over the knees
+        /// on the thighs. In the compact defensive base the pelvis sinks back onto the heels, the knees
+        /// spread wide and the trunk lies low and long so the forearms rest flat on the mat with the
+        /// elbows tucked in (the arms are placed by <see cref="SolveArms"/>).
+        /// </summary>
         private static Pose Kneeling(WrestlerFrame frame, BodyProportions body, Vector3 forward, Vector3 left, PoseRole role)
         {
             var pose = new Pose { Left = left };
             Vector3 centre = WrestlerFrame.OnMat(frame.Position);
-            float rise = Mathf.Clamp01(frame.Level / 0.6f);
-            float pelvisHeight = KneeOnMatHeight + (body.Thigh * Mathf.Lerp(0.55f, 0.97f, rise));
+            float compact = CompactBase(frame, role);
+            float compactHeight = ClipKinematics.CompactHipHeight(frame.Level);
+            float pelvisHeight = Mathf.Lerp(ClipKinematics.KneelingHipHeight(frame.Level, body.Thigh), compactHeight, compact);
+            // The thigh's run from the hip forward to the knee on the mat.
             float back = Mathf.Sqrt(Mathf.Max(0f, (body.Thigh * body.Thigh) - Mathf.Pow(pelvisHeight - KneeOnMatHeight, 2f)));
             float posture = role == PoseRole.Top ? Mathf.Min(frame.Posture, 0.35f) : frame.Posture;
-            float lean = Mathf.Lerp(80f, 8f, posture);
+            float lean = Mathf.Lerp(ClipKinematics.KneelingLean(posture), ClipKinematics.CompactLean(compactHeight, body.Torso, body.ShoulderDrop, body.UpperArm), compact);
             pose.Pelvis = centre + (Vector3.up * pelvisHeight) - (forward * (back * 0.5f));
             pose.Spine = Tilt(forward, lean);
             pose.ChestNormal = Vector3.Cross(pose.Spine, left).normalized;
@@ -706,12 +1001,13 @@ namespace Wrestling.Presentation
 
             pose.HipL = pose.Pelvis + (left * body.HipHalfWidth);
             pose.HipR = pose.Pelvis - (left * body.HipHalfWidth);
-            Vector3 kneeForward = forward * (back * 0.5f);
+            Vector3 kneeForward = forward * back;
+            float spread = Mathf.Lerp(KneeSpread, CompactKneeSpread, compact);
             bool oneKnee = frame.Ground == GroundState.OneKnee;
             bool leftLeads = frame.Stance != Stance.StaggeredRightLead;
 
-            pose.KneeL = Kneel(pose.HipL, kneeForward, left * 0.04f);
-            pose.KneeR = Kneel(pose.HipR, kneeForward, -left * 0.04f);
+            pose.KneeL = Kneel(pose.HipL, kneeForward, left * spread);
+            pose.KneeR = Kneel(pose.HipR, kneeForward, -left * spread);
             pose.AnkleL = pose.KneeL - (forward * body.Shin) + (Vector3.up * (AnkleHeight - KneeOnMatHeight));
             pose.AnkleR = pose.KneeR - (forward * body.Shin) + (Vector3.up * (AnkleHeight - KneeOnMatHeight));
             if (oneKnee)
@@ -790,10 +1086,9 @@ namespace Wrestling.Presentation
             pose.PelvisNormal = ((-Vector3.up * Mathf.Cos(hipRadians)) + (left * (Mathf.Sin(hipRadians) * rollSign))).normalized;
             Vector3 hipLeft = Vector3.Cross(pose.PelvisNormal, pose.Spine).normalized;
             bool bridge = frame.Ground == GroundState.Bridge;
-            float onSide = Mathf.Sin(radians);
-            float restHeight = Mathf.Lerp(body.TorsoHalfDepth, body.ShoulderHalfWidth * 0.9f, onSide);
+            float restHeight = ClipKinematics.LyingRestHeight(rotation, body.TorsoHalfDepth, body.ShoulderHalfWidth, false);
             Vector3 centre = WrestlerFrame.OnMat(frame.Position);
-            pose.Pelvis = centre - (forward * (body.Torso * 0.5f)) + (Vector3.up * (bridge ? restHeight + 0.22f : restHeight));
+            pose.Pelvis = centre - (forward * (body.Torso * 0.5f)) + (Vector3.up * ClipKinematics.LyingRestHeight(rotation, body.TorsoHalfDepth, body.ShoulderHalfWidth, bridge));
             pose.Neck = centre + (forward * (body.Torso * 0.5f)) + (Vector3.up * (bridge ? restHeight + 0.12f : restHeight));
             pose.Spine = (pose.Neck - pose.Pelvis).normalized;
             pose.Head = pose.Neck + (pose.Spine * (body.Neck + body.HeadRadius)) - (Vector3.up * (bridge ? 0.18f : 0f));
@@ -906,25 +1201,26 @@ namespace Wrestling.Presentation
         }
 
         /// <summary>The waist point that a whole-body rotation turns about (see <see cref="ApplyWholeBody"/>).</summary>
-        public static Vector3 WholeBodyPivot(in Pose pose) => Vector3.Lerp(pose.Pelvis, pose.Neck, 0.35f);
+        public static Vector3 WholeBodyPivot(in Pose pose) => Vector3.Lerp(pose.Pelvis, pose.Neck, ClipKinematics.WholeBodyPivotShare);
 
-        /// <summary>A contact point on the surface of a posed body.</summary>
+        /// <summary>
+        /// A contact point on the surface of a posed body: where a held body is seated on it at
+        /// that anatomical site (see <see cref="ClipKinematics.Seat"/>), the site's depth out from
+        /// the curved spine along <see cref="AnchorNormal"/>.
+        /// </summary>
         public static Vector3 AnchorOn(in Pose pose, BodyProportions body, AnchorPoint point)
         {
-            switch (point)
-            {
-                case AnchorPoint.Hips:
-                    // The hip bone at the back, where a hip toss loads the opponent.
-                    return pose.Pelvis - (pose.ChestNormal * (body.TorsoHalfDepth * 0.8f));
-                case AnchorPoint.LowerBack:
-                    return pose.SpinePoint(0.3f) - (pose.ChestNormal * body.TorsoHalfDepth);
-                case AnchorPoint.Shoulders:
-                    return pose.Neck - (pose.Spine * (body.Torso * 0.08f)) - (pose.ChestNormal * (body.TorsoHalfDepth * 0.4f));
-                case AnchorPoint.Chest:
-                    return pose.SpinePoint(0.65f) + (pose.ChestNormal * body.TorsoHalfDepth);
-                default:
-                    return WholeBodyPivot(in pose);
-            }
+            (float share, float _, float _, float depth) = ClipKinematics.Seat(point);
+            return pose.SpinePoint(share) + (AnchorNormal(in pose, point) * (depth * body.Height));
+        }
+
+        /// <summary>The outward surface normal at an anchor site: the back over the hips, lower back and shoulders (tipping up the spine at the shoulders), the front at the chest.</summary>
+        public static Vector3 AnchorNormal(in Pose pose, AnchorPoint point)
+        {
+            (float _, float frontSign, float spineBlend, float _) = ClipKinematics.Seat(point);
+            Vector3 front = point == AnchorPoint.Hips ? pose.PelvisFront : pose.ChestNormal;
+            Vector3 normal = (front * frontSign) + (pose.Spine * spineBlend);
+            return normal.sqrMagnitude > 1e-8f ? normal.normalized : Vector3.up;
         }
 
         /// <summary>Moves every joint of a pose by <paramref name="offset"/>.</summary>

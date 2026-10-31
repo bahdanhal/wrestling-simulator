@@ -1,8 +1,10 @@
 // Wrestler skin and singlet in one pass, cheap enough for phones.
 // Skin: MakeHuman albedo and normal maps; curvature-aware pre-integrated subsurface scattering
 // (per-channel wrapped diffuse that widens with surface curvature, softer normals and shadow
-// edges for red, light through thin parts) and a dual-lobe specular. Exertion builds a sweat
-// film, first on the brow, neck, deltoids and forearms, with droplet micro-highlights.
+// edges for red, light through thin parts) and a dual-lobe specular over pore micro-relief that
+// appears in close-ups (fading out where it would alias, and where the skin's own normal map
+// already has fine detail). Exertion builds a sweat film, first on the brow, neck, deltoids and
+// forearms, with droplet micro-highlights.
 // Singlet: compression fabric with anisotropic sheen along the knit, tension folds where the hips
 // and shoulders bend, a raised rolled binding with coverstitching, and damp patches as it soaks.
 // Per-vertex data from the importer (CharacterImport):
@@ -17,6 +19,7 @@ Shader "Wrestling/Wrestler Skin"
         _BumpScale ("Normal strength", Range(0, 2)) = 1
         _SkinTint ("Skin tint", Color) = (1, 1, 1, 1)
         _SkinSmoothness ("Skin smoothness", Range(0, 1)) = 0.38
+        _PoreStrength ("Pore micro-relief", Range(0, 2)) = 1
         _ScatterColor ("Subsurface colour", Color) = (0.85, 0.28, 0.18, 1)
         _ScatterStrength ("Subsurface strength", Range(0, 1)) = 0.6
         _CurvatureScale ("Curvature to scatter (m)", Range(0, 0.1)) = 0.03
@@ -41,6 +44,7 @@ Shader "Wrestling/Wrestler Skin"
             half4 _SkinTint;
             half _BumpScale;
             half _SkinSmoothness;
+            half _PoreStrength;
             half4 _ScatterColor;
             half _ScatterStrength;
             float _CurvatureScale;
@@ -145,6 +149,10 @@ Shader "Wrestling/Wrestler Skin"
 
                 float3 geometricNormal = normalize(input.normalWS);
                 half3 normalTS = UnpackNormalScale(SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, input.uv), _BumpScale);
+                // How much fine detail the skin's own normal map has here (against a blurred read of
+                // it): the procedural pores make way for real ones.
+                half3 coarseTS = UnpackNormalScale(SAMPLE_TEXTURE2D_BIAS(_BumpMap, sampler_BumpMap, input.uv, 3.0), _BumpScale);
+                half poreRoom = 1.0h - smoothstep(0.03h, 0.15h, length(normalTS.xy - coarseTS.xy));
                 normalTS = normalize(lerp(normalTS, half3(0, 0, 1), singlet * 0.94h));
                 float3 bitangent = input.tangentWS.w * cross(input.normalWS, input.tangentWS.xyz);
                 float3 normalWS = normalize(TransformTangentToWorld(normalTS, half3x3(input.tangentWS.xyz, bitangent, input.normalWS)));
@@ -199,11 +207,16 @@ Shader "Wrestling/Wrestler Skin"
                 surface.skinAlbedo = skin;
                 surface.fabricAlbedo = fabric;
                 surface.singlet = singlet;
-                surface.skinNormal = normalWS;
+                // Pores bump only the detail normal (the specular lobes); scattered light sees the
+                // blurred one. Cavities are rougher than the oily ridges between them.
+                float3 pores = SkinMicroPores(bodyPos * 1.75, dpdx, dpdy);
+                half poreAmount = _PoreStrength * poreRoom * (1.0h - singlet) * (1.0h - scalp);
+                float poreHeight = pores.x * poreAmount;
+                surface.skinNormal = normalize(normalWS - SurfaceGradient(normalWS, dpdx, dpdy, ddx(poreHeight), ddy(poreHeight)));
                 surface.blurredNormal = normalize(lerp(normalWS, geometricNormal, 0.65));
                 surface.fabricNormal = fabricNormal;
                 surface.fabricTangent = fabricTangent;
-                surface.skinRoughness = PerceptualSmoothnessToPerceptualRoughness(lerp(_SkinSmoothness, 0.22h, scalp));
+                surface.skinRoughness = saturate(PerceptualSmoothnessToPerceptualRoughness(lerp(_SkinSmoothness, 0.22h, scalp)) + (0.06h * ((2.0h * pores.y) - pores.z) * saturate(poreAmount)));
                 surface.fabricRoughness = PerceptualSmoothnessToPerceptualRoughness(saturate(_SingletSmoothness + 0.12h * damp + 0.06h * trim));
                 surface.scatter = saturate(max(curvature * _CurvatureScale, 0.12) * _ScatterStrength * 1.6) * (1.0h - scalp * 0.8h);
                 surface.thin = saturate((curvature * _CurvatureScale - 0.9) * 2.0) * (1.0h - scalp);

@@ -38,6 +38,7 @@ Material:
     - _CurvatureScale: 0.03
     - _Exertion: 0
     - _FoldDepth: 0.0018
+    - _PoreStrength: 1
     - _ScatterStrength: 0.5
     - _ScatterWrap: 0.45
     - _SingletOn: 1

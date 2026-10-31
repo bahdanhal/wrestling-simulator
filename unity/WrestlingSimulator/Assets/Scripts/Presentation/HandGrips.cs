@@ -145,6 +145,13 @@ namespace Wrestling.Presentation
             return link != null && link.Holding ? link.HeldPoint : (Vector3?)null;
         }
 
+        /// <summary>The hold a hand has made on the opponent's physical body, or null when it holds nothing.</summary>
+        public GripLink Link(Corner corner, GripSide side)
+        {
+            GripLink link = _links[((int)corner * 2) + (int)side];
+            return link != null && link.Holding ? link : null;
+        }
+
         /// <summary>Each physics substep: every hold pulls palm and held point together.</summary>
         public void Apply(float deltaTime)
         {

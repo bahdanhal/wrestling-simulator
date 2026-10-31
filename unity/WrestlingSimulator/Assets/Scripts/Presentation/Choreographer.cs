@@ -208,6 +208,19 @@ namespace Wrestling.Presentation
             float carryVelocity = t * decay;
             red = ((_offset[0] * carryOffset) + (_offsetVelocity[0] * carryVelocity)).AddTo(red);
             blue = ((_offset[1] * carryOffset) + (_offsetVelocity[1] * carryVelocity)).AddTo(blue);
+            if (clip.Throw.Kind != ThrowKind.None)
+            {
+                // What is shown (the clip plus what a switch carries over) loads the fulcrum as a body must.
+                (AnchorPoint, float, float) seat = Anchors[(int)executor.Opponent()];
+                if (executor == Corner.Red)
+                {
+                    red = LoadUnder(clip.Throw, progress, red, blue, seat);
+                }
+                else
+                {
+                    blue = LoadUnder(clip.Throw, progress, blue, red, seat);
+                }
+            }
 
             float entry = Mathf.SmoothStep(0f, 1f, (engine.Tick - active.StartTick + alpha) / EntryBlendTicks);
             if (entry < 1f)
@@ -216,6 +229,65 @@ namespace Wrestling.Presentation
                 Anchors[1] = EaseIn(_entryAnchors[1], Anchors[1], entry);
             }
         }
+
+        /// <summary>
+        /// The fulcrum of a throw over the hips or shoulders, kept as a body loads it (see
+        /// <see cref="ClipFeasibility.Loading"/>): through the load and the first half of the turn
+        /// the thrower's trunk is bent forward over the hip between
+        /// <see cref="ClipFeasibility.MinimumLoadLean"/> and <see cref="ClipFeasibility.MaximumLoadLean"/>,
+        /// and their hips sit at least <see cref="ClipFeasibility.FulcrumDrop"/> under the opponent's,
+        /// measured on the reference body as the content validator measures the clips. Clips that
+        /// pass validation are already inside these limits; this holds them through switches,
+        /// where a carried-over offset could lift the thrower out from under.
+        /// </summary>
+        private static WrestlerFrame LoadUnder(ThrowSpec spec, float progress, WrestlerFrame thrower, WrestlerFrame thrown, (AnchorPoint Point, float Weight, float Contact) seat)
+        {
+            ClipFeasibility.FulcrumLoad load = ClipFeasibility.Loading(spec, progress, seat.Point, seat.Weight);
+            if (load == ClipFeasibility.FulcrumLoad.None || thrower.Ground != GroundState.Standing)
+            {
+                return thrower;
+            }
+
+            if (load == ClipFeasibility.FulcrumLoad.OverHips)
+            {
+                float lean = ClipKinematics.StandingLean(thrower.Posture, thrower.Level, thrower.Balance);
+                float wanted = Mathf.Clamp(lean, ClipFeasibility.MinimumLoadLean, ClipFeasibility.MaximumLoadLean);
+                if (!Mathf.Approximately(wanted, lean))
+                {
+                    thrower.Posture = ClipKinematics.StandingPostureForLean(wanted, thrower.Level, thrower.Balance);
+                }
+            }
+
+            ClipKinematics.Body body = ClipKinematics.Body.Reference;
+            var key = new ClipKey { Executor = KeyOf(thrower, default), Opponent = KeyOf(thrown, seat) };
+            (ClipKinematics.Trunk under, ClipKinematics.Trunk over) = ClipFeasibility.Place(key, body, false, false);
+            float drop = over.Pelvis.Y - under.Pelvis.Y;
+            // A body seated on the thrower goes down with them: only its free share opens the gap.
+            float free = 1f - Mathf.Clamp01(seat.Weight);
+            if (drop < ClipFeasibility.FulcrumDrop && free > 0.05f)
+            {
+                float leg = body.Thigh + body.Shin;
+                float hip = ClipKinematics.StandingHipHeight(thrower.Level, leg) - ((ClipFeasibility.FulcrumDrop - drop) / free);
+                thrower.Level = Mathf.Min(thrower.Level, ClipKinematics.StandingLevelForHip(hip, leg));
+            }
+
+            return thrower;
+        }
+
+        private static ActorKey KeyOf(WrestlerFrame frame, (AnchorPoint Point, float Weight, float Contact) seat) => new ActorKey
+        {
+            Level = frame.Level,
+            Posture = frame.Posture,
+            Ground = frame.Ground,
+            Roll = Mathf.Clamp(frame.TorsoRotation, 0f, 180f),
+            RollSide = frame.RollSide < 0f ? -1 : 1,
+            Lift = Mathf.Max(0f, frame.Lift),
+            Pitch = frame.Pitch,
+            Bank = frame.Bank,
+            Anchor = seat.Weight > 0f ? seat.Point : AnchorPoint.None,
+            AnchorWeight = Mathf.Clamp01(seat.Weight),
+            Contact = seat.Contact,
+        };
 
         /// <summary>Records one corner's switch: the offset from the new clip to the frame on screen, and their velocity gap.</summary>
         private void Carry(int corner, WrestlerFrame shown, WrestlerFrame target, WrestlerFrame nextTarget, float perSecond, FrameOffset shownVelocity)

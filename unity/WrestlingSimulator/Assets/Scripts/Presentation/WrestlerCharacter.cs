@@ -16,8 +16,7 @@ namespace Wrestling.Presentation
         private GameObject _model;
         private Material _body;
         private SkinnedMeshRenderer _bodyRenderer;
-        private int _browShapeIndex = -1;
-        private int _effortShapeIndex = -1;
+        private FacialEffort _face;
         private CharacterRig _rig;
         private PhysicalBody _physical;
         private TwistBones _twist;
@@ -29,6 +28,9 @@ namespace Wrestling.Presentation
         public PhysicalBody Physical => _physical;
 
         public BodyProportions Body => _rig.Body;
+
+        /// <summary>The rig the pose drives (for the post-physics pass on the shown bones).</summary>
+        public CharacterRig Rig => _rig;
 
         /// <summary>The wrestler's standing height in metres.</summary>
         public float Height { get; private set; }
@@ -89,8 +91,6 @@ namespace Wrestling.Presentation
                     renderer.sharedMaterials = materials;
                     _bodyRenderer = renderer;
                     Mesh mesh = renderer.sharedMesh;
-                    _browShapeIndex = mesh.GetBlendShapeIndex("Expr_BrowFurrow");
-                    _effortShapeIndex = mesh.GetBlendShapeIndex("Expr_Effort");
                     for (int i = 0; i < mesh.blendShapeCount; i++)
                     {
                         renderer.SetBlendShapeWeight(i, look.ShapeWeights.TryGetValue(mesh.GetBlendShapeName(i), out float weight) ? weight * 100f : 0f);
@@ -130,6 +130,7 @@ namespace Wrestling.Presentation
             Transform Find(string boneName) => bones.TryGetValue(boneName, out Transform bone) ? bone : null;
             _twist = new TwistBones(Find);
             _correctives = new CorrectiveShapes(Find, bodyRenderer);
+            _face = new FacialEffort(bodyRenderer);
             bodyRenderer.quality = SkinQuality.Bone4;
             SetExertion(0f);
 
@@ -162,10 +163,15 @@ namespace Wrestling.Presentation
             }
         }
 
-        /// <summary>How worked the wrestler is, 0 (fresh) to 1 (spent): builds sweat on the skin and dampens the singlet.</summary>
-        public void SetExertion(float exertion01)
+        /// <summary>
+        /// How worked the wrestler is, 0 (fresh) to 1 (spent): builds sweat on the skin, dampens the
+        /// singlet, and sets how hard they breathe between exertions (the breath advancing by
+        /// <paramref name="deltaTime"/>).
+        /// </summary>
+        public void SetExertion(float exertion01, float deltaTime = 0f)
         {
             float exertion = Mathf.Clamp01(exertion01);
+            _face?.Breathe(deltaTime, exertion);
             if (_body != null && Mathf.Abs(exertion - _exertion) > 1e-3f)
             {
                 _exertion = exertion;
@@ -229,19 +235,10 @@ namespace Wrestling.Presentation
 
         public void ApplyExpression(in Pose pose)
         {
-            _rig.ApplyFace(in pose);
-            if (_bodyRenderer != null)
-            {
-                if (_browShapeIndex >= 0)
-                {
-                    _bodyRenderer.SetBlendShapeWeight(_browShapeIndex, Mathf.Clamp01(pose.Focus + (pose.Effort * 0.45f)) * 100f);
-                }
-
-                if (_effortShapeIndex >= 0)
-                {
-                    _bodyRenderer.SetBlendShapeWeight(_effortShapeIndex, Mathf.Clamp01(pose.Effort) * 100f);
-                }
-            }
+            float fatigue = Mathf.Max(0f, _exertion);
+            float breath = _face?.BreathPhase ?? 0f;
+            _rig.ApplyFace(in pose, fatigue, breath);
+            _face?.Apply(pose.Focus, pose.Effort, fatigue);
         }
 
         private void OnDestroy() => Release();
@@ -258,6 +255,7 @@ namespace Wrestling.Presentation
             _physical = null;
             _twist = null;
             _correctives = null;
+            _face = null;
             _exertion = -1f;
             _foldDrive = new Vector4(-1f, -1f, -1f, -1f);
             if (_body != null)

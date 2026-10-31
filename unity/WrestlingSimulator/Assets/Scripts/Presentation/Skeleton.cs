@@ -75,6 +75,16 @@ namespace Wrestling.Presentation
         private const float MaxDeviation = 28f;
         private const float MaxForearmTurn = 85f;
 
+        /// <summary>
+        /// Extension (degrees) a wrist takes passively with the body's weight on a palm flat on the
+        /// mat (a hand posted under a near-vertical forearm), past what it reaches actively.
+        /// </summary>
+        public const float MaxLoadedExtension = 90f;
+
+        /// <summary>A palm facing this far down (the y of its normal) with the wrist this low (m) bears weight on the mat.</summary>
+        private const float LoadedPalm = -0.85f;
+        private const float LoadedWrist = 0.12f;
+
         /// <summary>A foot whose ankle is this low (m) is planted: its sole lies on the mat.</summary>
         private const float PlantedAnkle = 0.11f;
         private const float LiftedAnkle = 0.17f;
@@ -136,7 +146,7 @@ namespace Wrestling.Presentation
             Set(Bone.LeftUpperArm, pose.ShoulderL, pose.ElbowL, upperFacingL);
             Set(Bone.LeftLowerArm, pose.ElbowL, pose.HandL, forearmFacingL);
             Vector3 neutralL = NeutralPalm(forearmDirL, forearmFacingL, true, in calibration);
-            (Vector3 handDirL, Vector3 palmL) = Wrist(forearmDirL, neutralL, pose.HandDirL, pose.PalmNormalL);
+            (Vector3 handDirL, Vector3 palmL) = Wrist(forearmDirL, neutralL, pose.HandDirL, pose.PalmNormalL, ExtensionLimit(pose.HandL, pose.PalmNormalL));
             Set(Bone.LeftHand, pose.HandL, pose.HandL + (handDirL * ((pose.HandL - pose.ElbowL).magnitude * 0.4f)), palmL);
 
             Vector3 bindArmR = ((-left * 0.88f) - (spineUp * 0.47f)).normalized;
@@ -147,7 +157,7 @@ namespace Wrestling.Presentation
             Set(Bone.RightUpperArm, pose.ShoulderR, pose.ElbowR, upperFacingR);
             Set(Bone.RightLowerArm, pose.ElbowR, pose.HandR, forearmFacingR);
             Vector3 neutralR = NeutralPalm(forearmDirR, forearmFacingR, false, in calibration);
-            (Vector3 handDirR, Vector3 palmR) = Wrist(forearmDirR, neutralR, pose.HandDirR, pose.PalmNormalR);
+            (Vector3 handDirR, Vector3 palmR) = Wrist(forearmDirR, neutralR, pose.HandDirR, pose.PalmNormalR, ExtensionLimit(pose.HandR, pose.PalmNormalR));
             Set(Bone.RightHand, pose.HandR, pose.HandR + (handDirR * ((pose.HandR - pose.ElbowR).magnitude * 0.4f)), palmR);
 
             // The legs hang from the pelvis, so their twist is measured from the pelvis' frame.
@@ -199,7 +209,7 @@ namespace Wrestling.Presentation
         /// do from the forearm's neutral (turn of the forearm, then flexion or extension and
         /// deviation). With nothing wanted the wrist is neutral.
         /// </summary>
-        private static (Vector3 Direction, Vector3 Palm) Wrist(Vector3 forearm, Vector3 neutral, Vector3 wantDir, Vector3 wantPalm)
+        public static (Vector3 Direction, Vector3 Palm) Wrist(Vector3 forearm, Vector3 neutral, Vector3 wantDir, Vector3 wantPalm, float maxExtension = MaxExtension)
         {
             if (wantDir.sqrMagnitude < 1e-8f && wantPalm.sqrMagnitude < 1e-8f)
             {
@@ -230,11 +240,39 @@ namespace Wrestling.Presentation
             // Flexion bends the fingers towards the palm; deviation towards the thumb or little finger.
             Vector3 thumbSide = Vector3.Cross(forearm, turned);
             float along = Vector3.Dot(direction, forearm);
-            float flexion = Mathf.Clamp(Mathf.Atan2(Vector3.Dot(direction, turned), along) * Mathf.Rad2Deg, -MaxExtension, MaxFlexion);
+            float flexion = Mathf.Clamp(Mathf.Atan2(Vector3.Dot(direction, turned), along) * Mathf.Rad2Deg, -maxExtension, MaxFlexion);
             float deviation = Mathf.Clamp(Mathf.Atan2(Vector3.Dot(direction, thumbSide), Mathf.Max(along, 0.05f)) * Mathf.Rad2Deg, -MaxDeviation, MaxDeviation);
-            Vector3 hand = (forearm + (turned * Mathf.Tan(flexion * Mathf.Deg2Rad)) + (thumbSide * Mathf.Tan(deviation * Mathf.Deg2Rad))).normalized;
+            // Flexion turns the hand from the forearm's line towards the palm side, deviation then
+            // swings it in the hand's own plane (rotations, so a loaded wrist bent to 90° is exact).
+            Vector3 flexed = Quaternion.AngleAxis(flexion, Vector3.Cross(forearm, turned)) * forearm;
+            Vector3 hand = (Quaternion.AngleAxis(deviation, Vector3.Cross(flexed, thumbSide)) * flexed).normalized;
             Vector3 handPalm = Quaternion.FromToRotation(forearm, hand) * turned;
             return (hand, handPalm);
+        }
+
+        /// <summary>How far a wrist may extend: further with a palm flat on the mat bearing weight.</summary>
+        private static float ExtensionLimit(Vector3 wrist, Vector3 palm) =>
+            palm.sqrMagnitude > 1e-6f && palm.normalized.y < LoadedPalm && wrist.y < LoadedWrist ? MaxLoadedExtension : MaxExtension;
+
+        /// <summary>
+        /// Which way the fingers of a hand flat on the mat point: along the forearm's line projected
+        /// onto the mat, turning smoothly towards the chest's facing as the forearm stands up
+        /// vertical (where its line on the mat vanishes), so a posted wrist never twists across.
+        /// </summary>
+        public static Vector3 PostedHandDirection(Vector3 forearm, Vector3 chestForward)
+        {
+            Vector3 facing = Vector3.ProjectOnPlane(chestForward, Vector3.up);
+            facing = facing.sqrMagnitude > 1e-6f ? facing.normalized : Vector3.forward;
+            Vector3 flat = Vector3.ProjectOnPlane(forearm, Vector3.up);
+            if (flat.sqrMagnitude < 1e-8f)
+            {
+                return facing;
+            }
+
+            float upright = Mathf.Abs(Vector3.Dot(forearm.normalized, Vector3.up));
+            float towardsChest = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.6f, 0.95f, upright));
+            Vector3 direction = Vector3.Slerp(flat.normalized, facing, towardsChest);
+            return direction.sqrMagnitude > 1e-6f ? direction.normalized : facing;
         }
 
         /// <summary>

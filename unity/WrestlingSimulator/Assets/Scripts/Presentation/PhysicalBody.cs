@@ -361,6 +361,12 @@ namespace Wrestling.Presentation
             return hand.Body.transform.InverseTransformPoint(Centre(hand));
         }
 
+        /// <summary>Radius (m) of a segment's collision volume (half the width of a foot's box).</summary>
+        public float Radius(string segmentName) => Find(segmentName).Radius;
+
+        /// <summary>The holds of a throw on this (thrown) body: the thrower's hands and traps on its segments, and the seat on the fulcrum.</summary>
+        public IReadOnlyList<GripLink> ThrowLinks => _throwLinks;
+
         /// <summary>World point a grip holds on a segment (the middle of its volume).</summary>
         public Vector3 GripPoint(string segment) => Centre(Find(segment));
 

@@ -28,8 +28,8 @@
   "phases": [
     {
       "id": "drop",
-      "minimumTicks": 12,
-      "maximumTicks": 18,
+      "minimumTicks": 16,
+      "maximumTicks": 24,
       "attributes": [
         {
           "attribute": "legAttacks",

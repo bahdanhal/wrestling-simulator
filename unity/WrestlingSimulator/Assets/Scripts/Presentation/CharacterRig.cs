@@ -149,6 +149,18 @@ namespace Wrestling.Presentation
             }
         }
 
+        /// <summary>The rig bone driven for a skeleton bone.</summary>
+        public Transform BoneOf(Bone bone) => _bones[(int)bone];
+
+        /// <summary>A bone's segment rotation (+Y along it, +Z its front, as <see cref="Skeleton"/> builds it) from the rig bone as it is now.</summary>
+        public Quaternion SegmentRotation(Bone bone) => _bones[(int)bone].rotation * Quaternion.Inverse(_bindOffsets[(int)bone]);
+
+        /// <summary>Turns a rig bone to a segment rotation (its children follow).</summary>
+        public void SetSegmentRotation(Bone bone, Quaternion segment) => _bones[(int)bone].rotation = segment * _bindOffsets[(int)bone];
+
+        /// <summary>Where this model's clavicles start and how its palms sit at rest.</summary>
+        public SkeletonCalibration Calibration => _calibration;
+
         /// <summary>A rig bone by its Mixamo name without the prefix (for example "LeftForeArm").</summary>
         public Transform Find(string name) =>
             _byName.TryGetValue(name, out Transform bone) ? bone : throw new InvalidOperationException($"Character rig has no bone '{name}'.");
@@ -184,13 +196,19 @@ namespace Wrestling.Presentation
             ApplyFace(in pose);
         }
 
-        public void ApplyFace(in Pose pose)
+        /// <summary>
+        /// The face's bones: the jaw set by strain (clenched under load, opening only to breathe
+        /// when <paramref name="fatigue"/> is high between exertions, at <paramref name="breath"/>'s
+        /// phase; see <see cref="FacialEffort.JawOpening"/>), the lids narrowed and the eyes on the
+        /// gaze target. The effort blend shapes are set by <see cref="FacialEffort"/>.
+        /// </summary>
+        public void ApplyFace(in Pose pose, float fatigue = 0f, float breath = 0f)
         {
             float focus = Mathf.Clamp01(pose.Focus);
             float effort = Mathf.Clamp01(pose.Effort);
             if (_jaw != null)
             {
-                float jawOpen = (1.5f * focus) + (5.5f * effort);
+                float jawOpen = FacialEffort.JawOpening(focus, effort, fatigue, breath);
                 _jaw.localRotation = _jawBind * Quaternion.Euler(jawOpen, 0f, 0f);
             }
 

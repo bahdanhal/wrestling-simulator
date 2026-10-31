@@ -56,6 +56,10 @@ namespace Wrestling.Editor
             public int OverpoweredFrames;
             public int GripHands;
             public int GripHeld;
+            public int ShownHolds;
+            public float ShownGapBefore;
+            public float ShownGapAfter;
+            public float ShownGapWorst;
             public int Throws;
             public float ThrowAngleSum;
         }
@@ -219,6 +223,8 @@ namespace Wrestling.Editor
             report.AppendLine(FormattableString.Invariant($"[lab] contact feasibility: {(all.Feasibility.Count == 0 ? 1f : all.Feasibility.Average()) * 100f:F0}% of the balance force and turn the mat contacts could make themselves (the rest stands in for stepping and leaning on the opponent)"));
             float active = Mathf.Max(1, all.ActiveFrames);
             report.AppendLine(FormattableString.Invariant($"[lab] pelvis err median {Percentile(all.Tracking, 0.5f):F1} cm, p75 {Percentile(all.Tracking, 0.75f):F1} cm"));
+            float holds = Mathf.Max(1, all.ShownHolds);
+            report.AppendLine(FormattableString.Invariant($"[lab] shown palm to held point over {all.ShownHolds} holding-hand frames: {all.ShownGapBefore / holds:F2} cm from physics, {all.ShownGapAfter / holds:F2} cm after the post-physics pass (worst frame {all.ShownGapWorst:F2} cm)"));
             report.AppendLine(FormattableString.Invariant($"[lab] shown jerk (mm per frame², mean/p99): hips {Mean(all.HipJerk):F2}/{Percentile(all.HipJerk, 0.99f):F2}, hands {Mean(all.HandJerk):F2}/{Percentile(all.HandJerk, 0.99f):F2}"));
             report.AppendLine(FormattableString.Invariant($"[lab] load: opponent force on a body mean/p95 {Mean(all.OpponentLoad):F0}/{Percentile(all.OpponentLoad, 0.95f):F0} N; give: largest joint shift mean/p95/max {Mean(all.Give):F2}/{Percentile(all.Give, 0.95f):F2}/{(all.Give.Count == 0 ? 0f : all.Give.Max()):F2} cm, hips sink mean/max {Mean(all.Sink):F2}/{(all.Sink.Count == 0 ? 0f : all.Sink.Max()):F2} cm, lean mean/max {Mean(all.Lean):F1}/{(all.Lean.Count == 0 ? 0f : all.Lean.Max()):F1} deg"));
             report.AppendLine("[lab] mean joint error (deg): " + string.Join(", ", all.JointSums.OrderByDescending(j => j.Value).Select(j => FormattableString.Invariant($"{j.Key} {j.Value / active:F0}"))));
@@ -246,6 +252,15 @@ namespace Wrestling.Editor
                 into.Overlap.Add(viewer.RedFigure.Physical.DeepestOverlap(viewer.BlueFigure.Physical) * 100f);
                 into.GripHands += viewer.HandGrips.Gripping;
                 into.GripHeld += viewer.HandGrips.Holding;
+                foreach (Corner shown in new[] { Corner.Red, Corner.Blue })
+                {
+                    // The hands as shown, after the post-physics pass, against what they hold.
+                    PostPhysicsReprojector.Result reprojected = viewer.Reprojected(shown);
+                    into.ShownHolds += reprojected.Holds;
+                    into.ShownGapBefore += reprojected.GapBefore * 100f;
+                    into.ShownGapAfter += reprojected.GapAfter * 100f;
+                    into.ShownGapWorst = Mathf.Max(into.ShownGapWorst, reprojected.Holds == 0 ? 0f : reprojected.GapAfter * 100f / reprojected.Holds);
+                }
                 for (int corner = 0; corner < 2; corner++)
                 {
                     WrestlerCharacter figure = corner == 0 ? viewer.RedFigure : viewer.BlueFigure;
@@ -386,6 +401,10 @@ namespace Wrestling.Editor
             into.OverpoweredFrames += from.OverpoweredFrames;
             into.GripHands += from.GripHands;
             into.GripHeld += from.GripHeld;
+            into.ShownHolds += from.ShownHolds;
+            into.ShownGapBefore += from.ShownGapBefore;
+            into.ShownGapAfter += from.ShownGapAfter;
+            into.ShownGapWorst = Mathf.Max(into.ShownGapWorst, from.ShownGapWorst);
             into.Throws += from.Throws;
             into.ThrowAngleSum += from.ThrowAngleSum;
         }

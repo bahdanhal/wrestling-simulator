@@ -392,7 +392,8 @@ namespace Wrestling.Data.Animation
 
         /// <summary>
         /// Builds the library. Every phase of every technique must have its clip, every clip must
-        /// belong to a phase of the file's technique, and par terre techniques use the bottom frame.
+        /// belong to a phase of the file's technique, par terre techniques use the bottom frame, and
+        /// every clip is physically feasible at its phase's minimum length (<see cref="ClipFeasibility"/>).
         /// </summary>
         public static MoveAnimationLibrary Create(IEnumerable<MoveAnimationFile> files, TechniqueCatalog catalog)
         {
@@ -414,13 +415,25 @@ namespace Wrestling.Data.Animation
 
                 TechniqueDefinition technique = catalog.Get(file.Technique);
                 var phaseClips = new HashSet<string>(technique.Phases.Select(p => p.Animation), StringComparer.Ordinal);
+                var minimumTicks = new Dictionary<string, int>(StringComparer.Ordinal);
+                foreach (PhaseDefinition phase in technique.Phases)
+                {
+                    minimumTicks[phase.Animation] = minimumTicks.TryGetValue(phase.Animation, out int ticks) ? Math.Min(ticks, phase.MinimumTicks) : phase.MinimumTicks;
+                }
+
                 ClipFrame expectedFrame = IsParTerre(technique) ? ClipFrame.Bottom : ClipFrame.Executor;
                 foreach (MoveClip clip in file.Clips)
                 {
-                    errors.AddRange(clip.Validate());
+                    IReadOnlyList<string> invalid = clip.Validate();
+                    errors.AddRange(invalid);
                     if (!phaseClips.Contains(clip.Id))
                     {
                         errors.Add($"{file.Technique}: clip '{clip.Id}' is not used by any of its phases.");
+                    }
+                    else if (invalid.Count == 0)
+                    {
+                        // Played at the phase's fastest, the clip must ask only for motion a body can make.
+                        errors.AddRange(ClipFeasibility.Check(clip, minimumTicks[clip.Id]));
                     }
 
                     if (clip.Frame != expectedFrame)

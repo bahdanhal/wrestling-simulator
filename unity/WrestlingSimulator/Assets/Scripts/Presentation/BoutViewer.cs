@@ -412,13 +412,17 @@ namespace Wrestling.Presentation
             _redFigure.Apply(in redPose, GripOn(engine, Corner.Red, GripSide.Left), GripOn(engine, Corner.Red, GripSide.Right));
             _blueFigure.Apply(in bluePose, GripOn(engine, Corner.Blue, GripSide.Left), GripOn(engine, Corner.Blue, GripSide.Right));
             SimulateFalls(deltaTime, snapped);
+
+            // After physics, on the shown bones only: holding hands back on what they hold, posted hands flat on the mat.
+            Reproject(Corner.Red, _redFigure, in redPose, engine);
+            Reproject(Corner.Blue, _blueFigure, in bluePose, engine);
             _redFigure.ApplyExpression(in redPose);
             _blueFigure.ApplyExpression(in bluePose);
             _mat.ShowContacts(_redFigure.Physical, _blueFigure.Physical);
 
             // Sweat and strain follow the stamina spent and the bout time gone.
-            _redFigure.SetExertion(_exertion[0].Update(engine.Wrestler(Corner.Red), engine.Clock, deltaTime));
-            _blueFigure.SetExertion(_exertion[1].Update(engine.Wrestler(Corner.Blue), engine.Clock, deltaTime));
+            _redFigure.SetExertion(_exertion[0].Update(engine.Wrestler(Corner.Red), engine.Clock, deltaTime), deltaTime);
+            _blueFigure.SetExertion(_exertion[1].Update(engine.Wrestler(Corner.Blue), engine.Clock, deltaTime), deltaTime);
 
             // Twist bones and corrective shapes follow the final bones, after posing, contact and physics.
             _redFigure.UpdateDeformation();
@@ -437,6 +441,48 @@ namespace Wrestling.Presentation
 
             _scoreboard.Refresh(_session);
             Presented?.Invoke(this);
+        }
+
+        /// <summary>This frame's post-physics pass for each corner (see <see cref="PostPhysicsReprojector"/>).</summary>
+        public PostPhysicsReprojector.Result Reprojected(Corner corner) => _reprojected[(int)corner];
+
+        private readonly PostPhysicsReprojector.Result[] _reprojected = new PostPhysicsReprojector.Result[2];
+        private readonly GripLink[] _holdsScratch = new GripLink[2];
+        private readonly bool[] _freeScratch = new bool[2];
+
+        private void Reproject(Corner corner, WrestlerCharacter figure, in Pose pose, BoutEngine engine)
+        {
+            for (int side = 0; side < 2; side++)
+            {
+                var hand = (GripSide)side;
+                _holdsScratch[side] = HoldOf(corner, hand, figure);
+                HandGripStyle style = hand == GripSide.Left ? pose.LeftGripStyle : pose.RightGripStyle;
+                _freeScratch[side] = _holdsScratch[side] == null && style == HandGripStyle.OpenGuard && GripOn(engine, corner, hand) <= 0f;
+            }
+
+            _reprojected[(int)corner] = PostPhysicsReprojector.Apply(figure, _holdsScratch, _freeScratch, pose.ChestNormal);
+        }
+
+        /// <summary>The physical hold a hand is on: its engine grip's, or for a thrower the throw's hold on the thrown body.</summary>
+        private GripLink HoldOf(Corner corner, GripSide side, WrestlerCharacter figure)
+        {
+            GripLink link = _handGrips.Link(corner, side);
+            if (link != null || _throwTechnique == null || _thrown == corner)
+            {
+                return link;
+            }
+
+            WrestlerCharacter thrown = _thrown == Corner.Red ? _redFigure : _blueFigure;
+            ArticulationBody hand = figure.Physical.Link(side == GripSide.Left ? "LeftHand" : "RightHand");
+            foreach (GripLink hold in thrown.Physical.ThrowLinks)
+            {
+                if (hold.Holding && hold.Holder == hand)
+                {
+                    return hold;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>Gives a wrestler's pose under the loads their physical body measured; hands that hold a grip keep their hold.</summary>
@@ -845,25 +891,35 @@ namespace Wrestling.Presentation
             ankle = reached;
         }
 
-        /// <summary>Re-solves each holding arm so its hand reaches the point it holds on the opponent's physical body.</summary>
+        /// <summary>Re-solves each holding arm so its hand reaches the point it holds on the opponent's physical body (within the shoulder's reach cone).</summary>
         private void ReachHeldPoints(ref Pose pose, BodyProportions body, Corner corner)
         {
             Vector3? left = _handGrips.HeldPoint(corner, GripSide.Left);
+            Vector3? right = _handGrips.HeldPoint(corner, GripSide.Right);
+            PoseSolver.TwistForReach(ref pose, left, right);
             if (left.HasValue)
             {
-                pose.ElbowL = PoseSolver.TwoBone(pose.ShoulderL, left.Value, body.UpperArm, body.Forearm, pose.ElbowL - pose.ShoulderL, out pose.HandL);
+                PoseSolver.ReachArm(ref pose, body, true, left.Value, pose.ElbowL - Vector3.Lerp(pose.ShoulderL, left.Value, 0.5f));
             }
 
-            Vector3? right = _handGrips.HeldPoint(corner, GripSide.Right);
             if (right.HasValue)
             {
-                pose.ElbowR = PoseSolver.TwoBone(pose.ShoulderR, right.Value, body.UpperArm, body.Forearm, pose.ElbowR - pose.ShoulderR, out pose.HandR);
+                PoseSolver.ReachArm(ref pose, body, false, right.Value, pose.ElbowR - Vector3.Lerp(pose.ShoulderR, right.Value, 0.5f));
             }
         }
 
-        /// <summary>Puts the thrower's hands on the grip points of the opponent's actual (physics) body.</summary>
+        /// <summary>
+        /// Puts the thrower's hands on the grip points of the opponent's actual (physics) body. A
+        /// thrower turned away from what they hold (a headlock thrown over the hip) turns the chest
+        /// back towards it and draws the shoulder blade back; the arm itself stays inside the
+        /// shoulder's reach cone.
+        /// </summary>
         private void HoldGrips(ref Pose pose, BodyProportions body, PhysicalBody held)
         {
+            Vector3? targetL = null;
+            Vector3? targetR = null;
+            Vector3? poleL = null;
+            Vector3? poleR = null;
             foreach ((string holder, string point) in _throwGrips)
             {
                 if (!holder.EndsWith("ForeArm", System.StringComparison.Ordinal))
@@ -876,7 +932,7 @@ namespace Wrestling.Presentation
                 Vector3 shoulder = left ? pose.ShoulderL : pose.ShoulderR;
                 Vector3 outward = left ? pose.Left : -pose.Left;
                 Vector3 target = held.GripPoint(point);
-                Vector3 pole = (-Vector3.up * 0.6f) + (outward * 0.6f);
+                Vector3? pole = null;
                 if (point == "Head")
                 {
                     // A headlock: the arm goes round the neck, the elbow up over the head and the hand
@@ -889,12 +945,25 @@ namespace Wrestling.Presentation
 
                 if (left)
                 {
-                    pose.ElbowL = PoseSolver.TwoBone(pose.ShoulderL, target, body.UpperArm, body.Forearm, pole, out pose.HandL);
+                    targetL = target;
+                    poleL = pole;
                 }
                 else
                 {
-                    pose.ElbowR = PoseSolver.TwoBone(pose.ShoulderR, target, body.UpperArm, body.Forearm, pole, out pose.HandR);
+                    targetR = target;
+                    poleR = pole;
                 }
+            }
+
+            PoseSolver.TwistForReach(ref pose, targetL, targetR);
+            if (targetL.HasValue)
+            {
+                PoseSolver.ReachArm(ref pose, body, true, targetL.Value, poleL ?? PoseSolver.ElbowPole(in pose, true, targetL.Value));
+            }
+
+            if (targetR.HasValue)
+            {
+                PoseSolver.ReachArm(ref pose, body, false, targetR.Value, poleR ?? PoseSolver.ElbowPole(in pose, false, targetR.Value));
             }
         }
 
@@ -912,14 +981,7 @@ namespace Wrestling.Presentation
                 }
 
                 Vector3 chest = PoseSolver.AnchorOn(in thrower, throwerBody, AnchorPoint.Chest);
-                if (point.StartsWith("Left"))
-                {
-                    pose.ElbowL = PoseSolver.TwoBone(pose.ShoulderL, chest, body.UpperArm, body.Forearm, Vector3.up, out pose.HandL);
-                }
-                else
-                {
-                    pose.ElbowR = PoseSolver.TwoBone(pose.ShoulderR, chest, body.UpperArm, body.Forearm, Vector3.up, out pose.HandR);
-                }
+                PoseSolver.ReachArm(ref pose, body, point.StartsWith("Left"), chest, Vector3.up);
             }
         }
 
@@ -949,17 +1011,16 @@ namespace Wrestling.Presentation
 
         /// <summary>
         /// Moves a held body (before its whole-body rotation) so that, after the rotation and lift,
-        /// its waist sits the contact thickness outside the carrier's contact point. The keyed lift
-        /// is replaced by the hold in proportion to the anchor weight, so the bodies cannot separate.
+        /// its waist sits on the carrier's anatomical seat for the anchor (see
+        /// <see cref="ClipKinematics.Seat"/>): the contact thickness out from the carrier's surface,
+        /// along the surface's normal there, so the target never lies inside the carrier's body.
+        /// The keyed lift is replaced by the hold in proportion to the anchor weight, so the bodies
+        /// cannot separate.
         /// </summary>
         private static void Hold(ref Pose held, WrestlerFrame heldFrame, in Pose carrier, BodyProportions carrierBody, (AnchorPoint Point, float Weight, float Contact) anchor)
         {
-            // The held waist sits just outside the carrier's surface at the contact point, along the
-            // carrier's outward direction there, so the target never lies inside the carrier's body.
             Vector3 point = PoseSolver.AnchorOn(in carrier, carrierBody, anchor.Point);
-            Vector3 outward = point - Vector3.Lerp(carrier.Pelvis, carrier.Neck, 0.4f);
-            outward = outward.sqrMagnitude > 1e-6f ? outward.normalized : Vector3.up;
-            Vector3 target = point + (outward * anchor.Contact);
+            Vector3 target = point + (PoseSolver.AnchorNormal(in carrier, anchor.Point) * anchor.Contact);
             Vector3 free = PoseSolver.WholeBodyPivot(in held) + (Vector3.up * heldFrame.Lift);
             PoseSolver.Translate(ref held, (target - free) * Mathf.Clamp01(anchor.Weight));
         }

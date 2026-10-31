@@ -42,12 +42,12 @@
           }
         },
         {
-          "t": 0.5,
+          "t": 0.6,
           "executor": {
             "x": 0.2,
             "z": 0.0,
             "heading": 0.0,
-            "level": 0.45,
+            "level": 0.52,
             "posture": 0.8,
             "ground": "standing",
             "roll": 0.0,

@@ -77,6 +77,7 @@ namespace Wrestling.Editor
                 string suffix = sign > 0f ? "_L" : "_R";
                 Bake(side + "Arm", side + "ForeArm", CorrectiveShapes.ArmDirection(CorrectiveShapes.RaiseKeyElevation, 0f, up, outward, forward), "PSD_ShoulderRaise" + suffix);
                 Bake(side + "Arm", side + "ForeArm", CorrectiveShapes.ArmDirection(CorrectiveShapes.AcrossKeyElevation, CorrectiveShapes.AcrossKeyAzimuth, up, outward, forward), "PSD_ShoulderAcross" + suffix);
+                Bake(side + "Arm", side + "ForeArm", CorrectiveShapes.ArmDirection(CorrectiveShapes.BackKeyElevation, CorrectiveShapes.BackKeyAzimuth, up, outward, forward), "PSD_ShoulderBack" + suffix);
                 Bake(side + "UpLeg", side + "Leg", CorrectiveShapes.ThighDirection(CorrectiveShapes.HipFlexKey, up, forward), "PSD_HipFlex" + suffix);
             }
 

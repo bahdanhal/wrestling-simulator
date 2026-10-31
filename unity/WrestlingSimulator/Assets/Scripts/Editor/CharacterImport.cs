@@ -123,8 +123,6 @@ namespace Wrestling.Editor
                 CompressAthleticChest(root.transform, body, bottom, height);
             }
 
-            AddExpressionBlendShapes(root.transform, body);
-
             Mesh bodyMesh = body.sharedMesh;
             Matrix4x4 toRoot = root.transform.worldToLocalMatrix * body.transform.localToWorldMatrix;
             EditableMesh editable = EditableMesh.Read(bodyMesh);
@@ -132,6 +130,7 @@ namespace Wrestling.Editor
             SingletSeam.Build(editable, toRoot, height, curvature, Armholes(root.transform, bottom, height));
             TwistRig.Build(body, editable);
             CorrectiveShapeBaker.Build(root.transform, body, editable, toRoot);
+            FacialEffortBaker.Build(root.transform, body, editable, toRoot);
             SkinMaps.SweatAffinity(root.transform, body, editable, bottom, height);
             editable.Write(bodyMesh);
 
@@ -376,100 +375,6 @@ namespace Wrestling.Editor
             {
                 values[i] = (0.25f * copy[i - 1]) + (0.50f * copy[i]) + (0.25f * copy[i + 1]);
             }
-        }
-
-        /// <summary>
-        /// Adds procedural facial expression blend shapes (Expr_BrowFurrow and Expr_Effort) relative to the
-        /// eye and jaw bones so wrestlers show competitive focus and physical exertion during bouts.
-        /// </summary>
-        private static void AddExpressionBlendShapes(Transform root, SkinnedMeshRenderer body)
-        {
-            Transform leftEyeBone = null;
-            Transform rightEyeBone = null;
-            float front = 1f;
-            foreach (Transform bone in body.bones)
-            {
-                if (bone.name.EndsWith("LeftEye"))
-                {
-                    leftEyeBone = bone;
-                }
-                else if (bone.name.EndsWith("RightEye"))
-                {
-                    rightEyeBone = bone;
-                }
-                else if (bone.name.EndsWith("ToeBase") && bone.parent != null)
-                {
-                    front = root.InverseTransformPoint(bone.position).z - root.InverseTransformPoint(bone.parent.position).z >= 0f ? 1f : -1f;
-                }
-            }
-
-            if (leftEyeBone == null || rightEyeBone == null)
-            {
-                return;
-            }
-
-            Vector3 leftEye = root.InverseTransformPoint(leftEyeBone.position);
-            Vector3 rightEye = root.InverseTransformPoint(rightEyeBone.position);
-            Vector3 eyeMid = (leftEye + rightEye) * 0.5f;
-            float ipd = Mathf.Max(Vector3.Distance(leftEye, rightEye), 0.045f);
-
-            Mesh mesh = body.sharedMesh;
-            Vector3[] vertices = mesh.vertices;
-            int vertexCount = vertices.Length;
-            Matrix4x4 toRoot = root.worldToLocalMatrix * body.transform.localToWorldMatrix;
-            Matrix4x4 fromRoot = toRoot.inverse;
-
-            var browDelta = new Vector3[vertexCount];
-            var effortDelta = new Vector3[vertexCount];
-            var zeroNormals = new Vector3[vertexCount];
-            var zeroTangents = new Vector3[vertexCount];
-
-            for (int i = 0; i < vertexCount; i++)
-            {
-                Vector3 p = toRoot.MultiplyPoint3x4(vertices[i]);
-                float dx = (p.x - eyeMid.x) / ipd;
-                float ax = Mathf.Abs(dx);
-                float dy = (p.y - eyeMid.y) / ipd;
-                float dz = front * (p.z - eyeMid.z) / ipd;
-                if (dz < -0.15f || ax > 1.15f || dy < -1.10f || dy > 0.90f)
-                {
-                    continue;
-                }
-
-                // Brow furrow: pulls the inner brow ridge (corrugator/glabella) downward and inward.
-                float browY = Mathf.Exp(-Mathf.Pow((dy - 0.30f) / 0.22f, 2f));
-                float browX = Mathf.Exp(-Mathf.Pow(ax / 0.68f, 2f));
-                float browFront = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-0.05f, 0.25f, dz));
-                float browMask = browY * browX * browFront;
-                if (browMask > 1e-3f)
-                {
-                    float innerBias = Mathf.Exp(-Mathf.Pow(ax / 0.38f, 2f));
-                    Vector3 dRoot = new Vector3(
-                        -Mathf.Sign(dx) * 0.045f * ipd * browMask * Mathf.Clamp01(ax / 0.25f),
-                        -0.065f * ipd * browMask * (0.45f + (0.55f * innerBias)),
-                        front * 0.015f * ipd * browMask * innerBias);
-                    browDelta[i] = fromRoot.MultiplyVector(dRoot);
-                }
-
-                // Effort grimace: flares the nostrils, tenses the upper lip and lifts the infraorbital cheek.
-                float noseY = Mathf.Exp(-Mathf.Pow((dy + 0.45f) / 0.22f, 2f));
-                float noseX = Mathf.Exp(-Mathf.Pow((ax - 0.24f) / 0.18f, 2f));
-                float cheekY = Mathf.Exp(-Mathf.Pow((dy + 0.25f) / 0.24f, 2f));
-                float cheekX = Mathf.Exp(-Mathf.Pow((ax - 0.48f) / 0.26f, 2f));
-                float noseMask = noseY * noseX * browFront;
-                float cheekMask = cheekY * cheekX * browFront;
-                if (noseMask > 1e-3f || cheekMask > 1e-3f)
-                {
-                    Vector3 dRoot = new Vector3(
-                        Mathf.Sign(dx) * 0.038f * ipd * noseMask,
-                        (0.032f * ipd * noseMask) + (0.042f * ipd * cheekMask),
-                        front * 0.018f * ipd * cheekMask);
-                    effortDelta[i] = fromRoot.MultiplyVector(dRoot);
-                }
-            }
-
-            mesh.AddBlendShapeFrame("Expr_BrowFurrow", 100f, browDelta, zeroNormals, zeroTangents);
-            mesh.AddBlendShapeFrame("Expr_Effort", 100f, effortDelta, zeroNormals, zeroTangents);
         }
 
         /// <summary>

@@ -5,7 +5,8 @@ namespace Wrestling.Presentation
 {
     /// <summary>
     /// Pose-space corrective blend shapes for the shoulders and hips. The character importer bakes
-    /// each shape at a key pose (arm raised, arm across the chest, hip flexed) as the difference
+    /// each shape at a key pose (arm raised, arm across the chest, arm back behind the body, hip
+    /// flexed) as the difference
     /// between volume-preserving and linear skinning there; at runtime this class measures the
     /// same angles from the final bones and fades the shapes in. Shape names, key poses and the
     /// angle measures are defined once here for both. Display only.
@@ -16,6 +17,15 @@ namespace Wrestling.Presentation
         public const string ShoulderRaiseRight = "PSD_ShoulderRaise_R";
         public const string ShoulderAcrossLeft = "PSD_ShoulderAcross_L";
         public const string ShoulderAcrossRight = "PSD_ShoulderAcross_R";
+
+        /// <summary>
+        /// The upper arm extended back behind the coronal plane (a headlock thrown over the hip, an
+        /// arm reaching back for a hold while turned away): smooths the posterior axillary fold where
+        /// the latissimus, teres major and posterior deltoid meet, and opens the front of the
+        /// shoulder, so the armpit never pinches into a crease.
+        /// </summary>
+        public const string ShoulderBackLeft = "PSD_ShoulderBack_L";
+        public const string ShoulderBackRight = "PSD_ShoulderBack_R";
         public const string HipFlexLeft = "PSD_HipFlex_L";
         public const string HipFlexRight = "PSD_HipFlex_R";
 
@@ -26,6 +36,14 @@ namespace Wrestling.Presentation
         public const float AcrossKeyElevation = 90f;
 
         public const float AcrossKeyAzimuth = 115f;
+
+        /// <summary>Arm elevation and horizontal angle (degrees, negative = behind straight out sideways) of the back key pose: about 40° behind the coronal plane.</summary>
+        public const float BackKeyElevation = 80f;
+
+        public const float BackKeyAzimuth = -40f;
+
+        /// <summary>How far behind the coronal plane (dot of the arm with the body's back) the back shape starts.</summary>
+        private const float BackOnset = 0.2f;
 
         /// <summary>Thigh flexion from hanging (degrees) at which the hip shape is baked.</summary>
         public const float HipFlexKey = 95f;
@@ -52,9 +70,11 @@ namespace Wrestling.Presentation
             public float Sign;
             public int Raise;
             public int Across;
+            public int Back;
             public int Hip;
             public float RaiseWeight = -1f;
             public float AcrossWeight = -1f;
+            public float BackWeight = -1f;
             public float HipWeight = -1f;
         }
 
@@ -74,7 +94,7 @@ namespace Wrestling.Presentation
                 return index >= 0 ? index : throw new InvalidOperationException($"Body mesh has no corrective shape '{name}'; re-import the character models.");
             }
 
-            Side Make(string side, float sign, string raise, string across, string hip) => new Side
+            Side Make(string side, float sign, string raise, string across, string back, string hip) => new Side
             {
                 Arm = Required(side + "Arm"),
                 ForeArm = Required(side + "ForeArm"),
@@ -83,11 +103,12 @@ namespace Wrestling.Presentation
                 Sign = sign,
                 Raise = Shape(raise),
                 Across = Shape(across),
+                Back = Shape(back),
                 Hip = Shape(hip),
             };
 
-            _left = Make("Left", 1f, ShoulderRaiseLeft, ShoulderAcrossLeft, HipFlexLeft);
-            _right = Make("Right", -1f, ShoulderRaiseRight, ShoulderAcrossRight, HipFlexRight);
+            _left = Make("Left", 1f, ShoulderRaiseLeft, ShoulderAcrossLeft, ShoulderBackLeft, HipFlexLeft);
+            _right = Make("Right", -1f, ShoulderRaiseRight, ShoulderAcrossRight, ShoulderBackRight, HipFlexRight);
             Transform toe = Required("LeftToeBase");
             BodyFrame(_hips.position, Required("Neck").position, _left.Arm.position, _right.Arm.position, toe.position - toe.parent.position, out Vector3 up, out Vector3 left, out Vector3 forward);
             Quaternion toChest = Quaternion.Inverse(_chest.rotation);
@@ -133,13 +154,20 @@ namespace Wrestling.Presentation
             return ((-up * Mathf.Cos(f)) + (forward * Mathf.Sin(f))).normalized;
         }
 
-        /// <summary>Weights of the raise and across shapes for an arm direction in the body frame.</summary>
-        public static void ShoulderWeights(Vector3 direction, Vector3 up, Vector3 outward, Vector3 forward, out float raise, out float across)
+        /// <summary>
+        /// Weights of the raise, across and back shapes for an arm direction in the body frame. Each
+        /// is 1 alone at its own key pose; the back shape grows as the arm goes behind the coronal
+        /// plane (from <see cref="BackOnset"/>) and fades as it goes overhead.
+        /// </summary>
+        public static void ShoulderWeights(Vector3 direction, Vector3 up, Vector3 outward, Vector3 forward, out float raise, out float across, out float back)
         {
             float elevation = Mathf.Acos(Mathf.Clamp(-Vector3.Dot(direction, up), -1f, 1f)) * Mathf.Rad2Deg;
             float azimuth = Mathf.Atan2(Vector3.Dot(direction, forward), Vector3.Dot(direction, outward)) * Mathf.Rad2Deg;
             across = Ramp(85f, AcrossKeyAzimuth, azimuth) * Ramp(45f, 75f, elevation) * (1f - Ramp(120f, 150f, elevation));
-            raise = Ramp(60f, RaiseKeyElevation, elevation) * (1f - across);
+            float behind = -Vector3.Dot(direction, forward);
+            float keyBehind = -Vector3.Dot(ArmDirection(BackKeyElevation, BackKeyAzimuth, up, outward, forward), forward);
+            back = Ramp(BackOnset, keyBehind, behind) * Ramp(20f, 50f, elevation) * (1f - Ramp(125f, 155f, elevation)) * (1f - across);
+            raise = Ramp(60f, RaiseKeyElevation, elevation) * (1f - across) * (1f - back);
         }
 
         /// <summary>Weight of the hip shape for a thigh direction in the body frame.</summary>
@@ -162,13 +190,14 @@ namespace Wrestling.Presentation
         private float UpdateSide(Side side, Quaternion toChest, Quaternion toHips, out float hip)
         {
             Vector3 arm = toChest * (side.ForeArm.position - side.Arm.position).normalized;
-            ShoulderWeights(arm, _chestUp, _chestLeft * side.Sign, _chestForward, out float raise, out float across);
+            ShoulderWeights(arm, _chestUp, _chestLeft * side.Sign, _chestForward, out float raise, out float across, out float back);
             Vector3 thigh = toHips * (side.Knee.position - side.Thigh.position).normalized;
             hip = HipWeight(thigh, _hipsUp, _hipsForward);
             Set(side.Raise, raise * 100f, ref side.RaiseWeight);
             Set(side.Across, across * 100f, ref side.AcrossWeight);
+            Set(side.Back, back * 100f, ref side.BackWeight);
             Set(side.Hip, hip * 100f, ref side.HipWeight);
-            return Mathf.Max(raise, across);
+            return Mathf.Max(raise, Mathf.Max(across, back));
         }
 
         private void Set(int shape, float weight, ref float current)

@@ -10,7 +10,8 @@ namespace Wrestling.Editor
 {
     /// <summary>
     /// Renders each base character in the poses that stress skinning (arms raised, arm across the
-    /// chest, deep hip flexion, forearm and upper-arm roll), plain linear skinning on the left and
+    /// chest, arms extended back behind the body, a headlock wrap, deep hip flexion, forearm and
+    /// upper-arm roll), plain linear skinning on the left and
     /// with the twist bones and corrective shapes on the right, to check the deformation fixes.
     /// Menu Wrestling → Diagnostics → Render Deformation Sheet, or in batch mode (with graphics):
     /// -executeMethod Wrestling.Editor.DeformationSheet.RenderFromCommandLine -deformationOutput DIR
@@ -24,6 +25,8 @@ namespace Wrestling.Editor
         {
             ArmsRaised,
             ArmAcross,
+            ArmsBack,
+            HeadlockWrap,
             HipFlexed,
             LimbRoll,
         }
@@ -249,6 +252,30 @@ namespace Wrestling.Editor
 
                     focus = chest;
                     viewFrom = (forward * 1.2f) - (left * 0.6f) + (up * 0.15f);
+                    break;
+                case Stress.ArmsBack:
+                    // Both arms reaching back past the coronal plane: the posterior axillary fold.
+                    foreach (float side in new[] { 1f, -1f })
+                    {
+                        string prefix = side > 0f ? "Left" : "Right";
+                        Aim(find(prefix + "Arm"), find(prefix + "ForeArm"), CorrectiveShapes.ArmDirection(CorrectiveShapes.BackKeyElevation, CorrectiveShapes.BackKeyAzimuth, up, left * side, forward));
+                        Aim(find(prefix + "ForeArm"), find(prefix + "Hand"), CorrectiveShapes.ArmDirection(60f, -70f, up, left * side, forward));
+                    }
+
+                    // From behind and above the left shoulder, onto the back of the armpit.
+                    focus = find("LeftArm").position - (forward * 0.03f) - (up * 0.04f);
+                    viewFrom = (-forward * 0.75f) + (left * 0.55f) + (up * 0.45f);
+                    break;
+                case Stress.HeadlockWrap:
+                    // A headlock thrown over the hip: one arm high round the opponent's neck, the
+                    // other drawing their arm back behind the thrower's body.
+                    Aim(find("RightArm"), find("RightForeArm"), CorrectiveShapes.ArmDirection(105f, 125f, up, -left, forward));
+                    Aim(find("RightForeArm"), find("RightHand"), CorrectiveShapes.ArmDirection(95f, 200f, up, -left, forward));
+                    Roll(find("RightArm"), (find("RightForeArm").position - find("RightArm").position).normalized, -40f);
+                    Aim(find("LeftArm"), find("LeftForeArm"), CorrectiveShapes.ArmDirection(70f, -45f, up, left, forward));
+                    Aim(find("LeftForeArm"), find("LeftHand"), CorrectiveShapes.ArmDirection(80f, 10f, up, left, forward));
+                    focus = Vector3.Lerp(find("LeftArm").position, find("RightArm").position, 0.35f) - (up * 0.03f);
+                    viewFrom = (-forward * 0.85f) + (left * 0.6f) + (up * 0.5f);
                     break;
                 case Stress.HipFlexed:
                     foreach (float side in new[] { 1f, -1f })

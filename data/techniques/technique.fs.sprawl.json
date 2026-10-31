@@ -23,8 +23,8 @@
   "phases": [
     {
       "id": "sprawl",
-      "minimumTicks": 10,
-      "maximumTicks": 18,
+      "minimumTicks": 22,
+      "maximumTicks": 30,
       "attributes": [
         {
           "attribute": "legDefence",

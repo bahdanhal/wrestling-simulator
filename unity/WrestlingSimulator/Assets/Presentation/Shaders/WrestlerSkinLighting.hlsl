@@ -68,6 +68,58 @@ float SweatDroplets(float3 positionMetres, float3 dpdx, float3 dpdy)
     return smoothstep(0.56, 0.74, n) * visible;
 }
 
+// Distance to the nearest of one jittered point per unit cell (cellular / Worley F1).
+float WrestlerCellular(float3 p)
+{
+    float3 cell = floor(p);
+    float3 f = frac(p);
+    float nearest = 8.0;
+    [unroll] for (int z = -1; z <= 1; z++)
+    {
+        [unroll] for (int y = -1; y <= 1; y++)
+        {
+            [unroll] for (int x = -1; x <= 1; x++)
+            {
+                float3 o = float3(x, y, z);
+                float3 c = cell + o;
+                float3 jitter = float3(WrestlerHash(c), WrestlerHash(c + 17.31), WrestlerHash(c + 41.73));
+                float3 d = o + jitter - f;
+                nearest = min(nearest, dot(d, d));
+            }
+        }
+    }
+
+    return sqrt(nearest);
+}
+
+// Skin micro-relief: pores as small cavities on two scales (about 1.3 mm and 0.6 mm apart), on the
+// bind-space position in metres, so they are the same size everywhere and never break at UV
+// seams. Returns the height (m, negative in a pore), the pore share (0 on the ridges between them,
+// 1 in a pore) and how visible the relief is: each scale fades out where its pores would be
+// smaller than a pixel, so it never aliases at broadcast distance (and costs nothing there).
+float3 SkinMicroPores(float3 positionMetres, float3 dpdx, float3 dpdy)
+{
+    float footprint = max(length(dpdx), length(dpdy));
+    float coarse = 1.0 - smoothstep(0.25, 0.7, footprint / 0.0013);
+    float3 result = 0;
+    UNITY_BRANCH
+    if (coarse > 0.0)
+    {
+        float pore = (1.0 - smoothstep(0.08, 0.32, WrestlerCellular(positionMetres / 0.0013))) * coarse * 0.65;
+        float fine = 1.0 - smoothstep(0.25, 0.7, footprint / 0.0006);
+        UNITY_BRANCH
+        if (fine > 0.0)
+        {
+            pore += (1.0 - smoothstep(0.08, 0.3, WrestlerCellular((positionMetres / 0.0006) + 13.7))) * fine * 0.45;
+        }
+
+        pore = saturate(pore);
+        result = float3(-pore * 0.00004, pore, coarse);
+    }
+
+    return result;
+}
+
 float WrestlerGGX(float nh, float alpha)
 {
     float a2 = alpha * alpha;

@@ -24,8 +24,8 @@
   "phases": [
     {
       "id": "penetration",
-      "minimumTicks": 10,
-      "maximumTicks": 16,
+      "minimumTicks": 12,
+      "maximumTicks": 18,
       "attributes": [
         {
           "attribute": "legAttacks",
