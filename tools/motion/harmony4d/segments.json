@@ -1,0 +1,32 @@
+{
+  "note": "Segments of Harmony4D checked by eye against the cam01 images. Frames are indices into the sequence's pose files (20 fps) and into the take made from it.",
+  "segments": [
+    {
+      "clip": "anim.double_leg_blast.penetration",
+      "take": "harmony4d.train-grappling-001",
+      "poses": "train/02_grappling/001_grappling",
+      "fromFrame": 126,
+      "toFrame": 146,
+      "executor": 0,
+      "seen": "Level change and penetration step into both legs, knee to the mat; the hands have not closed on the legs yet."
+    },
+    {
+      "clip": "anim.snap_down_go_behind.snap",
+      "take": "harmony4d.test-grappling2-043",
+      "poses": "test/03_grappling2/043_grappling2",
+      "fromFrame": 176,
+      "toFrame": 204,
+      "executor": 1,
+      "seen": "From a tie-up, a hand on the head pulls the opponent down into a bent-over position; both stay on their feet."
+    },
+    {
+      "clip": "anim.body_lock_throw.lock",
+      "take": "harmony4d.train-grappling-055",
+      "poses": "train/02_grappling/055_grappling",
+      "fromFrame": 40,
+      "toFrame": 60,
+      "executor": 1,
+      "seen": "From 0.7 m apart, chest to chest with both arms round the opponent's back; the executor straightens up as the lock closes."
+    }
+  ]
+}

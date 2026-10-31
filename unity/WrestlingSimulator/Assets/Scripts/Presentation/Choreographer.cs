@@ -92,6 +92,9 @@ namespace Wrestling.Presentation
                 _motionTechnique = active;
                 _motionPhase = active.PhaseIndex;
                 _recordedStartTick = engine.Tick;
+#if UNITY_EDITOR
+                Debug.Log($"[motion] {active.Phase.Animation} starts at tick {engine.Tick}, executor {active.Executor}");
+#endif
             }
 
             float progress = active.PhaseLength > 0 ? (active.PhaseTick + alpha) / active.PhaseLength : 1f;
