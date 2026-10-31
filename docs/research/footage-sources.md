@@ -1,11 +1,34 @@
 # Footage sources for motion extraction
 
-Research on 29 October 2026 for real wrestling footage we may use to extract motion for the game's
+Research on 29 October 2026 (updated 31 October) for real wrestling footage we may use to extract motion for the game's
 technique clips. Folk and other grappling styles count: the mechanics of throws, lifts and
 takedowns (hip loading, leg drive, contact) are the same.
 
 Not legal advice. Every file below needs its licence checked on its own page before use, and
 attribution recorded.
+
+## Best source: Harmony4D (multi-view 3D, both people)
+
+Added 31 October 2026. [Harmony4D](https://huggingface.co/datasets/Jyun-Ting/Harmony4D) (Khirodkar, Song, Cao, Luo, Kitani; Carnegie Mellon; NeurIPS 2024) records unscripted close-contact activities with about 20 synchronised 4K GoPros at 60 fps, and releases per-frame 3D keypoints for **both** people at 20 fps, triangulated from all cameras, so neither body is lost when they clinch.
+
+- **Licence:** the Hugging Face dataset is tagged MIT, the [code repository](https://github.com/jyuntins/harmony4d) is MIT ("Copyright (c) 2024 Jyun-Ting Song"), and the paper is CC BY 4.0. Participants gave informed consent under IRB rules and were paid. Not gated. A third-party card ([Voxel51](https://docs.voxel51.com/dataset_zoo/datasets_hf/harmony4d.html)) says "not specified"; the authors' own MIT tag is the stronger signal, but confirm commercial use with them in writing before shipping.
+- **Content:** standing wrestling in shorts and rash guards on a wrestling mat (stance, hand fighting, collar ties, body locks, level changes, scrambles to the mat), recreational-level athletes rather than elite. Grappling: 67 sequences, 14,107 frames (11.8 minutes). MMA (with clinches and takedowns): 60 sequences, 16,025 frames (13.4 minutes). Also hugging, dancing, karate and fencing.
+- **Format:** each sequence's `processed_data/poses3d/NNNNN.npy` holds a dict of the two people (`aria01`, `aria02`), each a 17 × 4 float array (COCO-17 joints in metres, plus confidence), stored Fortran-ordered. The `.npy` files are pickled objects: read them by decoding the byte arrays from the pickle stream (`pickletools`), never with `allow_pickle=True`. SMPL fits are also included, but the SMPL body model is non-commercial, so use the keypoints.
+- **Size:** the zips are mostly images (17–44 GB each), but zip archives can be read file by file over HTTP range requests, so only the pose files (about 1.5 KB per frame, about 45 MB in all) need downloading.
+
+## Pilot: single-camera Commons footage (31 October 2026)
+
+Tried on [Sergey Semenov - Adam Coon](https://commons.wikimedia.org/wiki/File:Sergey_Semenov_-_Adam_Coon.ogv) (130 kg Greco-Roman, 1920 × 1080, 50 fps), around the overhead throw at 2:16–2:17.
+
+- MediaPipe pose (Apache 2.0) found each wrestler in under half the frames and confused the blue wrestler with the referee.
+- RTMPose-x with a YOLOX-x detector ([rtmlib](https://github.com/Tau-J/rtmlib), Apache 2.0) tracked the thrower in 152 of 175 frames, but the thrown wrestler, hidden behind him in the clinch and under him on landing, in only about 12 frames near the action.
+- Conclusion: one camera from the stands cannot give both bodies through a throw. Nothing was imported. Still useful as timing reference: the throw's flight (lift to landing) takes about 0.75 s, where the keyed throw flights take 0.27–0.43 s.
+
+## Other options checked
+
+- **Commercial paired animation packs:** [Grab & Throw Takedown Animation Pack](https://www.gameassetdeals.com/asset/403288/grab-throw-takedown-animation-pack) (46+ clips, each takedown with a matching victim clip), [Paired Suplex Wrestling Animations](https://www.fab.com/listings/16dc7f2d-eac7-4c6e-9045-4ac0cdf19d70) (12 sequences), [ActorCore Hand to Hand Combat](https://actorcore.reallusion.com/3d-motion/pack/studio-mocap-hand-to-hand-combat?info=1) (mocap, FBX/BVH). Paid, game-style (pro-wrestling and action takedowns), not Olympic technique; check each licence for use in a shipped game and for redistributing derived data.
+- **CMU Motion Capture Database:** free for research and commercial projects with credit, with about 55 two-person sequences, but everyday interactions (talking, playing, throwing a ball), not grappling.
+- **InterHuman, Hi4D, CHI3D, Inter-X:** two-person interaction datasets, research-only or with no stated licence; not usable commercially without the authors' permission.
 
 ## Usable: free licences
 
