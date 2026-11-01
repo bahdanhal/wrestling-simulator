@@ -176,7 +176,8 @@ public class PairedMotionSearchTests
     {
         string folder = TestContent.PathOf("motion/takes");
         var takes = Directory.GetFiles(folder, "*.json").Select(p => MotionLoader.TakeFromJson(File.ReadAllText(p), p)).ToArray();
-        Assert.Equal(3, takes.Length);
+        Assert.Contains(takes, t => t.Id == "harmony4d.test-grappling2-043");
+        Assert.True(takes.Length >= 7);
         foreach (var take in takes)
         {
             var range = new PairedMotionRange { Take = take, FromFrame = 0, ToFrame = Math.Min(5, take.FrameCount - 1) };

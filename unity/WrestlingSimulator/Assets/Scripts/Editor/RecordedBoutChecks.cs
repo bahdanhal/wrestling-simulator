@@ -59,6 +59,7 @@ namespace Wrestling.Editor
                 viewer.StartBout(test.Seed);
                 var baseline = new BoutSession(content, test.Style, 60, test.Seed);
                 int recordedFrames = 0;
+                int gripFrames = 0;
                 int until = test.Tick + 120;
                 int start = Math.Max(0, test.Tick - 45);
                 viewer.FastForward(start);
@@ -76,7 +77,11 @@ namespace Wrestling.Editor
                         if (viewer.RecordedLegs(corner).HasValue && !viewer.RecordedArms(corner).HasValue)
                             throw new InvalidOperationException("Recorded legs were active without recorded wrist retargeting.");
                     }
-                    if (viewer.CurrentClip == item.Key && viewer.RecordedLegs(Corner.Red).HasValue) recordedFrames++;
+                    if (viewer.CurrentClip == item.Key && viewer.RecordedLegs(Corner.Red).HasValue)
+                    {
+                        recordedFrames++;
+                        if (viewer.HandGrips.Gripping > 0) gripFrames++;
+                    }
                     var actual = viewer.Session.Engine;
                     var expected = baseline.Engine;
                     if (actual.Tick != expected.Tick || actual.Sheet.Points(Corner.Red) != expected.Sheet.Points(Corner.Red)
@@ -85,7 +90,9 @@ namespace Wrestling.Editor
                         throw new InvalidOperationException("Recorded presentation changed the authoritative simulation.");
                 }
                 if (recordedFrames < 2) throw new InvalidOperationException("Recorded phase was not exercised: " + item.Key);
-                Debug.Log($"[recorded-bout] {item.Key}: {recordedFrames} presented recorded frames, {test.Style}, seed {test.Seed}, phase found at tick {test.Tick}; review-only library, authoritative tick/score/state/phase unchanged.");
+                if (item.Key == "anim.snap_down_go_behind.snap" && gripFrames == 0)
+                    throw new InvalidOperationException("Recorded snap-down suspended engine hand grips.");
+                Debug.Log($"[recorded-bout] {item.Key}: {recordedFrames} presented recorded frames, grips active in {gripFrames}, {test.Style}, seed {test.Seed}, phase found at tick {test.Tick}; review-only library, authoritative tick/score/state/phase unchanged.");
             }
             Debug.Log("[recorded-bout] PASS all three recorded phase paths, entry and exit, actual limb retarget activation and independent simulation comparison. Contacts/exit continuity are not accepted by this check; production motion index is unchanged.");
         }

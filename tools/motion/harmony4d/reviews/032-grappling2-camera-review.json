@@ -1,0 +1,67 @@
+{
+  "source": {
+    "title": "Harmony4D test/03_grappling2.zip, sequence 032_grappling2",
+    "url": "https://huggingface.co/datasets/Jyun-Ting/Harmony4D",
+    "author": "Rawal Khirodkar, Jyun-Ting Song, Jinkun Cao, Zhengyi Luo, Kris Kitani (Carnegie Mellon University), Harmony4D, NeurIPS 2024",
+    "license": "MIT"
+  },
+  "camera": "cam01",
+  "reviewer": "Codex visual inspection; not an expert capture review",
+  "status": "camera context reviewed; candidate segment, no production phase assignment",
+  "poseIndexRange": [
+    7,
+    53
+  ],
+  "sampledPoseIndices": [
+    7,
+    16,
+    26,
+    36,
+    46,
+    53
+  ],
+  "sampledOriginalFrames": [
+    8,
+    17,
+    27,
+    37,
+    47,
+    54
+  ],
+  "images": [
+    {
+      "poseIndex": 7,
+      "originalFrame": 8,
+      "archiveMember": "03_grappling2/032_grappling2/exo/cam01/images/00008.jpg"
+    },
+    {
+      "poseIndex": 16,
+      "originalFrame": 17,
+      "archiveMember": "03_grappling2/032_grappling2/exo/cam01/images/00017.jpg"
+    },
+    {
+      "poseIndex": 26,
+      "originalFrame": 27,
+      "archiveMember": "03_grappling2/032_grappling2/exo/cam01/images/00027.jpg"
+    },
+    {
+      "poseIndex": 36,
+      "originalFrame": 37,
+      "archiveMember": "03_grappling2/032_grappling2/exo/cam01/images/00037.jpg"
+    },
+    {
+      "poseIndex": 46,
+      "originalFrame": 47,
+      "archiveMember": "03_grappling2/032_grappling2/exo/cam01/images/00047.jpg"
+    },
+    {
+      "poseIndex": 53,
+      "originalFrame": 54,
+      "archiveMember": "03_grappling2/032_grappling2/exo/cam01/images/00054.jpg"
+    }
+  ],
+  "summary": "The samples show a continuous close-contact exchange with a level change and a transition to one athlete kneeling while the other remains over them. This supports a real paired-wrestling transition; it is not independently labeled as a shot, takedown, or scoring outcome.",
+  "uncertainty": "cam01 is a wide oblique view. Bodies overlap through the exchange and hide several hands and contact points. Feet are visible in some frames, but contact geometry and palm/sole contact are not verified.",
+  "interpretationLimits": "The Harmony4D COCO-17 3D tracks are model-derived reconstructions. Camera samples support participant identity, broad action context and visible stance. They do not establish precise 3D joint accuracy, exact grip identity, palm contact, or sole contact. Toes in imported takes are inferred from ankles and pelvis facing.",
+  "savedEvidence": "docs/images/realism-review/contact-checkpoint (one camera sample per take; full downloaded review cache is temporary)"
+}

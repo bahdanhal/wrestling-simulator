@@ -70,7 +70,7 @@ namespace Wrestling.Presentation
 
         private static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 
-        private static Vector3 Point(in Pose pose, int i)
+        internal static Vector3 Point(in Pose pose, int i)
         {
             switch (i)
             {
@@ -95,7 +95,7 @@ namespace Wrestling.Presentation
             }
         }
 
-        private static void Set(ref Pose pose, int i, Vector3 value)
+        internal static void Set(ref Pose pose, int i, Vector3 value)
         {
             switch (i)
             {

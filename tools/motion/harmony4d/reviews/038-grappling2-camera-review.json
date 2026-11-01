@@ -1,0 +1,67 @@
+{
+  "source": {
+    "title": "Harmony4D test/03_grappling2.zip, sequence 038_grappling2",
+    "url": "https://huggingface.co/datasets/Jyun-Ting/Harmony4D",
+    "author": "Rawal Khirodkar, Jyun-Ting Song, Jinkun Cao, Zhengyi Luo, Kris Kitani (Carnegie Mellon University), Harmony4D, NeurIPS 2024",
+    "license": "MIT"
+  },
+  "camera": "cam01",
+  "reviewer": "Codex visual inspection; not an expert capture review",
+  "status": "camera context reviewed; candidate segment, no production phase assignment",
+  "poseIndexRange": [
+    121,
+    294
+  ],
+  "sampledPoseIndices": [
+    121,
+    160,
+    200,
+    240,
+    280,
+    294
+  ],
+  "sampledOriginalFrames": [
+    122,
+    161,
+    201,
+    241,
+    281,
+    295
+  ],
+  "images": [
+    {
+      "poseIndex": 121,
+      "originalFrame": 122,
+      "archiveMember": "03_grappling2/038_grappling2/exo/cam01/images/00122.jpg"
+    },
+    {
+      "poseIndex": 160,
+      "originalFrame": 161,
+      "archiveMember": "03_grappling2/038_grappling2/exo/cam01/images/00161.jpg"
+    },
+    {
+      "poseIndex": 200,
+      "originalFrame": 201,
+      "archiveMember": "03_grappling2/038_grappling2/exo/cam01/images/00201.jpg"
+    },
+    {
+      "poseIndex": 240,
+      "originalFrame": 241,
+      "archiveMember": "03_grappling2/038_grappling2/exo/cam01/images/00241.jpg"
+    },
+    {
+      "poseIndex": 280,
+      "originalFrame": 281,
+      "archiveMember": "03_grappling2/038_grappling2/exo/cam01/images/00281.jpg"
+    },
+    {
+      "poseIndex": 294,
+      "originalFrame": 295,
+      "archiveMember": "03_grappling2/038_grappling2/exo/cam01/images/00295.jpg"
+    }
+  ],
+  "summary": "The samples show sustained mutual standing hand-fighting and tie work across the reviewed window, with both athletes moving and changing their upper-body engagement. This is a useful standing neutral-to-tie source window, not a phase assignment.",
+  "uncertainty": "cam01 is a wide oblique view. Overlapping bodies obscure inside-arm placement and exact grips. Both athletes are visibly upright and feet appear at the mat, but exact palm/sole contact is not verified.",
+  "interpretationLimits": "The Harmony4D COCO-17 3D tracks are model-derived reconstructions. Camera samples support participant identity, broad action context and visible stance. They do not establish precise 3D joint accuracy, exact grip identity, palm contact, or sole contact. Toes in imported takes are inferred from ankles and pelvis facing.",
+  "savedEvidence": "docs/images/realism-review/contact-checkpoint (one camera sample per take; full downloaded review cache is temporary)"
+}

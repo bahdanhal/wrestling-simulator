@@ -1,6 +1,7 @@
 # Roadmap: everything the best version needs
 
 Current rough completion estimate and the next implementation milestone: [progress.md](progress.md).
+Latest saved implementation and remaining realism gaps: [1 November checkpoint](checkpoints/2026-11-01-motion-contacts.md).
 
 31 October 2026. Everything still needed for the full product, by area. Not staged: each item is built to its final quality. Target for presentation: bouts that look like real wrestling, judged against real athletes, not against our own clips. Built so far: `implementation-status.md`. Harmony4D's MIT licence is confirmed.
 

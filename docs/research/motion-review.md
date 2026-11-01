@@ -172,9 +172,9 @@ viewer against an independent engine session. It leaves `data/motion/index.json`
 Source coverage is recorded in [motion-coverage.md](motion-coverage.md); detections and reviewed
 windows remain distinct from production assignments.
 
-## Validation of this change
+## Validation snapshot before the motion/contact checkpoint
 
-The Release build and 407 C# tests pass, as do 18 offline Python tests. Unity checks fixed limb
+At the preceding checkpoint, the Release build and 407 C# tests passed, as did 18 offline Python tests. Unity checked fixed limb
 lengths over 35,668 procedural poses and recorded ankle mapping over 15,904 actor-frames across
 three source takes, both sexes, two leg proportions and both mirror states. Actual rig ankles
 agree with the solver's reachable endpoints within 0.000002 m. Short-legged profiles still have
@@ -190,3 +190,7 @@ respectively before counter/phase changes. Entry and exit code paths ran; this i
 that their contacts or procedural exits look like the recording.
 See [anatomical-knees.md](anatomical-knees.md) for knee geometry, passive-stop evidence and the
 remaining ambiguity in inferred signed flexion.
+
+Current verification, seven-take expansion, contact integration and remaining limitations are
+recorded in the [1 November motion/contact checkpoint](../checkpoints/2026-11-01-motion-contacts.md).
+The measurements above describe the earlier three-take, pelvis-preserving baseline.

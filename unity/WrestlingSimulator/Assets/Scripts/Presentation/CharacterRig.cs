@@ -49,6 +49,7 @@ namespace Wrestling.Presentation
         private readonly Transform _spine1;
         private readonly Dictionary<string, Transform> _byName = new Dictionary<string, Transform>(StringComparer.Ordinal);
         private readonly Vector3 _pelvisToHips;
+        private readonly Vector3 _headCentre;
         private readonly Vector3 _hipOffsetL;
         private readonly Vector3 _hipOffsetR;
         private readonly float _thighL;
@@ -105,6 +106,7 @@ namespace Wrestling.Presentation
             (bind.HandDirL, bind.PalmNormalL) = MeasureHand(byName, "Left", _bones[(int)Bone.LeftHand]);
             (bind.HandDirR, bind.PalmNormalR) = MeasureHand(byName, "Right", _bones[(int)Bone.RightHand]);
             Bind = bind;
+            _headCentre = _bones[(int)Bone.Head].InverseTransformPoint(bind.Head);
             Body = BodyProportions.FromBindPose(in bind, HeightOf(root));
 
             // The clavicles start where the rig's clavicle bones do, held in the chest's frame; the
@@ -198,18 +200,22 @@ namespace Wrestling.Presentation
         /// <summary>Recorded ankle targets and the reachable positions used by this model's legs.</summary>
         public readonly struct RecordedLegsResult
         {
-            public RecordedLegsResult(Vector3 leftTarget, Vector3 rightTarget, Vector3 leftReached, Vector3 rightReached)
+            public RecordedLegsResult(Vector3 leftTarget, Vector3 rightTarget, Vector3 leftReached, Vector3 rightReached, float pelvisCorrection = 0f, bool pelvisFitFeasible = true)
             {
                 LeftTarget = leftTarget;
                 RightTarget = rightTarget;
                 LeftReached = leftReached;
                 RightReached = rightReached;
+                PelvisCorrection = pelvisCorrection;
+                PelvisFitFeasible = pelvisFitFeasible;
             }
 
             public Vector3 LeftTarget { get; }
             public Vector3 RightTarget { get; }
             public Vector3 LeftReached { get; }
             public Vector3 RightReached { get; }
+            public float PelvisCorrection { get; }
+            public bool PelvisFitFeasible { get; }
             public float LeftResidual => Vector3.Distance(LeftTarget, LeftReached);
             public float RightResidual => Vector3.Distance(RightTarget, RightReached);
             public float MaxResidual => Mathf.Max(LeftResidual, RightResidual);
@@ -220,7 +226,7 @@ namespace Wrestling.Presentation
         /// transform. The pelvis trajectory is unchanged. Unreachable targets remain explicit in
         /// the result; this does not infer foot contacts, move the pelvis or place soles on a mat.
         /// </summary>
-        public RecordedLegsResult RetargetRecordedLegs(ref Pose pose)
+        public RecordedLegsResult RetargetRecordedLegs(ref Pose pose, bool fitPelvisToAnkles = false)
         {
             Vector3 targetL = pose.AnkleL;
             Vector3 targetR = pose.AnkleR;
@@ -238,11 +244,22 @@ namespace Wrestling.Presentation
             Quaternion pelvis = _rotations[(int)Bone.Hips];
             pose.HipL = pose.Pelvis + (pelvis * _hipOffsetL);
             pose.HipR = pose.Pelvis + (pelvis * _hipOffsetR);
+            var correction = fitPelvisToAnkles
+                ? AnkleReachProjection.Solve(pose.HipL, targetL, _thighL, _shinL, pose.HipR, targetR, _thighR, _shinR)
+                : new AnkleReachProjection.Result(0f, true);
+            if (correction.Feasible && correction.DeltaY != 0f)
+            {
+                // Fit the model to the trajectories, not the source athlete's incompatible hip
+                // height. Preserve both ankle/toe targets and horizontal pair placement.
+                PoseSolver.Translate(ref pose, Vector3.up * correction.DeltaY);
+                pose.AnkleL = targetL; pose.AnkleR = targetR;
+                pose.ToeL = targetL + toeL; pose.ToeR = targetR + toeR;
+            }
             pose.KneeL = ReachLimb(pose.HipL, targetL, _thighL, _shinL, poleL, pelvisFront, out pose.AnkleL);
             pose.KneeR = ReachLimb(pose.HipR, targetR, _thighR, _shinR, poleR, pelvisFront, out pose.AnkleR);
             pose.ToeL = pose.AnkleL + toeL;
             pose.ToeR = pose.AnkleR + toeR;
-            return new RecordedLegsResult(targetL, targetR, pose.AnkleL, pose.AnkleR);
+            return new RecordedLegsResult(targetL, targetR, pose.AnkleL, pose.AnkleR, correction.DeltaY, correction.Feasible);
         }
 
         private static Vector3 ReachLimb(Vector3 hip, Vector3 target, float thigh, float shin, Vector3 pole, Vector3 fallback, out Vector3 ankle)
@@ -392,6 +409,78 @@ namespace Wrestling.Presentation
         }
 
         public RecordedArmsResult? RecordedArms { get; private set; }
+
+        /// <summary>Current rendered geometry for interaction targets; never feeds the bout engine.</summary>
+        public Pose MeasurePose()
+        {
+            Vector3 P(Bone b) => _bones[(int)b].position;
+            return new Pose
+            {
+                Pelvis = (P(Bone.LeftUpperLeg) + P(Bone.RightUpperLeg)) * .5f,
+                Neck = P(Bone.Neck), Head = _bones[(int)Bone.Head].TransformPoint(_headCentre),
+                ShoulderL = P(Bone.LeftUpperArm), ShoulderR = P(Bone.RightUpperArm),
+                ElbowL = P(Bone.LeftLowerArm), ElbowR = P(Bone.RightLowerArm),
+                HandL = P(Bone.LeftHand), HandR = P(Bone.RightHand),
+                HipL = P(Bone.LeftUpperLeg), HipR = P(Bone.RightUpperLeg),
+                KneeL = P(Bone.LeftLowerLeg), KneeR = P(Bone.RightLowerLeg),
+                AnkleL = P(Bone.LeftFoot), AnkleR = P(Bone.RightFoot),
+                ToeL = Find("LeftToeBase").position, ToeR = Find("RightToeBase").position,
+                Spine = (P(Bone.Neck) - ((P(Bone.LeftUpperLeg) + P(Bone.RightUpperLeg)) * .5f)).normalized,
+                Left = SegmentRotation(Bone.Chest) * Vector3.left,
+                ChestNormal = SegmentRotation(Bone.Chest) * Vector3.forward,
+                PelvisUp = SegmentRotation(Bone.Hips) * Vector3.up,
+                PelvisNormal = SegmentRotation(Bone.Hips) * Vector3.forward,
+                HeadNormal = SegmentRotation(Bone.Head) * Vector3.forward,
+                HandDirL = SegmentRotation(Bone.LeftHand) * Vector3.up,
+                HandDirR = SegmentRotation(Bone.RightHand) * Vector3.up,
+                PalmNormalL = SegmentRotation(Bone.LeftHand) * Vector3.forward,
+                PalmNormalR = SegmentRotation(Bone.RightHand) * Vector3.forward,
+            };
+        }
+
+        /// <summary>Seats a wrist using actual fixed-length arm geometry; reports remaining reach error.</summary>
+        public (Vector3 Reached, float Residual) ReachWrist(bool left, Vector3 target)
+        {
+            Transform upper = _bones[(int)(left ? Bone.LeftUpperArm : Bone.RightUpperArm)];
+            Transform lower = _bones[(int)(left ? Bone.LeftLowerArm : Bone.RightLowerArm)];
+            Transform hand = _bones[(int)(left ? Bone.LeftHand : Bone.RightHand)];
+            Vector3 shoulder = upper.position, elbow = lower.position, wrist = hand.position;
+            Quaternion handRotation = hand.rotation;
+            Vector3 pole = elbow - Vector3.Lerp(shoulder, wrist, .5f);
+            Vector3 newElbow = ReachLimb(shoulder, target, left ? _upperArmL : _upperArmR,
+                left ? _forearmL : _forearmR, pole, SegmentRotation(Bone.Chest) * Vector3.forward, out Vector3 reached);
+            upper.rotation = Quaternion.FromToRotation(elbow - shoulder, newElbow - shoulder) * upper.rotation;
+            lower.rotation = Quaternion.FromToRotation(hand.position - lower.position, reached - lower.position) * lower.rotation;
+            hand.rotation = handRotation;
+            return (reached, Vector3.Distance(target, reached));
+        }
+
+        public (Vector3 Reached, float Residual) ReachAnkle(bool left, Vector3 target)
+        {
+            Transform upper = _bones[(int)(left ? Bone.LeftUpperLeg : Bone.RightUpperLeg)];
+            Transform lower = _bones[(int)(left ? Bone.LeftLowerLeg : Bone.RightLowerLeg)];
+            Transform foot = _bones[(int)(left ? Bone.LeftFoot : Bone.RightFoot)];
+            Vector3 hip = upper.position, knee = lower.position, ankle = foot.position;
+            Quaternion footRotation = foot.rotation;
+            Vector3 pole = knee - Vector3.Lerp(hip, ankle, .5f);
+            Vector3 newKnee = ReachLimb(hip, target, left ? _thighL : _thighR, left ? _shinL : _shinR,
+                pole, SegmentRotation(Bone.Hips) * Vector3.forward, out Vector3 reached);
+            upper.rotation = Quaternion.FromToRotation(knee - hip, newKnee - hip) * upper.rotation;
+            lower.rotation = Quaternion.FromToRotation(foot.position - lower.position, reached - lower.position) * lower.rotation;
+            foot.rotation = footRotation;
+            if (_calibratedKnees) AlignKnee(left);
+            return (reached, Vector3.Distance(target, reached));
+        }
+
+        public void AimPalm(bool left, Vector3 direction, Vector3 palm, float weight)
+        {
+            Bone forearmBone = left ? Bone.LeftLowerArm : Bone.RightLowerArm;
+            Bone handBone = left ? Bone.LeftHand : Bone.RightHand;
+            Quaternion forearm = SegmentRotation(forearmBone);
+            Vector3 neutral = Skeleton.NeutralPalm(forearm * Vector3.up, forearm * Vector3.forward, left, in _calibration);
+            var wrist = Skeleton.Wrist(forearm * Vector3.up, neutral, direction, palm);
+            SetSegmentRotation(handBone, Quaternion.Slerp(SegmentRotation(handBone), Skeleton.Orientation(wrist.Direction, wrist.Palm), Mathf.Clamp01(weight)));
+        }
 
         private RecordedArmsResult FitRecordedArms(in Pose pose)
         {

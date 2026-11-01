@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEditor;
@@ -10,6 +11,8 @@ using UnityEngine;
 using Wrestling.Core.Match;
 using Wrestling.Core.Rules;
 using Wrestling.Data;
+using Wrestling.Data.Json;
+using Wrestling.Data.Motion;
 using Wrestling.Presentation;
 using Debug = UnityEngine.Debug;
 
@@ -109,7 +112,16 @@ namespace Wrestling.Editor
                 EditorSceneManager.OpenScene(BoutViewerSceneBuilder.ScenePath, OpenSceneMode.Single);
                 BoutViewer viewer = UnityEngine.Object.FindAnyObjectByType<BoutViewer>();
                 Camera camera = UnityEngine.Object.FindAnyObjectByType<BroadcastCamera>().GetComponent<Camera>();
-                viewer.Initialise(ContentLocator.LoadDirect());
+                GameContent content = ContentLocator.LoadDirect();
+                MotionLibrary motion = null;
+                string motionIndex = Text("-clipMotionIndex", "");
+                if (!string.IsNullOrEmpty(motionIndex))
+                {
+                    MotionIndexFile index = ContentJson.Deserialize<MotionIndexFile>(File.ReadAllText(motionIndex), motionIndex);
+                    motion = MotionLibrary.Create(index, content.Motion.Takes,
+                        new HashSet<string>(content.Animations.All.Select(c => c.Id)), content.Motion.Contacts);
+                }
+                viewer.Initialise(content, motion);
                 viewer.Style = style;
                 viewer.StartBout((ulong)Argument(args, "-clipSeed", 1f));
                 if (Array.IndexOf(args, "-clipNoContact") >= 0)

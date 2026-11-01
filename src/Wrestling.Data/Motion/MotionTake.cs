@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Wrestling.Core.Match;
 
 namespace Wrestling.Data.Motion
 {
@@ -239,6 +240,18 @@ namespace Wrestling.Data.Motion
 
         /// <summary>True when the recorded technique is done to the executor's left side (the game mirrors it as needed).</summary>
         public bool LeftSide { get; init; }
+        /// <summary>When supplied, align the recorded working side to this actual engine grip,
+        /// rather than a technique's independent direction choice.</summary>
+        public GripType? MirrorGrip { get; init; }
+
+        /// <summary>When enabled, restricts this window to the listed engine grips for both actors.</summary>
+        public bool EnforceGripCompatibility { get; init; }
+
+        /// <summary>An enforced empty list requires no active engine hand grips.</summary>
+        public IReadOnlyList<GripType> CompatibleGrips { get; init; } = Array.Empty<GripType>();
+
+        /// <summary>Scope of camera review and authored adaptations; not an expert approval.</summary>
+        public string ReviewNotes { get; init; } = string.Empty;
     }
 
     /// <summary>Which technique phases have recorded motion (<c>data/motion/index.json</c>).</summary>
@@ -253,14 +266,17 @@ namespace Wrestling.Data.Motion
     public sealed class MotionLibrary
     {
         private readonly Dictionary<string, (MotionPhase Phase, MotionTake Take)> _byClip;
+        private readonly Dictionary<string, MotionContactSet> _contacts;
 
-        private MotionLibrary(Dictionary<string, (MotionPhase, MotionTake)> byClip, IReadOnlyList<MotionTake> takes)
+        private MotionLibrary(Dictionary<string, (MotionPhase, MotionTake)> byClip, IReadOnlyList<MotionTake> takes, Dictionary<string, MotionContactSet> contacts)
         {
             _byClip = byClip;
+            _contacts = contacts;
             Takes = takes;
         }
 
         public IReadOnlyList<MotionTake> Takes { get; }
+        public IReadOnlyCollection<MotionContactSet> Contacts => _contacts.Values;
 
         public int PhaseCount => _byClip.Count;
 
@@ -279,7 +295,10 @@ namespace Wrestling.Data.Motion
             return false;
         }
 
-        public static MotionLibrary Create(MotionIndexFile index, IEnumerable<MotionTake> takes, ISet<string> clipIds)
+        /// <summary>Validated presentation contact annotations for the take, if supplied.</summary>
+        public bool TryGetContacts(string takeId, out MotionContactSet contacts) => _contacts.TryGetValue(takeId, out contacts!);
+
+        public static MotionLibrary Create(MotionIndexFile index, IEnumerable<MotionTake> takes, ISet<string> clipIds, IEnumerable<MotionContactSet>? contactSets = null)
         {
             var errors = new List<string>();
             var byId = new Dictionary<string, MotionTake>(StringComparer.Ordinal);
@@ -299,6 +318,10 @@ namespace Wrestling.Data.Motion
             var byClip = new Dictionary<string, (MotionPhase, MotionTake)>(StringComparer.Ordinal);
             foreach (MotionPhase phase in index.Phases)
             {
+                if (phase.CompatibleGrips == null || phase.CompatibleGrips.Any(g => !Enum.IsDefined(typeof(GripType), g)))
+                    errors.Add($"{phase.Clip}: invalid compatible grip type.");
+                if (phase.EnforceGripCompatibility && string.IsNullOrWhiteSpace(phase.ReviewNotes))
+                    errors.Add($"{phase.Clip}: constrained source use needs review/adaptation notes.");
                 if (!clipIds.Contains(phase.Clip))
                 {
                     errors.Add($"Motion for unknown clip '{phase.Clip}'.");
@@ -330,12 +353,29 @@ namespace Wrestling.Data.Motion
                 byClip.Add(phase.Clip, (phase, take));
             }
 
+            var contactsByTake = new Dictionary<string, MotionContactSet>(StringComparer.Ordinal);
+            if (contactSets != null)
+            {
+                foreach (MotionContactSet contacts in contactSets)
+                {
+                    if (contacts == null) { errors.Add("Contact set must not be null."); continue; }
+                    if (string.IsNullOrWhiteSpace(contacts.Take) || !byId.TryGetValue(contacts.Take, out MotionTake? take))
+                    {
+                        errors.Add($"Contacts reference unknown take '{contacts.Take}'.");
+                        continue;
+                    }
+                    errors.AddRange(contacts.Validate(take));
+                    if (contactsByTake.ContainsKey(contacts.Take)) errors.Add($"Duplicate contact set for take '{contacts.Take}'.");
+                    else contactsByTake.Add(contacts.Take, contacts);
+                }
+            }
+
             if (errors.Count > 0)
             {
                 throw new ArgumentException("Motion data is invalid:\n- " + string.Join("\n- ", errors));
             }
 
-            return new MotionLibrary(byClip, byId.Values.ToList());
+            return new MotionLibrary(byClip, byId.Values.ToList(), contactsByTake);
         }
     }
 }

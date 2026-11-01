@@ -47,13 +47,9 @@ namespace Wrestling.Presentation
         private TechniqueExecution _throwTechnique;
         private int _throwPhase = -1;
         private readonly Pose[] _lastPoses = new Pose[2];
-        private readonly Pose[] _previousPoses = new Pose[2];
-        private readonly RecordedPoseTransition[] _recordedTransitions = { new RecordedPoseTransition(), new RecordedPoseTransition() };
-        private TechniqueExecution _recordedTechnique;
-        private int _recordedPhase = -1;
-        private float _recordedSwitchTime;
-        private float _lastPoseTime;
-        private float _previousPoseSeconds;
+        private readonly PoseTransitionCoordinator _poseTransitions = new PoseTransitionCoordinator();
+        private readonly RecordedGripRetargeter _recordedGrips = new RecordedGripRetargeter();
+        public RecordedContactConstraints.Result RecordedContacts { get; private set; }
         private readonly CharacterRig.RecordedLegsResult?[] _recordedLegs = new CharacterRig.RecordedLegsResult?[2];
 
         /// <summary>Recorded ankle targets and any unreachable residuals before physical tracking, when a recorded phase is active.</summary>
@@ -87,6 +83,7 @@ namespace Wrestling.Presentation
 
         /// <summary>The physical holds of the engine's grips (diagnostics).</summary>
         public HandGrips HandGrips => _handGrips;
+        public RecordedGripRetargeter.Result RecordedGrip(Corner corner, GripSide side) => _recordedGrips.Hand(corner, side);
 
         /// <summary>After a throw, the thrown wrestler's staging stays where the throw landed them, easing back to the engine's placement over about this long (s).</summary>
         private const float LandingOffsetSeconds = 3f;
@@ -165,6 +162,8 @@ namespace Wrestling.Presentation
 
         /// <summary>The move clip playing (diagnostics).</summary>
         public string CurrentClip => _choreographer?.CurrentClip;
+        public string RecordedTakeId => _choreographer?.RecordedTakeId;
+        public float RecordedSourceFrame => _choreographer?.RecordedFrame ?? 0f;
 
         /// <summary>The body state shown for a corner this frame (diagnostics).</summary>
         public WrestlerFrame Shown(Corner corner) => _shown[(int)corner];
@@ -222,9 +221,8 @@ namespace Wrestling.Presentation
             _throwGrips = new List<(string, string)>();
             _turning = false;
             _lastExecutor = null;
-            _recordedTechnique = null;
-            _recordedPhase = -1;
-            _previousPoseSeconds = 0f;
+            _poseTransitions.Reset();
+            _recordedGrips.Reset();
             _landingOffset[0] = Vector2.zero;
             _landingOffset[1] = Vector2.zero;
             _followLanding[0] = false;
@@ -323,6 +321,7 @@ namespace Wrestling.Presentation
             Smooth(1, blue, deltaTime);
             bool snapped = _snapNextFrame;
             _snapNextFrame = false;
+            if (snapped) _handGrips.Clear();
 
             PoseRole redRole = Staging.RoleOf(Corner.Red, engine.Position, engine.Top);
             PoseRole blueRole = Staging.RoleOf(Corner.Blue, engine.Position, engine.Top);
@@ -354,33 +353,9 @@ namespace Wrestling.Presentation
             float poseTime = (engine.Tick + alpha) / BoutClock.TicksPerSecond;
             if (recorded)
             {
-                var r = _choreographer.Recorded.Value;
-                var next = _choreographer.RecordedNext.Value;
-                bool switched = !ReferenceEquals(_recordedTechnique, engine.ActiveTechnique)
-                    || _recordedPhase != engine.ActiveTechnique.PhaseIndex;
-                if (snapped || _lastPoses[0].Spine == Vector3.zero)
-                {
-                    _recordedTransitions[0].Reset();
-                    _recordedTransitions[1].Reset();
-                    _recordedSwitchTime = poseTime;
-                }
-                else if (switched)
-                {
-                    float advance = Mathf.Clamp(poseTime - _lastPoseTime, 0f, 0.25f);
-                    _recordedTransitions[0].Begin(in _lastPoses[0], in _previousPoses[0], _previousPoseSeconds, in r.Red, in next.Red, next.Seconds, advance);
-                    _recordedTransitions[1].Begin(in _lastPoses[1], in _previousPoses[1], _previousPoseSeconds, in r.Blue, in next.Blue, next.Seconds, advance);
-                    _recordedSwitchTime = poseTime - advance;
-                }
-                _recordedTechnique = engine.ActiveTechnique;
-                _recordedPhase = engine.ActiveTechnique.PhaseIndex;
-                float elapsed = Mathf.Max(0f, poseTime - _recordedSwitchTime);
-                redPose = _recordedTransitions[0].Apply(in r.Red, elapsed);
-                bluePose = _recordedTransitions[1].Apply(in r.Blue, elapsed);
-            }
-            else
-            {
-                _recordedTechnique = null;
-                _recordedPhase = -1;
+                var source = _choreographer.Recorded.Value;
+                redPose = source.Red;
+                bluePose = source.Blue;
             }
 
             if (!recorded && redAnchor.Weight <= 0f && blueAnchor.Weight <= 0f)
@@ -447,14 +422,19 @@ namespace Wrestling.Presentation
                 PlantFeet(ref bluePose, _blueFigure);
             }
 
-            _recordedLegs[0] = recorded ? _redFigure.Rig.RetargetRecordedLegs(ref redPose) : (CharacterRig.RecordedLegsResult?)null;
-            _recordedLegs[1] = recorded ? _blueFigure.Rig.RetargetRecordedLegs(ref bluePose) : (CharacterRig.RecordedLegsResult?)null;
+            var future = _choreographer.RecordedNext;
+            Pose nextRed = future.HasValue ? future.Value.Red : redPose;
+            Pose nextBlue = future.HasValue ? future.Value.Blue : bluePose;
+            var transitioned = _poseTransitions.Sample(engine.ActiveTechnique, engine.ActiveTechnique?.PhaseIndex ?? -1,
+                recorded, poseTime, in redPose, in bluePose, future.HasValue, in nextRed, in nextBlue,
+                future?.Seconds ?? 0f, snapped);
+            redPose = transitioned.Red;
+            bluePose = transitioned.Blue;
+            bool fitTargets = recorded || _poseTransitions.IsTransitioning;
+            _recordedLegs[0] = fitTargets ? _redFigure.Rig.RetargetRecordedLegs(ref redPose, true) : (CharacterRig.RecordedLegsResult?)null;
+            _recordedLegs[1] = fitTargets ? _blueFigure.Rig.RetargetRecordedLegs(ref bluePose, true) : (CharacterRig.RecordedLegsResult?)null;
 
             SolveExpressions(engine, ref redPose, ref bluePose);
-            _previousPoses[0] = _lastPoses[0];
-            _previousPoses[1] = _lastPoses[1];
-            _previousPoseSeconds = snapped ? 0f : Mathf.Max(0f, poseTime - _lastPoseTime);
-            _lastPoseTime = poseTime;
             _lastPoses[0] = redPose;
             _lastPoses[1] = bluePose;
             if (snapped)
@@ -462,13 +442,25 @@ namespace Wrestling.Presentation
                 _redFigure.Rig.ResetKneeRollHistory();
                 _blueFigure.Rig.ResetKneeRollHistory();
             }
-            _redFigure.Apply(in redPose, GripOn(engine, Corner.Red, GripSide.Left), GripOn(engine, Corner.Red, GripSide.Right), recorded);
-            _blueFigure.Apply(in bluePose, GripOn(engine, Corner.Blue, GripSide.Left), GripOn(engine, Corner.Blue, GripSide.Right), recorded);
+            _redFigure.Apply(in redPose, GripOn(engine, Corner.Red, GripSide.Left), GripOn(engine, Corner.Red, GripSide.Right), fitTargets);
+            _blueFigure.Apply(in bluePose, GripOn(engine, Corner.Blue, GripSide.Left), GripOn(engine, Corner.Blue, GripSide.Right), fitTargets);
+            if (fitTargets)
+            {
+                if (!snapped) _handGrips.Update(engine, _redFigure.Physical, _blueFigure.Physical, _throwTechnique != null);
+                _recordedGrips.Apply(engine, _redFigure, _blueFigure, _handGrips, deltaTime, snapped);
+            }
+            else
+                _recordedGrips.Reset();
+            RecordedContacts = recorded ? RecordedContactConstraints.Apply(_choreographer.RecordedContacts,
+                _redFigure, _blueFigure, _choreographer.PlaceContactPoint, _choreographer.RecordedMirrored, engine) : default;
             SimulateFalls(deltaTime, snapped);
 
             // After physics, on the shown bones only: holding hands back on what they hold, posted hands flat on the mat.
             Reproject(Corner.Red, _redFigure, in redPose, engine);
             Reproject(Corner.Blue, _blueFigure, in bluePose, engine);
+            if (recorded)
+                RecordedContacts = RecordedContactConstraints.Apply(_choreographer.RecordedContacts,
+                    _redFigure, _blueFigure, _choreographer.PlaceContactPoint, _choreographer.RecordedMirrored, engine);
             _redFigure.ApplyExpression(in redPose);
             _blueFigure.ApplyExpression(in bluePose);
             _mat.ShowContacts(_redFigure.Physical, _blueFigure.Physical);
@@ -698,8 +690,8 @@ namespace Wrestling.Presentation
             var throwing = _choreographer.Recorded != null ? null : _choreographer.Throw;
             UpdateThrow(throwing, figures);
 
-            // The engine's grips hold physically, except while a throw's own holds or recorded motion are in charge.
-            _handGrips.Update(_session.Engine, _redFigure.Physical, _blueFigure.Physical, _throwTechnique != null || _choreographer.Recorded != null);
+            // Recorded poses retain the engine's physical grips; only keyed throw holds replace them.
+            _handGrips.Update(_session.Engine, _redFigure.Physical, _blueFigure.Physical, _throwTechnique != null);
             for (int i = 0; i < 2; i++)
             {
                 // A wrestler the clip holds on the other's body (a lift, a carry) is held up by them.

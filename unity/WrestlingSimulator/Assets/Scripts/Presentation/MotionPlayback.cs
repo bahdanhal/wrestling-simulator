@@ -20,6 +20,16 @@ namespace Wrestling.Presentation
         private float _scale;
         private bool _mirror;
         private Vector3 _mirrorNormal;
+        public bool Mirrored => _mirror;
+
+        /// <summary>Places a point from the take's original right-handed Y-up metre space.
+        /// Uses exactly the same origin, scale and pair-facing reflection as recorded joints.</summary>
+        public Vector3 TransformSourcePoint(Vector3 source)
+        {
+            Vector3 local = (new Vector3(source.x, source.y, -source.z) - _takeOrigin) * _scale;
+            if (_mirror) local = Vector3.Reflect(local, _mirrorNormal);
+            return _origin + (_turn * local);
+        }
 
         /// <summary>Aligns a take to the wrestlers' current poses (call once when the phase starts).</summary>
         public void Begin(MotionTake take, MotionPhase phase, in Pose executor, in Pose opponent, float executorHeight, float opponentHeight, bool leftSide)

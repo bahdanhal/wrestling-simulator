@@ -21,6 +21,7 @@ namespace Wrestling.Presentation
         private float _damper;
         private float _maxForce;
         private readonly float _breakDistance;
+        private readonly Quaternion _holderInHeld;
 
         /// <param name="holder">Segment that holds (a hand, or the thrower's trunk for a trap).</param>
         /// <param name="holderAnchor">Point on the holder, in its local space.</param>
@@ -36,6 +37,7 @@ namespace Wrestling.Presentation
             _damper = damper;
             _maxForce = maxForce;
             _breakDistance = breakDistance;
+            _holderInHeld = Quaternion.Inverse(held.transform.rotation) * holder.transform.rotation;
         }
 
         /// <summary>Point on the holder, in its local space (movable: a seat that slides round a fulcrum).</summary>
@@ -66,6 +68,7 @@ namespace Wrestling.Presentation
         public Vector3 HolderPoint => _holder.transform.TransformPoint(HolderAnchor);
 
         public Vector3 HeldPoint => _held.transform.TransformPoint(HeldAnchor);
+        public Quaternion HeldOrientation => _held.transform.rotation * _holderInHeld;
 
         public float MaxForce => _maxForce;
 

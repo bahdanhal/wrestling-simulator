@@ -1,0 +1,50 @@
+{
+  "archive": "test/03_grappling2.zip",
+  "archive_url": "https://huggingface.co/datasets/Jyun-Ting/Harmony4D/resolve/main/test/03_grappling2.zip",
+  "sequence": "038_grappling2",
+  "camera": "cam01",
+  "source": {
+    "title": "Harmony4D",
+    "url": "https://huggingface.co/datasets/Jyun-Ting/Harmony4D",
+    "license": "MIT",
+    "notes": "Dataset attribution; see the dataset for terms and details."
+  },
+  "images": [
+    {
+      "pose_index": 121,
+      "original_frame": 122,
+      "archive_member": "03_grappling2/038_grappling2/exo/cam01/images/00122.jpg",
+      "file": "pose-000121-frame-000122.jpg"
+    },
+    {
+      "pose_index": 160,
+      "original_frame": 161,
+      "archive_member": "03_grappling2/038_grappling2/exo/cam01/images/00161.jpg",
+      "file": "pose-000160-frame-000161.jpg"
+    },
+    {
+      "pose_index": 200,
+      "original_frame": 201,
+      "archive_member": "03_grappling2/038_grappling2/exo/cam01/images/00201.jpg",
+      "file": "pose-000200-frame-000201.jpg"
+    },
+    {
+      "pose_index": 240,
+      "original_frame": 241,
+      "archive_member": "03_grappling2/038_grappling2/exo/cam01/images/00241.jpg",
+      "file": "pose-000240-frame-000241.jpg"
+    },
+    {
+      "pose_index": 280,
+      "original_frame": 281,
+      "archive_member": "03_grappling2/038_grappling2/exo/cam01/images/00281.jpg",
+      "file": "pose-000280-frame-000281.jpg"
+    },
+    {
+      "pose_index": 294,
+      "original_frame": 295,
+      "archive_member": "03_grappling2/038_grappling2/exo/cam01/images/00295.jpg",
+      "file": "pose-000294-frame-000295.jpg"
+    }
+  ]
+}

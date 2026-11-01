@@ -1,0 +1,62 @@
+{
+  "archive": "test/03_grappling2.zip",
+  "archive_url": "https://huggingface.co/datasets/Jyun-Ting/Harmony4D/resolve/main/test/03_grappling2.zip",
+  "sequence": "030_grappling2",
+  "camera": "cam01",
+  "source": {
+    "title": "Harmony4D",
+    "url": "https://huggingface.co/datasets/Jyun-Ting/Harmony4D",
+    "license": "MIT",
+    "notes": "Dataset attribution; see the dataset for terms and details."
+  },
+  "images": [
+    {
+      "pose_index": 94,
+      "original_frame": 95,
+      "archive_member": "03_grappling2/030_grappling2/exo/cam01/images/00095.jpg",
+      "file": "pose-000094-frame-000095.jpg"
+    },
+    {
+      "pose_index": 106,
+      "original_frame": 107,
+      "archive_member": "03_grappling2/030_grappling2/exo/cam01/images/00107.jpg",
+      "file": "pose-000106-frame-000107.jpg"
+    },
+    {
+      "pose_index": 120,
+      "original_frame": 121,
+      "archive_member": "03_grappling2/030_grappling2/exo/cam01/images/00121.jpg",
+      "file": "pose-000120-frame-000121.jpg"
+    },
+    {
+      "pose_index": 134,
+      "original_frame": 135,
+      "archive_member": "03_grappling2/030_grappling2/exo/cam01/images/00135.jpg",
+      "file": "pose-000134-frame-000135.jpg"
+    },
+    {
+      "pose_index": 196,
+      "original_frame": 197,
+      "archive_member": "03_grappling2/030_grappling2/exo/cam01/images/00197.jpg",
+      "file": "pose-000196-frame-000197.jpg"
+    },
+    {
+      "pose_index": 230,
+      "original_frame": 231,
+      "archive_member": "03_grappling2/030_grappling2/exo/cam01/images/00231.jpg",
+      "file": "pose-000230-frame-000231.jpg"
+    },
+    {
+      "pose_index": 265,
+      "original_frame": 266,
+      "archive_member": "03_grappling2/030_grappling2/exo/cam01/images/00266.jpg",
+      "file": "pose-000265-frame-000266.jpg"
+    },
+    {
+      "pose_index": 300,
+      "original_frame": 301,
+      "archive_member": "03_grappling2/030_grappling2/exo/cam01/images/00301.jpg",
+      "file": "pose-000300-frame-000301.jpg"
+    }
+  ]
+}

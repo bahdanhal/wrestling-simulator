@@ -2,6 +2,9 @@
 
 Updated 1 November 2026. Baseline commit: `6055771`.
 
+Latest saved implementation and continuation notes:
+[1 November motion/contact checkpoint](checkpoints/2026-11-01-motion-contacts.md).
+
 **Approximately 20% complete**, as an engineering estimate of the full product described in
 [the roadmap](roadmap.md), not a measured score or a count of equally sized checklist items.
 The deterministic bout/rules engine and tournament foundations are substantially built.

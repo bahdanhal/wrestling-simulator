@@ -1,0 +1,60 @@
+{
+  "source": {
+    "title": "Harmony4D test/03_grappling2.zip, sequence 040_grappling2",
+    "url": "https://huggingface.co/datasets/Jyun-Ting/Harmony4D",
+    "author": "Rawal Khirodkar, Jyun-Ting Song, Jinkun Cao, Zhengyi Luo, Kris Kitani (Carnegie Mellon University), Harmony4D, NeurIPS 2024",
+    "license": "MIT"
+  },
+  "camera": "cam01",
+  "reviewer": "Codex visual inspection; not an expert capture review",
+  "status": "camera context reviewed; candidate segment, no production phase assignment",
+  "poseIndexRange": [
+    214,
+    253
+  ],
+  "sampledPoseIndices": [
+    214,
+    224,
+    234,
+    244,
+    253
+  ],
+  "sampledOriginalFrames": [
+    215,
+    225,
+    235,
+    245,
+    254
+  ],
+  "images": [
+    {
+      "poseIndex": 214,
+      "originalFrame": 215,
+      "archiveMember": "03_grappling2/040_grappling2/exo/cam01/images/00215.jpg"
+    },
+    {
+      "poseIndex": 224,
+      "originalFrame": 225,
+      "archiveMember": "03_grappling2/040_grappling2/exo/cam01/images/00225.jpg"
+    },
+    {
+      "poseIndex": 234,
+      "originalFrame": 235,
+      "archiveMember": "03_grappling2/040_grappling2/exo/cam01/images/00235.jpg"
+    },
+    {
+      "poseIndex": 244,
+      "originalFrame": 245,
+      "archiveMember": "03_grappling2/040_grappling2/exo/cam01/images/00245.jpg"
+    },
+    {
+      "poseIndex": 253,
+      "originalFrame": 254,
+      "archiveMember": "03_grappling2/040_grappling2/exo/cam01/images/00254.jpg"
+    }
+  ],
+  "summary": "The samples show a standing collar/tie engagement with visible upper-body pressure and both athletes staying on their feet throughout the reviewed window. This supports a tie-work source window, not a snapdown/takedown label.",
+  "uncertainty": "cam01 is a wide oblique view. Upper bodies overlap, obscuring the exact hand-to-neck placement and fingers. Feet appear grounded, but exact palm/sole contact is not verified.",
+  "interpretationLimits": "The Harmony4D COCO-17 3D tracks are model-derived reconstructions. Camera samples support participant identity, broad action context and visible stance. They do not establish precise 3D joint accuracy, exact grip identity, palm contact, or sole contact. Toes in imported takes are inferred from ankles and pelvis facing.",
+  "savedEvidence": "docs/images/realism-review/contact-checkpoint (one camera sample per take; full downloaded review cache is temporary)"
+}

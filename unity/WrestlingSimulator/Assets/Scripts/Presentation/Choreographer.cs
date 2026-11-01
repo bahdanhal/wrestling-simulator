@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Wrestling.Core.Match;
 using Wrestling.Core.Rules;
@@ -53,6 +56,8 @@ namespace Wrestling.Presentation
         private readonly MotionPlayback _playback = new MotionPlayback();
         private TechniqueExecution _motionTechnique;
         private int _motionPhase = -1;
+        private TechniqueExecution _rejectedMotion;
+        private int _rejectedPhase = -1;
         private TechniqueExecution _anchored;
         private Vector2 _origin;
         private Vector2 _forward;
@@ -70,6 +75,11 @@ namespace Wrestling.Presentation
         /// </summary>
         public (Pose Red, Pose Blue, float Entry)? Recorded { get; private set; }
         public (Pose Red, Pose Blue, float Seconds)? RecordedNext { get; private set; }
+        public IReadOnlyList<MotionContactSample> RecordedContacts { get; private set; } = Array.Empty<MotionContactSample>();
+        public bool RecordedMirrored => _playback.Mirrored;
+        public string RecordedTakeId { get; private set; }
+        public float RecordedFrame { get; private set; }
+        public Vector3 PlaceContactPoint(ContactVector point) => _playback.TransformSourcePoint(new Vector3(point.X, point.Y, point.Z));
 
         /// <summary>
         /// Looks up recorded motion for the active phase; on a new phase it aligns the take to the
@@ -79,6 +89,8 @@ namespace Wrestling.Presentation
         {
             Recorded = null;
             RecordedNext = null;
+            RecordedContacts = Array.Empty<MotionContactSample>();
+            RecordedTakeId = null;
             TechniqueExecution active = engine.ActiveTechnique;
             if (active == null || engine.IsStopped || !_motion.TryGet(active.Phase.Animation, out MotionPhase phase, out MotionTake take))
             {
@@ -88,9 +100,31 @@ namespace Wrestling.Presentation
             }
 
             int executor = (int)active.Executor;
+            if (ReferenceEquals(_rejectedMotion, active) && _rejectedPhase == active.PhaseIndex) return;
+            if (phase.EnforceGripCompatibility && engine.Grips.All.Any(g => !phase.CompatibleGrips.Contains(g.Type)))
+            {
+                // Once a phase becomes incompatible, stay procedural until its next boundary.
+                _rejectedMotion = active;
+                _rejectedPhase = active.PhaseIndex;
+                _motionTechnique = null;
+                _motionPhase = -1;
+                return;
+            }
             if (!ReferenceEquals(_motionTechnique, active) || _motionPhase != active.PhaseIndex)
             {
-                _playback.Begin(take, phase, in shownPoses[executor], in shownPoses[1 - executor], heights[executor], heights[1 - executor], active.Side == GripSide.Left);
+                GripSide workingSide = active.Side;
+                if (phase.MirrorGrip.HasValue)
+                {
+                    Grip grip = engine.Grips.Find(active.Executor, phase.MirrorGrip.Value);
+                    if (grip == null)
+                    {
+                        _rejectedMotion = active;
+                        _rejectedPhase = active.PhaseIndex;
+                        return;
+                    }
+                    workingSide = grip.Side;
+                }
+                _playback.Begin(take, phase, in shownPoses[executor], in shownPoses[1 - executor], heights[executor], heights[1 - executor], workingSide == GripSide.Left);
                 _motionTechnique = active;
                 _motionPhase = active.PhaseIndex;
                 _recordedStartTick = engine.Tick;
@@ -100,7 +134,12 @@ namespace Wrestling.Presentation
             }
 
             float progress = active.PhaseLength > 0 ? (active.PhaseTick + alpha) / active.PhaseLength : 1f;
+            RecordedTakeId = take.Id;
+            RecordedFrame = Mathf.Lerp(phase.FromFrame, phase.ToFrame, Mathf.Clamp01(progress));
             (Pose executorPose, Pose opponentPose) = _playback.Sample(progress);
+            if (_motion.TryGetContacts(take.Id, out MotionContactSet contacts))
+                RecordedContacts = contacts.Sample(Mathf.Lerp(phase.FromFrame, phase.ToFrame, Mathf.Clamp01(progress)),
+                    _playback.Mirrored, phase.Executor != executor);
             float available = (active.PhaseLength - active.PhaseTick - alpha) / BoutClock.TicksPerSecond;
             float nextSeconds = available > 1e-5f ? Mathf.Min(1f / BoutClock.TicksPerSecond, available) : 1f / BoutClock.TicksPerSecond;
             float phaseSeconds = active.PhaseLength / (float)BoutClock.TicksPerSecond;

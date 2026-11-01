@@ -41,9 +41,23 @@ namespace Wrestling.Data.Motion
                 }
             }
 
+            var contacts = new List<MotionContactSet>();
+            string contactsPath = Path.Combine(directory, MotionContactLoader.ContactsFolder);
+            if (Directory.Exists(contactsPath))
+            {
+                foreach (string path in Directory.GetFiles(contactsPath, "*.json").OrderBy(p => p, StringComparer.Ordinal))
+                {
+                    string name = Path.GetFileName(path);
+                    MotionContactSet set = ContentJson.Deserialize<MotionContactSet>(File.ReadAllText(path), name);
+                    if (!string.Equals(name, set.Take + ".json", StringComparison.Ordinal))
+                        throw new ContentLoadException(name, $"File name must match the contact take id ('{set.Take}.json').");
+                    contacts.Add(set);
+                }
+            }
+
             try
             {
-                return MotionLibrary.Create(index, takes, new HashSet<string>(animations.All.Select(c => c.Id), StringComparer.Ordinal));
+                return MotionLibrary.Create(index, takes, new HashSet<string>(animations.All.Select(c => c.Id), StringComparer.Ordinal), contacts);
             }
             catch (ArgumentException exception)
             {

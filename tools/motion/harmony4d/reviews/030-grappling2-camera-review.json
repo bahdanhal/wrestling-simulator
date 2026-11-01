@@ -1,0 +1,81 @@
+{
+  "source": {
+    "title": "Harmony4D test/03_grappling2.zip, sequence 030_grappling2",
+    "url": "https://huggingface.co/datasets/Jyun-Ting/Harmony4D",
+    "author": "Rawal Khirodkar, Jyun-Ting Song, Jinkun Cao, Zhengyi Luo, Kris Kitani (Carnegie Mellon University), Harmony4D, NeurIPS 2024",
+    "license": "MIT"
+  },
+  "camera": "cam01",
+  "reviewer": "Codex visual inspection; not an expert capture review",
+  "status": "camera context reviewed; candidate segment, no production phase assignment",
+  "poseIndexRange": [
+    94,
+    300
+  ],
+  "sampledPoseIndices": [
+    94,
+    106,
+    120,
+    134,
+    196,
+    230,
+    265,
+    300
+  ],
+  "sampledOriginalFrames": [
+    95,
+    107,
+    121,
+    135,
+    197,
+    231,
+    266,
+    301
+  ],
+  "images": [
+    {
+      "poseIndex": 94,
+      "originalFrame": 95,
+      "archiveMember": "03_grappling2/030_grappling2/exo/cam01/images/00095.jpg"
+    },
+    {
+      "poseIndex": 106,
+      "originalFrame": 107,
+      "archiveMember": "03_grappling2/030_grappling2/exo/cam01/images/00107.jpg"
+    },
+    {
+      "poseIndex": 120,
+      "originalFrame": 121,
+      "archiveMember": "03_grappling2/030_grappling2/exo/cam01/images/00121.jpg"
+    },
+    {
+      "poseIndex": 134,
+      "originalFrame": 135,
+      "archiveMember": "03_grappling2/030_grappling2/exo/cam01/images/00135.jpg"
+    },
+    {
+      "poseIndex": 196,
+      "originalFrame": 197,
+      "archiveMember": "03_grappling2/030_grappling2/exo/cam01/images/00197.jpg"
+    },
+    {
+      "poseIndex": 230,
+      "originalFrame": 231,
+      "archiveMember": "03_grappling2/030_grappling2/exo/cam01/images/00231.jpg"
+    },
+    {
+      "poseIndex": 265,
+      "originalFrame": 266,
+      "archiveMember": "03_grappling2/030_grappling2/exo/cam01/images/00266.jpg"
+    },
+    {
+      "poseIndex": 300,
+      "originalFrame": 301,
+      "archiveMember": "03_grappling2/030_grappling2/exo/cam01/images/00301.jpg"
+    }
+  ],
+  "summary": "The two athletes remain visible in close standing hand-fighting/body contact across the sampled approach and engagement frames. Torso overlap hides several arm and hand placements. This supports a real paired-wrestling context, but not a specific technique label.",
+  "uncertainty": "cam01 is a wide oblique view. Some inside arms and grips are hidden by body overlap; feet are visible in sampled views, but camera images do not verify exact sole contact or any specific hand contact.",
+  "interpretationLimits": "The Harmony4D COCO-17 3D tracks are model-derived reconstructions. Camera samples support participant identity, broad action context and visible stance. They do not establish precise 3D joint accuracy, exact grip identity, palm contact, or sole contact. Toes in imported takes are inferred from ankles and pelvis facing.",
+  "savedEvidence": "docs/images/realism-review/contact-checkpoint (one camera sample per take; full downloaded review cache is temporary)"
+}

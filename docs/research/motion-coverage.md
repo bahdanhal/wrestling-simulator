@@ -6,6 +6,10 @@ The 3 camera-reviewed segment records are reviewed source windows; their clip la
 
 | Take | Source | Licence | FPS | Frames | Endpoint span (s) | Hold-last span (s) |
 |---|---|---:|---:|---:|---:|---:|
+| harmony4d.test-grappling2-030 | Harmony4D test/03_grappling2.zip, sequence 030_grappling2 | MIT | 20 | 301 | 15.00 | 15.05 |
+| harmony4d.test-grappling2-032 | Harmony4D test/03_grappling2.zip, sequence 032_grappling2 | MIT | 20 | 57 | 2.80 | 2.85 |
+| harmony4d.test-grappling2-038 | Harmony4D test/03_grappling2.zip, sequence 038_grappling2 | MIT | 20 | 295 | 14.70 | 14.75 |
+| harmony4d.test-grappling2-040 | Harmony4D test/03_grappling2.zip, sequence 040_grappling2 | MIT | 20 | 518 | 25.85 | 25.90 |
 | harmony4d.test-grappling2-043 | Harmony4D test/03_grappling2.zip, sequence 043_grappling2 | MIT | 20 | 326 | 16.25 | 16.30 |
 | harmony4d.train-grappling-001 | Harmony4D train/02_grappling.zip, sequence 001_grappling | MIT | 20 | 601 | 30.00 | 30.05 |
 | harmony4d.train-grappling-055 | Harmony4D train/02_grappling.zip, sequence 055_grappling | MIT | 20 | 67 | 3.30 | 3.35 |

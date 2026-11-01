@@ -77,7 +77,59 @@ namespace Wrestling.Editor
             Same(incoming, settled, 2e-6f);
             transition.Reset();
             Same(incoming, transition.Apply(in incoming, 0), 0);
+            CheckCoordinator(reference);
             Debug.Log("[paired-motion] PASS native timing, frame partition, annotated range end, unknown-contact rejection, coherent pair handoff, frozen pelvis frame and positional-velocity continuity. No production assignment or contact acceptance.");
+        }
+
+        private static void CheckCoordinator(MotionPlayback source)
+        {
+            // Use real source samples for both outgoing and incoming motion. The phase switch
+            // occurs on a render sample; position must advance by the measured outgoing speed.
+            foreach (float step in new[] { 1f / 30f, 1f / 60f, 1f / 120f })
+            {
+                var coordinator = new PoseTransitionCoordinator();
+                object firstPhase = new object(), counter = new object();
+                Pose Source(float seconds) => source.Sample(seconds / 1f).Executor;
+                Pose Sample(float time, bool recorded, object owner, int phase, float sourceTime)
+                {
+                    Pose raw = Source(sourceTime), future = Source(sourceTime + .001f);
+                    return coordinator.Sample(owner, phase, recorded, time, in raw, in raw,
+                        true, in future, in future, .001f).Red;
+                }
+                Pose a = Sample(0f, true, firstPhase, 0, .20f);
+                Pose b = Sample(step, true, firstPhase, 0, .20f + step);
+                // Duplicate sampling should leave the previous measured velocity intact.
+                Sample(step, true, firstPhase, 0, .20f + step);
+                Pose c = Sample(2f * step, false, null, -1, .65f);
+                Vector3 projected = b.Pelvis + (b.Pelvis - a.Pelvis);
+                Require(Vector3.Distance(c.Pelvis, projected) < 1e-5f, "Recorded exit froze or jumped at the boundary.");
+                Require(Vector3.Angle(b.PelvisAxis, c.PelvisAxis) < .01f, "Recorded exit lost its frozen pelvis frame.");
+                const float probe = .0002f;
+                Pose cNext = Sample((2f * step) + probe, false, null, -1, .65f + probe);
+                Vector3 carried = (cNext.Pelvis - c.Pelvis) / probe;
+                Require(Vector3.Distance(carried, (b.Pelvis - a.Pelvis) / step) < .08f,
+                    "Recorded exit did not carry positional velocity.");
+                Pose d = Sample(3f * step, true, counter, 1, .75f);
+                Require(Vector3.Distance(d.Pelvis, c.Pelvis) < .3f, "Counter interruption jumped.");
+                Pose raw = Source(.85f);
+                Pose reset = coordinator.Sample(counter, 1, true, 4f, in raw, in raw, false,
+                    in raw, in raw, 0f).Red;
+                Same(raw, reset, 2e-6f);
+                Pose backwards = Source(.9f);
+                reset = coordinator.Sample(counter, 1, true, 3f, in backwards, in backwards, false,
+                    in backwards, in backwards, 0f).Red;
+                Same(backwards, reset, 2e-6f);
+            }
+            // A continuous series of frames must let the correction settle to the raw target.
+            var settling = new PoseTransitionCoordinator();
+            object phaseA = new object(), phaseB = new object();
+            Pose start = source.Sample(.2f).Executor, target = source.Sample(.7f).Executor;
+            settling.Sample(phaseA, 0, true, 0f, in start, in start, false, in start, in start, 0f);
+            Pose result = default;
+            for (int i = 1; i <= 130; i++)
+                result = settling.Sample(phaseB, 0, true, i / 60f, in target, in target, false,
+                    in target, in target, 0f).Red;
+            Same(target, result, 2e-6f);
         }
 
         private static void Same(Pose a, Pose b, float tolerance)

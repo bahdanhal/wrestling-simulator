@@ -399,6 +399,16 @@ namespace Wrestling.Presentation
             return hand.Body.transform.InverseTransformPoint(Centre(hand));
         }
 
+        /// <summary>Centre of a modeled foot box's sole, in its articulation's metre coordinates.
+        /// This is a collision-geometry proxy, not a captured shoe-surface measurement.</summary>
+        public Vector3 SoleAnchor(string footName)
+        {
+            Segment foot = Find(footName);
+            if (!(foot.Shape is BoxCollider box)) throw new ArgumentException("A sole requires a foot box.", nameof(footName));
+            Vector3 point = box.transform.TransformPoint(box.center - (Vector3.up * box.size.y * .5f));
+            return foot.Body.transform.InverseTransformPoint(point);
+        }
+
         /// <summary>Radius (m) of a segment's collision volume (half the width of a foot's box).</summary>
         public float Radius(string segmentName) => Find(segmentName).Radius;
 
@@ -440,6 +450,28 @@ namespace Wrestling.Presentation
                 }
             }
 
+            return (best.Body, bestPoint, bestDistance);
+        }
+
+        /// <summary>Nearest boundary of the named segments, including for points inside a shape.
+        /// Distance is the distance to that boundary, not the volume gap used by Nearest.</summary>
+        public (ArticulationBody Body, Vector3 Point, float Distance) NearestSurface(Vector3 point, IReadOnlyList<string> segmentNames = null)
+        {
+            Segment best = null;
+            Vector3 bestPoint = point;
+            float bestDistance = float.MaxValue;
+            foreach (Segment segment in _segments)
+            {
+                if (segmentNames != null && !Contains(segmentNames, segment.Name)) continue;
+                Vector3 closest = ClosestBoundary(segment, point);
+                float distance = (closest - point).magnitude;
+                if (distance < bestDistance)
+                {
+                    best = segment;
+                    bestPoint = closest;
+                    bestDistance = distance;
+                }
+            }
             return (best.Body, bestPoint, bestDistance);
         }
 
@@ -1323,6 +1355,45 @@ namespace Wrestling.Presentation
             Vector3 outward = point - axis;
             float distance = outward.magnitude;
             return distance <= segment.Radius ? point : axis + (outward * (segment.Radius / distance));
+        }
+
+        private static Vector3 ClosestBoundary(Segment segment, Vector3 point)
+        {
+            if (segment.Shape is BoxCollider box)
+            {
+                Transform transform = box.transform;
+                Vector3 centre = transform.TransformPoint(box.center);
+                Vector3 scale = transform.lossyScale;
+                Vector3 half = Vector3.Scale(box.size * .5f,
+                    new Vector3(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z)));
+                Vector3 local = Quaternion.Inverse(transform.rotation) * (point - centre);
+                Vector3 closest = new Vector3(Mathf.Clamp(local.x, -half.x, half.x),
+                    Mathf.Clamp(local.y, -half.y, half.y), Mathf.Clamp(local.z, -half.z, half.z));
+                if (local.x >= -half.x && local.x <= half.x && local.y >= -half.y && local.y <= half.y
+                    && local.z >= -half.z && local.z <= half.z)
+                {
+                    float x = half.x - Mathf.Abs(local.x), y = half.y - Mathf.Abs(local.y), z = half.z - Mathf.Abs(local.z);
+                    if (x <= y && x <= z) closest.x = local.x >= 0f ? half.x : -half.x;
+                    else if (y <= z) closest.y = local.y >= 0f ? half.y : -half.y;
+                    else closest.z = local.z >= 0f ? half.z : -half.z;
+                }
+                return centre + (transform.rotation * closest);
+            }
+
+            Transform link = segment.Body.transform;
+            Vector3 a = link.TransformPoint(segment.CapsuleA);
+            Vector3 b = link.TransformPoint(segment.CapsuleB);
+            Vector3 ab = b - a;
+            float t = ab.sqrMagnitude > 1e-8f ? Mathf.Clamp01(Vector3.Dot(point - a, ab) / ab.sqrMagnitude) : 0f;
+            Vector3 axis = a + (ab * t);
+            Vector3 outward = point - axis;
+            if (outward.sqrMagnitude < 1e-12f)
+            {
+                // On the axis, every radial direction is equally near; use a stable perpendicular.
+                outward = ab.sqrMagnitude > 1e-8f ? Vector3.Cross(ab, link.right) : link.right;
+                if (outward.sqrMagnitude < 1e-12f) outward = Vector3.Cross(ab, link.up);
+            }
+            return axis + (outward.normalized * segment.Radius);
         }
 
         // ---------------------------------------------------------------- Loads

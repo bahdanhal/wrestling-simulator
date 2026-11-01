@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "phases": [
+    {
+      "clip": "anim.double_leg_blast.penetration",
+      "take": "harmony4d.train-grappling-001",
+      "fromFrame": 126,
+      "toFrame": 146,
+      "executor": 0,
+      "compatibleGrips": [],
+      "reviewNotes": "Camera-checked recreational source window. Authored engine-grip adaptation and limb reach projection; floor is ankle-estimated, toes inferred. Compatibility restricts use; no measured palm/sole contacts or elite-technique approval.",
+      "leftSide": false,
+      "enforceGripCompatibility": true,
+      "mirrorGrip": null
+    },
+    {
+      "clip": "anim.snap_down_go_behind.snap",
+      "take": "harmony4d.test-grappling2-043",
+      "fromFrame": 188,
+      "toFrame": 204,
+      "executor": 1,
+      "compatibleGrips": [
+        "collarTie",
+        "wristControl",
+        "frontHeadlock",
+        "headAndArm",
+        "twoOnOne"
+      ],
+      "reviewNotes": "Camera-checked recreational source window. Authored engine-grip adaptation and limb reach projection; floor is ankle-estimated, toes inferred. Compatibility restricts use; no measured palm/sole contacts or elite-technique approval. Uses frames188-204 (0.8s faster lowering after tie-up); source actor1 left wrist tracks the opponent head and playback follows the actual collar-tie hand.",
+      "leftSide": true,
+      "enforceGripCompatibility": true,
+      "mirrorGrip": "collarTie"
+    },
+    {
+      "clip": "anim.body_lock_throw.lock",
+      "take": "harmony4d.train-grappling-055",
+      "fromFrame": 40,
+      "toFrame": 60,
+      "executor": 1,
+      "compatibleGrips": [
+        "bodyLock",
+        "underhook",
+        "overhook"
+      ],
+      "reviewNotes": "Camera-checked recreational source window. Authored engine-grip adaptation and limb reach projection; floor is ankle-estimated, toes inferred. Compatibility restricts use; no measured palm/sole contacts or elite-technique approval.",
+      "leftSide": false,
+      "enforceGripCompatibility": true,
+      "mirrorGrip": null
+    }
+  ]
+}

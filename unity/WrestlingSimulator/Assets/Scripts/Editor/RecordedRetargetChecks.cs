@@ -90,6 +90,7 @@ namespace Wrestling.Editor
                                     foreach (Pose source in new[] { pair.Executor, pair.Opponent })
                                     {
                                         Check(figure.Rig, in source, ref localUnreachable, ref localMaxActual, ref localMaxResidual);
+                                        CheckPelvisFit(figure.Rig, in source);
                                         samples++;
                                     }
                                 }
@@ -175,6 +176,25 @@ namespace Wrestling.Editor
             else _unreachableWrists++;
             _maxWristActual = Mathf.Max(_maxWristActual, actualError);
             _maxWristResidual = Mathf.Max(_maxWristResidual, residual);
+        }
+
+        private static void CheckPelvisFit(CharacterRig rig, in Pose source)
+        {
+            Pose fit = source;
+            var result = rig.RetargetRecordedLegs(ref fit, true);
+            Require(Mathf.Abs(source.Pelvis.x - fit.Pelvis.x) < 1e-6f && Mathf.Abs(source.Pelvis.z - fit.Pelvis.z) < 1e-6f,
+                "Pelvis fit changed horizontal pair placement.");
+            Require(Mathf.Abs(fit.Pelvis.y - source.Pelvis.y - result.PelvisCorrection) < 1e-6f,
+                "Pelvis correction was not exposed.");
+            Require(Mathf.Abs(result.PelvisCorrection) <= .35001f, "Pelvis fit exceeded its declared correction limit.");
+            Require(Vector3.Distance(result.LeftTarget, source.AnkleL) < 1e-6f
+                && Vector3.Distance(result.RightTarget, source.AnkleR) < 1e-6f, "Pelvis fit changed the ankle targets.");
+            if (result.PelvisFitFeasible) Require(result.MaxResidual < ActualTolerance, "Feasible pelvis fit missed an ankle target.");
+            else Require(result.PelvisCorrection == 0f, "An infeasible fit silently moved the pelvis.");
+            rig.Apply(in fit, 0f, 0f, true);
+            Require(Vector3.Distance(rig.Find("LeftFoot").position, result.LeftReached) < ActualTolerance
+                && Vector3.Distance(rig.Find("RightFoot").position, result.RightReached) < ActualTolerance,
+                "Projected ankle targets did not survive actual rig application.");
         }
 
         private static void CheckLeg(CharacterRig rig, bool left, Vector3 hip, Vector3 reached, Vector3 target, float residual, ref int unreachable, ref float maxActual, ref float maxResidual)

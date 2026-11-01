@@ -100,7 +100,7 @@ namespace Wrestling.Presentation
             {
                 var corner = (Corner)(i / 2);
                 var side = (GripSide)(i % 2);
-                Grip grip = suspended ? null : GripOn(engine, corner, side);
+                Grip grip = suspended ? null : ForHand(engine, corner, side);
                 _activeGrips[i] = grip != null;
                 if (grip == null)
                 {
@@ -147,7 +147,7 @@ namespace Wrestling.Presentation
                 ArticulationBody hand = holder.Link(handName);
                 Vector3 palm = holder.PalmAnchor(handName);
                 Vector3 palmWorld = hand.transform.TransformPoint(palm);
-                (ArticulationBody body, Vector3 point, float distance) = held.Nearest(palmWorld, HeldParts(grip, side));
+                (ArticulationBody body, Vector3 point, float distance) = held.NearestSurface(palmWorld, HeldParts(grip, side));
                 if (distance <= ReachDistance)
                 {
                     _links[i] = new GripLink(hand, palm, body, body.transform.InverseTransformPoint(point), Spring, Damper, hold, BreakDistance);
@@ -481,7 +481,7 @@ namespace Wrestling.Presentation
             }
         }
 
-        private static Grip GripOn(BoutEngine engine, Corner corner, GripSide side)
+        public static Grip ForHand(BoutEngine engine, Corner corner, GripSide side)
         {
             foreach (Grip grip in engine.Grips.Of(corner))
             {
@@ -493,5 +493,10 @@ namespace Wrestling.Presentation
 
             return null;
         }
+
+        /// <summary>Seats a requested interaction on the current physical opponent, restricted to
+        /// the anatomy this engine grip can hold, rather than a future animation target.</summary>
+        public static Vector3 SurfaceFor(PhysicalBody opponent, Grip grip, GripSide hand, Vector3 requested) =>
+            opponent.NearestSurface(requested, HeldParts(grip, hand)).Point;
     }
 }

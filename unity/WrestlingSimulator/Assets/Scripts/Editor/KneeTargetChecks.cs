@@ -35,7 +35,7 @@ namespace Wrestling.Editor
         {
             var content = ContentLocator.LoadDirect();
             MotionTake[] takes = content.Motion.Takes.Where(t => t.Id.StartsWith("harmony4d.", StringComparison.Ordinal)).ToArray();
-            if (takes.Length != 3) throw new InvalidOperationException($"Expected three Harmony4D takes, found {takes.Length}.");
+            if (takes.Length < 7) throw new InvalidOperationException($"Expected the expanded Harmony4D corpus, found {takes.Length}.");
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var library = AssetDatabase.LoadAssetAtPath<CharacterLibrary>(CharacterLibraryBuilder.LibraryPath);
             int samples = 0, impossible = 0, planeUnidentifiable = 0;
