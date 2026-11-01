@@ -94,6 +94,12 @@ dotnet run --project src/Wrestling.Sim -c Release -- motion-assign --clip anim.h
 
 Every take records its source and licence. See `docs/research/footage-sources.md`.
 
+To see whether the engine's grips become physical holds while review-only recorded entries play, run the acquisition check. It finds bouts for each entry per style and executor corner, plays each one with the recorded entry and again with the keyed clips, and reports per hand the held share of grip frames, time to take hold, tear-offs and physical palm gaps. It fails when a recorded entry holds markedly less than the keyed clips (more than 10 points). A held link is a game constraint, not a measured contact. `-acquisitionTrace <clip text>` adds a per-frame log for matching clips.
+
+```bash
+/Applications/Unity/Hub/Editor/6000.6.7f1/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath unity/WrestlingSimulator -executeMethod Wrestling.Editor.RecordedAcquisitionChecks.RunFromCommandLine -acquisitionReport docs/research/acquisition/report.txt -logFile -
+```
+
 Review motion against the original camera images at its native timing before assigning it. The
 [source-review workflow](docs/research/motion-review.md) renders aligned joint tracks beside the
 character rig and combines them with exactly matched source-camera frames. It keeps source

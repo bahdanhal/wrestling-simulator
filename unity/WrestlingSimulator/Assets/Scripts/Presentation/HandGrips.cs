@@ -185,7 +185,7 @@ namespace Wrestling.Presentation
         /// legs for a leg grip. A neck or body grip never takes hold of an arm the hand brushes on its
         /// way, which would tie the two wrestlers' arms together.
         /// </summary>
-        private static IReadOnlyList<string> HeldParts(Grip grip, GripSide hand)
+        public static IReadOnlyList<string> HeldParts(Grip grip, GripSide hand)
         {
             bool armHand = hand != grip.Side;
             switch (grip.Type)

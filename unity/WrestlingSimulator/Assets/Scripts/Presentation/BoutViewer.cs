@@ -164,6 +164,7 @@ namespace Wrestling.Presentation
         public string CurrentClip => _choreographer?.CurrentClip;
         public string RecordedTakeId => _choreographer?.RecordedTakeId;
         public float RecordedSourceFrame => _choreographer?.RecordedFrame ?? 0f;
+        public bool RecordedMirrored => _choreographer?.RecordedMirrored ?? false;
 
         /// <summary>The body state shown for a corner this frame (diagnostics).</summary>
         public WrestlerFrame Shown(Corner corner) => _shown[(int)corner];
@@ -208,6 +209,12 @@ namespace Wrestling.Presentation
             Physics.simulationMode = SimulationMode.Script;
             _mat.Build(content.Rules.Mat);
             _scoreboard.Build(_font);
+        }
+
+        /// <summary>Tools: swaps the motion library between bouts (for example recorded review versus keyed clips) without rebuilding the scene.</summary>
+        public void UseMotion(MotionLibrary motion)
+        {
+            _choreographer = new Choreographer(_content.Animations, motion ?? _content.Motion);
         }
 
         public void StartBout(ulong seed)
