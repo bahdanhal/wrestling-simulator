@@ -116,8 +116,20 @@ namespace Wrestling.Presentation
         private void Step()
         {
             Array.Copy(_current, _previous, 2);
+            int eventsBefore = Engine.Events.Count;
             Engine.Step();
             Capture();
+            // A restart can move both wrestlers across the mat and change their ground state.
+            // It is a discontinuity, so do not interpolate from the pre-restart position.
+            for (int i = eventsBefore; i < Engine.Events.Count; i++)
+            {
+                BoutEventType type = Engine.Events[i].Type;
+                if (type == BoutEventType.Restart || type == BoutEventType.PeriodStarted)
+                {
+                    Array.Copy(_current, _previous, 2);
+                    break;
+                }
+            }
         }
 
         private void Capture()

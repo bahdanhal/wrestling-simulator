@@ -48,6 +48,7 @@ namespace Wrestling.Editor
             public readonly List<float> Lean = new List<float>();
             public readonly List<float> OpponentLoad = new List<float>();
             public float LowestFoot = float.MaxValue;
+            public string LowestFootContext;
             public int Frames;
             public int ActiveFrames;
             public int LostFrames;
@@ -128,12 +129,13 @@ namespace Wrestling.Editor
                     };
                 }
 
-                if (Array.IndexOf(args, "-clipNoJump") >= 0)
+                bool livePlayback = Array.IndexOf(args, "-clipNoJump") >= 0;
+                if (livePlayback)
                 {
-                    // Played live from the start rather than jumping there.
+                    // Use the same event handling and interpolation as the lab, including restarts.
                     for (int i = 0; i < from; i++)
                     {
-                        viewer.FastForward(1);
+                        viewer.PlayFrame(1f / 60f);
                     }
                 }
                 else
@@ -177,7 +179,7 @@ namespace Wrestling.Editor
                         markers[0].transform.position = red.PelvisTarget;
                         markers[1].transform.position = blue.PelvisTarget;
                         Debug.Log(FormattableString.Invariant($"[clip] frame {frame++} tick {viewer.Session.Engine.Tick}: red err {red.TrackingError:F2} support {red.Support:F2} {(red.IsThrown ? "thrown" : red.IsFalling ? "falling" : "")} {red.Limit} | blue err {blue.TrackingError:F2} support {blue.Support:F2} {(blue.IsThrown ? "thrown" : blue.IsFalling ? "falling" : "")} {blue.Limit} | overlap {red.DeepestOverlap(blue) * 100f:F1} cm | red hips {red.HipPosition:F2} target {red.PelvisTarget:F2} | blue hips {blue.HipPosition:F2} target {blue.PelvisTarget:F2} | clip {viewer.CurrentClip} grips {viewer.HandGrips.Holding}/{viewer.HandGrips.Gripping} push {red.GroundPush:F2}/{blue.GroundPush:F2} worst {red.WorstJointError(out string rj):F0} {rj} / {blue.WorstJointError(out string bj):F0} {bj}"));
-                    });
+                    }, livePlayback);
                 }
                 finally
                 {
@@ -211,12 +213,16 @@ namespace Wrestling.Editor
                     viewer.Style = style;
                     viewer.StartBout((ulong)(bout + 1));
                     var measured = new Sample();
-                    Measure(viewer, seconds, measured);
+                    Measure(viewer, seconds, measured, bout + 1);
                     Merge(measured, sample);
                     Merge(measured, all);
                 }
 
                 report.AppendLine(Line(style.ToString(), sample));
+                if (sample.LowestFootContext != null)
+                {
+                    report.AppendLine("[lab] lowest foot: " + sample.LowestFootContext);
+                }
             }
 
             report.AppendLine(Line("All", all));
@@ -232,7 +238,7 @@ namespace Wrestling.Editor
             return report.ToString();
         }
 
-        private static void Measure(BoutViewer viewer, float seconds, Sample into)
+        private static void Measure(BoutViewer viewer, float seconds, Sample into, int seed)
         {
             int frames = Mathf.RoundToInt(seconds * FramesPerSecond);
             // Editor diagnostics only: a fixed seed so a jittery run repeats exactly.
@@ -251,7 +257,7 @@ namespace Wrestling.Editor
                 into.Frames++;
                 into.Overlap.Add(viewer.RedFigure.Physical.DeepestOverlap(viewer.BlueFigure.Physical) * 100f);
                 into.GripHands += viewer.HandGrips.Gripping;
-                into.GripHeld += viewer.HandGrips.Holding;
+                into.GripHeld += viewer.HandGrips.ActiveHolding;
                 foreach (Corner shown in new[] { Corner.Red, Corner.Blue })
                 {
                     // The hands as shown, after the post-physics pass, against what they hold.
@@ -265,7 +271,14 @@ namespace Wrestling.Editor
                 {
                     WrestlerCharacter figure = corner == 0 ? viewer.RedFigure : viewer.BlueFigure;
                     PhysicalBody body = figure.Physical;
-                    into.LowestFoot = Mathf.Min(into.LowestFoot, body.FootClearance * 100f);
+                    float foot = body.FootClearance * 100f;
+                    // A reset teleports the articulation to the animated pose without advancing
+                    // physics. Its collider is not the displayed physical pose on that frame.
+                    if (body.Weight > 0f && foot < into.LowestFoot)
+                    {
+                        into.LowestFoot = foot;
+                        into.LowestFootContext = FormattableString.Invariant($"seed {seed}, tick {viewer.Session.Engine.Tick}, {(corner == 0 ? "red" : "blue")}, {foot:F1} cm, clip {viewer.CurrentClip}, thrown {body.IsThrown}, falling {body.IsFalling}");
+                    }
                     if (thrown[corner] && !body.IsThrown)
                     {
                         into.Throws++;
@@ -392,7 +405,11 @@ namespace Wrestling.Editor
                 into.WorstJoints[joint.Key] = into.WorstJoints.TryGetValue(joint.Key, out int n) ? n + joint.Value : joint.Value;
             }
 
-            into.LowestFoot = Mathf.Min(into.LowestFoot, from.LowestFoot);
+            if (from.LowestFoot < into.LowestFoot)
+            {
+                into.LowestFoot = from.LowestFoot;
+                into.LowestFootContext = from.LowestFootContext;
+            }
             into.Frames += from.Frames;
             into.ActiveFrames += from.ActiveFrames;
             into.LostFrames += from.LostFrames;

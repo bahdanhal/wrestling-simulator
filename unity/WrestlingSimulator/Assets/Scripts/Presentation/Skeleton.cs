@@ -168,7 +168,7 @@ namespace Wrestling.Presentation
             Vector3 shinFacingL = TransportFacing(thighDirL, shinDirL, thighFacingL);
             Set(Bone.LeftUpperLeg, pose.HipL, pose.KneeL, thighFacingL);
             Set(Bone.LeftLowerLeg, pose.KneeL, pose.AnkleL, shinFacingL);
-            Set(Bone.LeftFoot, pose.AnkleL, pose.ToeL, FootTop(pose.AnkleL, pose.ToeL, shinDirL, shinFacingL));
+            Set(Bone.LeftFoot, pose.AnkleL, pose.ToeL, FootTop(pose.AnkleL, pose.ToeL, shinDirL, shinFacingL, pose.UnconstrainedFeet));
 
             Vector3 thighDirR = SafeDir(pose.KneeR - pose.HipR, bindLeg);
             Vector3 shinDirR = SafeDir(pose.AnkleR - pose.KneeR, thighDirR);
@@ -176,7 +176,7 @@ namespace Wrestling.Presentation
             Vector3 shinFacingR = TransportFacing(thighDirR, shinDirR, thighFacingR);
             Set(Bone.RightUpperLeg, pose.HipR, pose.KneeR, thighFacingR);
             Set(Bone.RightLowerLeg, pose.KneeR, pose.AnkleR, shinFacingR);
-            Set(Bone.RightFoot, pose.AnkleR, pose.ToeR, FootTop(pose.AnkleR, pose.ToeR, shinDirR, shinFacingR));
+            Set(Bone.RightFoot, pose.AnkleR, pose.ToeR, FootTop(pose.AnkleR, pose.ToeR, shinDirR, shinFacingR, pose.UnconstrainedFeet));
 
             void Set(Bone bone, Vector3 from, Vector3 to, Vector3 facing)
             {
@@ -279,11 +279,16 @@ namespace Wrestling.Presentation
         /// The top of the foot: a planted foot lies flat on the mat (no roll about its length); a
         /// lifted one follows the knee's hinge.
         /// </summary>
-        private static Vector3 FootTop(Vector3 ankle, Vector3 toe, Vector3 shinDir, Vector3 shinFacing)
+        private static Vector3 FootTop(Vector3 ankle, Vector3 toe, Vector3 shinDir, Vector3 shinFacing, bool unconstrained)
         {
             Vector3 along = SafeDir(toe - ankle, Vector3.forward);
             Vector3 hinge = Vector3.Cross(shinDir, shinFacing);
             Vector3 lifted = Vector3.Cross(hinge, along);
+            if (unconstrained)
+            {
+                return lifted;
+            }
+
             Vector3 flat = Vector3.ProjectOnPlane(Vector3.up, along);
             float planted = Mathf.Clamp01((LiftedAnkle - ankle.y) / (LiftedAnkle - PlantedAnkle));
             if (flat.sqrMagnitude < 1e-6f || lifted.sqrMagnitude < 1e-6f || planted <= 0f)

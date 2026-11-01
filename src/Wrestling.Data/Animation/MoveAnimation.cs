@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using Wrestling.Core.Match;
 using Wrestling.Core.Techniques;
 
@@ -56,6 +57,13 @@ namespace Wrestling.Data.Animation
         public float Posture { get; init; }
 
         public GroundState Ground { get; init; }
+
+        /// <summary>Runtime construction states across the authored key interval; null on authored keys.</summary>
+        [JsonIgnore] public GroundState? GroundFrom { get; init; }
+        [JsonIgnore] public GroundState? GroundTo { get; init; }
+        [JsonIgnore] public float GroundBlend { get; init; }
+        [JsonIgnore] public bool GroundFromLying { get; init; }
+        [JsonIgnore] public bool GroundToLying { get; init; }
 
         /// <summary>Torso rotation for a body on the mat: 0° chest down, 90° on the side, 180° on the back.</summary>
         public float Roll { get; init; }
@@ -291,24 +299,35 @@ namespace Wrestling.Data.Animation
             return (Blend(a.Executor, b.Executor, eased, local), Blend(a.Opponent, b.Opponent, eased, local));
         }
 
-        /// <summary>Continuous values eased; discrete ones (ground, roll side) switch halfway between keys.</summary>
-        public static ActorKey Blend(ActorKey a, ActorKey b, float eased, float linear) => new ActorKey
+        /// <summary>Continuous values and ground construction eased; categorical ground and roll side switch halfway.</summary>
+        public static ActorKey Blend(ActorKey a, ActorKey b, float eased, float linear)
         {
-            X = Lerp(a.X, b.X, eased),
-            Z = Lerp(a.Z, b.Z, eased),
-            Heading = a.Heading + (DeltaAngle(a.Heading, b.Heading) * eased),
-            Level = Lerp(a.Level, b.Level, eased),
-            Posture = Lerp(a.Posture, b.Posture, eased),
-            Ground = linear < 0.5f ? a.Ground : b.Ground,
-            Roll = Lerp(a.Roll, b.Roll, eased),
-            RollSide = linear < 0.5f ? a.RollSide : b.RollSide,
-            Lift = Lerp(a.Lift, b.Lift, eased),
-            Pitch = Lerp(a.Pitch, b.Pitch, eased),
-            Bank = Lerp(a.Bank, b.Bank, eased),
-            Anchor = b.AnchorWeight > 0f ? b.Anchor : a.Anchor,
-            AnchorWeight = Lerp(a.AnchorWeight, b.AnchorWeight, eased),
-            Contact = Lerp(a.Contact, b.Contact, eased),
-        };
+            bool fromLying = ClipKinematics.IsLying(a.Ground, a.Roll);
+            bool toLying = ClipKinematics.IsLying(b.Ground, b.Roll);
+            bool transition = a.Ground != b.Ground || fromLying != toLying;
+            return new ActorKey
+            {
+                X = Lerp(a.X, b.X, eased),
+                Z = Lerp(a.Z, b.Z, eased),
+                Heading = a.Heading + (DeltaAngle(a.Heading, b.Heading) * eased),
+                Level = Lerp(a.Level, b.Level, eased),
+                Posture = Lerp(a.Posture, b.Posture, eased),
+                Ground = linear < 0.5f ? a.Ground : b.Ground,
+                GroundFrom = transition ? a.Ground : (GroundState?)null,
+                GroundTo = transition ? b.Ground : (GroundState?)null,
+                GroundBlend = eased,
+                GroundFromLying = fromLying,
+                GroundToLying = toLying,
+                Roll = Lerp(a.Roll, b.Roll, eased),
+                RollSide = linear < 0.5f ? a.RollSide : b.RollSide,
+                Lift = Lerp(a.Lift, b.Lift, eased),
+                Pitch = Lerp(a.Pitch, b.Pitch, eased),
+                Bank = Lerp(a.Bank, b.Bank, eased),
+                Anchor = b.AnchorWeight > 0f ? b.Anchor : a.Anchor,
+                AnchorWeight = Lerp(a.AnchorWeight, b.AnchorWeight, eased),
+                Contact = Lerp(a.Contact, b.Contact, eased),
+            };
+        }
 
         private static float Lerp(float a, float b, float t) => a + ((b - a) * t);
 

@@ -172,6 +172,12 @@ namespace Wrestling.Presentation
         public float RetractionL;
         public float RetractionR;
 
+        /// <summary>Explicit pelvis construction axis for retargeted motion; zero derives it from the thighs and trunk.</summary>
+        public Vector3 PelvisUp;
+
+        /// <summary>Keep the supplied foot direction and lower-leg roll instead of flattening low feet onto an assumed contact plane.</summary>
+        public bool UnconstrainedFeet;
+
         /// <summary>Unit vector the pelvis faces, square to its axis: <see cref="PelvisNormal"/>, else from the hip line, else the chest's.</summary>
         public Vector3 PelvisFront
         {
@@ -219,6 +225,11 @@ namespace Wrestling.Presentation
         {
             get
             {
+                if (PelvisUp.sqrMagnitude > 1e-8f)
+                {
+                    return PelvisUp.normalized;
+                }
+
                 Vector3 hips = (HipL + HipR) * 0.5f;
                 Vector3 knees = (KneeL + KneeR) * 0.5f;
                 Vector3 alongThighs = hips - knees;
@@ -266,6 +277,71 @@ namespace Wrestling.Presentation
         /// <summary>Body and legs, with arms in their default place; hands are solved afterwards.</summary>
         public static Pose SolveBody(WrestlerFrame frame, BodyProportions body, PoseRole role)
         {
+            if (frame.GroundFrom.HasValue && frame.GroundTo.HasValue)
+            {
+                WrestlerFrame from = frame;
+                WrestlerFrame to = frame;
+                from.Ground = frame.GroundFrom.Value;
+                to.Ground = frame.GroundTo.Value;
+                Pose a = SolveDiscreteBody(from, body, role, frame.GroundFromLying);
+                Pose b = SolveDiscreteBody(to, body, role, frame.GroundToLying);
+                return BlendConstruction(in a, in b, body, Mathf.Clamp01(frame.GroundBlend));
+            }
+
+            return SolveDiscreteBody(frame, body, role);
+        }
+
+        /// <summary>
+        /// Changes construction over the authored interval, keeping the trunk rigid and solving
+        /// fixed-length legs to the interpolated foot contacts. Blending joint positions directly
+        /// would shorten limbs; switching construction at the interval midpoint would teleport hips.
+        /// </summary>
+        private static Pose BlendConstruction(in Pose a, in Pose b, BodyProportions body, float t)
+        {
+            if (t <= 0f) return a;
+            if (t >= 1f) return b;
+            Quaternion trunkA = Quaternion.LookRotation(a.ChestNormal, a.Spine);
+            Quaternion trunkB = Quaternion.LookRotation(b.ChestNormal, b.Spine);
+            Quaternion trunk = Quaternion.Slerp(trunkA, trunkB, t);
+            var pose = new Pose
+            {
+                Pelvis = Vector3.Lerp(a.Pelvis, b.Pelvis, t),
+                Spine = trunk * Vector3.up,
+                Left = trunk * Vector3.left,
+                ChestNormal = trunk * Vector3.forward,
+            };
+            FinishUpperBody(ref pose, body);
+            pose.Neck = pose.Pelvis + (pose.Spine * Mathf.Lerp((a.Neck - a.Pelvis).magnitude, (b.Neck - b.Pelvis).magnitude, t));
+            Vector3 shoulderBase = pose.Neck - (pose.Spine * body.ShoulderDrop);
+            pose.ShoulderL = shoulderBase + (pose.Left * body.ShoulderHalfWidth);
+            pose.ShoulderR = shoulderBase - (pose.Left * body.ShoulderHalfWidth);
+            Vector3 headDirection = Vector3.Slerp((a.Head - a.Neck).normalized, (b.Head - b.Neck).normalized, t).normalized;
+            pose.Head = pose.Neck + (headDirection * (body.Neck + body.HeadRadius));
+            KeepAboveMat(ref pose.Head, body.HeadRadius);
+
+            Quaternion hipsA = Quaternion.LookRotation(a.PelvisFront, a.PelvisAxis);
+            Quaternion hipsB = Quaternion.LookRotation(b.PelvisFront, b.PelvisAxis);
+            Quaternion hips = Quaternion.Slerp(hipsA, hipsB, t);
+            Vector3 hipLeft = hips * Vector3.left;
+            pose.PelvisNormal = hips * Vector3.forward;
+            pose.HipL = pose.Pelvis + (hipLeft * body.HipHalfWidth);
+            pose.HipR = pose.Pelvis - (hipLeft * body.HipHalfWidth);
+
+            Vector3 footL = Vector3.Lerp(a.AnkleL, b.AnkleL, t);
+            Vector3 footR = Vector3.Lerp(a.AnkleR, b.AnkleR, t);
+            Vector3 poleL = Vector3.Lerp(a.KneeL, b.KneeL, t) - Vector3.Lerp(pose.HipL, footL, 0.5f);
+            Vector3 poleR = Vector3.Lerp(a.KneeR, b.KneeR, t) - Vector3.Lerp(pose.HipR, footR, 0.5f);
+            pose.KneeL = TwoBone(pose.HipL, footL, body.Thigh, body.Shin, poleL, out pose.AnkleL);
+            pose.KneeR = TwoBone(pose.HipR, footR, body.Thigh, body.Shin, poleR, out pose.AnkleR);
+            pose.ToeL = pose.AnkleL + Vector3.Slerp(a.ToeL - a.AnkleL, b.ToeL - b.AnkleL, t);
+            pose.ToeR = pose.AnkleR + Vector3.Slerp(a.ToeR - a.AnkleR, b.ToeR - b.AnkleR, t);
+            KeepAboveMat(ref pose.ToeL, 0.03f);
+            KeepAboveMat(ref pose.ToeR, 0.03f);
+            return pose;
+        }
+
+        private static Pose SolveDiscreteBody(WrestlerFrame frame, BodyProportions body, PoseRole role, bool? forceLying = null)
+        {
             Vector3 forward = WrestlerFrame.OnMat(frame.Facing).normalized;
             if (forward.sqrMagnitude < 1e-6f)
             {
@@ -273,22 +349,43 @@ namespace Wrestling.Presentation
             }
 
             Vector3 left = Vector3.Cross(forward, Vector3.up).normalized;
-            bool lying = frame.Ground == GroundState.Prone || frame.Ground == GroundState.Supine || frame.Ground == GroundState.Bridge
-                || (frame.Ground != GroundState.Standing && frame.TorsoRotation >= 45f);
+            bool lying = forceLying ?? (frame.Ground == GroundState.Prone || frame.Ground == GroundState.Supine || frame.Ground == GroundState.Bridge
+                || (frame.Ground != GroundState.Standing && frame.TorsoRotation >= 45f));
+            Pose pose;
             if (lying)
             {
-                return Lying(frame, body, forward, left);
+                pose = Lying(frame, body, forward, left);
+            }
+            else
+            {
+                switch (frame.Ground)
+                {
+                    case GroundState.Standing:
+                        pose = Standing(frame, body, forward, left);
+                        break;
+                    case GroundState.Seated:
+                        pose = Seated(frame, body, forward, left);
+                        break;
+                    default:
+                        pose = Kneeling(frame, body, forward, left, role);
+                        break;
+                }
             }
 
-            switch (frame.Ground)
-            {
-                case GroundState.Standing:
-                    return Standing(frame, body, forward, left);
-                case GroundState.Seated:
-                    return Seated(frame, body, forward, left);
-                default:
-                    return Kneeling(frame, body, forward, left, role);
-            }
+            ConstrainLegs(ref pose, body);
+            return pose;
+        }
+
+        private static void ConstrainLegs(ref Pose pose, BodyProportions body)
+        {
+            Vector3 ankleL = pose.AnkleL;
+            Vector3 ankleR = pose.AnkleR;
+            Vector3 poleL = pose.KneeL - Vector3.Lerp(pose.HipL, ankleL, 0.5f);
+            Vector3 poleR = pose.KneeR - Vector3.Lerp(pose.HipR, ankleR, 0.5f);
+            pose.KneeL = TwoBone(pose.HipL, ankleL, body.Thigh, body.Shin, poleL, out pose.AnkleL);
+            pose.KneeR = TwoBone(pose.HipR, ankleR, body.Thigh, body.Shin, poleR, out pose.AnkleR);
+            pose.ToeL += pose.AnkleL - ankleL;
+            pose.ToeR += pose.AnkleR - ankleR;
         }
 
         /// <summary>
@@ -297,6 +394,62 @@ namespace Wrestling.Presentation
         /// of both bodies, and each hand is turned to its socket or task.
         /// </summary>
         public static void SolveArms(ref Pose pose, BodyProportions body, PoseRole role, WrestlerFrame frame, in Pose opponent, IEnumerable<Grip> grips)
+        {
+            if (!frame.GroundFrom.HasValue || !frame.GroundTo.HasValue)
+            {
+                SolveDiscreteArms(ref pose, body, role, frame, in opponent, grips);
+                return;
+            }
+
+            WrestlerFrame from = frame;
+            WrestlerFrame to = frame;
+            from.Ground = frame.GroundFrom.Value;
+            to.Ground = frame.GroundTo.Value;
+            Pose a = pose;
+            Pose b = pose;
+            SolveDiscreteArms(ref a, body, role, from, in opponent, grips, frame.GroundFromLying);
+            SolveDiscreteArms(ref b, body, role, to, in opponent, grips, frame.GroundToLying);
+            float t = Mathf.Clamp01(frame.GroundBlend);
+            if (t <= 0f) { pose = a; return; }
+            if (t >= 1f) { pose = b; return; }
+
+            Quaternion chest = Quaternion.Slerp(Quaternion.LookRotation(a.ChestNormal, a.Spine), Quaternion.LookRotation(b.ChestNormal, b.Spine), t);
+            pose.ChestNormal = chest * Vector3.forward;
+            pose.Left = chest * Vector3.left;
+            pose.HeadNormal = Vector3.Slerp(a.HeadNormal, b.HeadNormal, t);
+            pose.ShoulderL = Vector3.Lerp(a.ShoulderL, b.ShoulderL, t);
+            pose.ShoulderR = Vector3.Lerp(a.ShoulderR, b.ShoulderR, t);
+            Vector3 handL = Vector3.Lerp(a.HandL, b.HandL, t);
+            Vector3 handR = Vector3.Lerp(a.HandR, b.HandR, t);
+            // Endpoint reaches can each lie inside the cone while their interpolation does not.
+            handL = IntoCone(in pose, pose.ShoulderL, handL, pose.Left);
+            handR = IntoCone(in pose, pose.ShoulderR, handR, -pose.Left);
+            Vector3 poleL = Vector3.Lerp(a.ElbowL, b.ElbowL, t) - Vector3.Lerp(pose.ShoulderL, handL, 0.5f);
+            Vector3 poleR = Vector3.Lerp(a.ElbowR, b.ElbowR, t) - Vector3.Lerp(pose.ShoulderR, handR, 0.5f);
+            pose.ElbowL = TwoBone(pose.ShoulderL, handL, body.UpperArm, body.Forearm, poleL, out pose.HandL);
+            pose.ElbowR = TwoBone(pose.ShoulderR, handR, body.UpperArm, body.Forearm, poleR, out pose.HandR);
+            bool hasOpponent = opponent.Spine.sqrMagnitude > 1e-6f;
+            float otherScale = hasOpponent ? OpponentScale(in pose, in opponent) : 1f;
+            pose.ElbowL = Swivel(pose.ShoulderL, pose.ElbowL, pose.HandL, in pose, body, in opponent, otherScale, hasOpponent);
+            pose.ElbowR = Swivel(pose.ShoulderR, pose.ElbowR, pose.HandR, in pose, body, in opponent, otherScale, hasOpponent);
+            pose.ElbowL = ArmAboveMat(pose.ShoulderL, pose.HandL, body.UpperArm, body.Forearm, pose.ElbowL - Vector3.Lerp(pose.ShoulderL, pose.HandL, 0.5f), out pose.HandL);
+            pose.ElbowR = ArmAboveMat(pose.ShoulderR, pose.HandR, body.UpperArm, body.Forearm, pose.ElbowR - Vector3.Lerp(pose.ShoulderR, pose.HandR, 0.5f), out pose.HandR);
+            Quaternion leftHand = Quaternion.Slerp(Skeleton.Orientation(a.HandDirL, a.PalmNormalL), Skeleton.Orientation(b.HandDirL, b.PalmNormalL), t);
+            Quaternion rightHand = Quaternion.Slerp(Skeleton.Orientation(a.HandDirR, a.PalmNormalR), Skeleton.Orientation(b.HandDirR, b.PalmNormalR), t);
+            pose.HandDirL = leftHand * Vector3.up;
+            pose.PalmNormalL = leftHand * Vector3.forward;
+            pose.HandDirR = rightHand * Vector3.up;
+            pose.PalmNormalR = rightHand * Vector3.forward;
+            pose.LeftGripStyle = a.LeftGripStyle;
+            pose.RightGripStyle = a.RightGripStyle;
+            pose.LeftGripAperture = Mathf.Lerp(a.LeftGripAperture, b.LeftGripAperture, t);
+            pose.RightGripAperture = Mathf.Lerp(a.RightGripAperture, b.RightGripAperture, t);
+            pose.ReachTorsion = Mathf.Lerp(a.ReachTorsion, b.ReachTorsion, t);
+            pose.RetractionL = Mathf.Lerp(a.RetractionL, b.RetractionL, t);
+            pose.RetractionR = Mathf.Lerp(a.RetractionR, b.RetractionR, t);
+        }
+
+        private static void SolveDiscreteArms(ref Pose pose, BodyProportions body, PoseRole role, WrestlerFrame frame, in Pose opponent, IEnumerable<Grip> grips, bool? forceLying = null)
         {
             bool hasOpponent = opponent.Spine.sqrMagnitude > 1e-6f;
             GripSocket? left = null;
@@ -311,7 +464,7 @@ namespace Wrestling.Presentation
                 }
             }
 
-            bool lying = frame.Ground == GroundState.Prone || frame.Ground == GroundState.Supine || frame.Ground == GroundState.Bridge;
+            bool lying = forceLying ?? (frame.Ground == GroundState.Prone || frame.Ground == GroundState.Supine || frame.Ground == GroundState.Bridge);
             Vector3 reachForward = Vector3.ProjectOnPlane(pose.ChestNormal, Vector3.up).normalized;
             if (reachForward.sqrMagnitude < 1e-6f)
             {
@@ -491,8 +644,7 @@ namespace Wrestling.Presentation
             target = IntoCone(in pose, shoulder, target, lateral);
             elbow = TwoBone(shoulder, target, body.UpperArm, body.Forearm, pole, out Vector3 hand);
             elbow = Swivel(shoulder, elbow, hand, in pose, body, in opponent, otherScale, hasOpponent);
-            KeepAboveMat(ref elbow, ClipKinematics.ForearmElbowHeight);
-            KeepAboveMat(ref hand, ClipKinematics.ForearmWristHeight);
+            elbow = ArmAboveMat(shoulder, hand, body.UpperArm, body.Forearm, elbow - Vector3.Lerp(shoulder, hand, 0.5f), out hand);
             if (left)
             {
                 pose.ShoulderL = shoulder;
@@ -1184,6 +1336,7 @@ namespace Wrestling.Presentation
         /// <summary>Turns the pose's segment directions (pelvis, head, hands) by <paramref name="rotation"/>.</summary>
         public static void RotateFrames(ref Pose pose, Quaternion rotation)
         {
+            pose.PelvisUp = rotation * pose.PelvisUp;
             pose.PelvisNormal = rotation * pose.PelvisNormal;
             pose.HeadNormal = rotation * pose.HeadNormal;
             pose.HandDirL = rotation * pose.HandDirL;
@@ -1326,9 +1479,71 @@ namespace Wrestling.Presentation
             if (bend.sqrMagnitude < 1e-6f)
             {
                 bend = Vector3.ProjectOnPlane(Vector3.forward, direction);
+                if (bend.sqrMagnitude < 1e-6f) bend = Vector3.ProjectOnPlane(Vector3.up, direction);
+                if (bend.sqrMagnitude < 1e-6f) bend = Vector3.ProjectOnPlane(Vector3.right, direction);
             }
 
             return root + (direction * along) + (bend.normalized * across);
+        }
+
+        /// <summary>
+        /// Keeps a posted wrist and elbow above the mat without changing either bone length.
+        /// The elbow moves around the shoulder-wrist axis; only when that circle cannot reach
+        /// the mat plane does the wrist slide along the plane to the nearest feasible reach.
+        /// </summary>
+        private static Vector3 ArmAboveMat(Vector3 root, Vector3 target, float upper, float lower, Vector3 pole, out Vector3 end)
+        {
+            float floor = ClipKinematics.ForearmElbowHeight;
+            target.y = Mathf.Max(target.y, ClipKinematics.ForearmWristHeight);
+            Vector3 elbow = TwoBone(root, target, upper, lower, pole, out end);
+            if (elbow.y >= floor) return elbow;
+
+            if (ElbowAbovePlane(root, end, elbow, floor, out Vector3 onPlane)) return onPlane;
+
+            // At a very short low reach, a longer upper arm would put the elbow below the
+            // mat for every swivel. The two limb spheres intersect the mat in circles: their
+            // radii give the range of horizontal wrist distances that keeps both lengths.
+            float rootRise = root.y - floor;
+            float endRise = target.y - floor;
+            float upperRun = Mathf.Sqrt(Mathf.Max(0f, (upper * upper) - (rootRise * rootRise)));
+            float lowerRun = Mathf.Sqrt(Mathf.Max(0f, (lower * lower) - (endRise * endRise)));
+            Vector3 horizontal = Vector3.ProjectOnPlane(target - root, Vector3.up);
+            float distance = horizontal.magnitude;
+            Vector3 direction = distance > 1e-6f ? horizontal / distance : Vector3.ProjectOnPlane(pole, Vector3.up).normalized;
+            if (direction.sqrMagnitude < 1e-6f) direction = Vector3.forward;
+            float closest = Mathf.Clamp(distance, Mathf.Abs(upperRun - lowerRun) + 0.001f, Mathf.Max(0.001f, upperRun + lowerRun - 0.001f));
+            target = new Vector3(root.x, target.y, root.z) + (direction * closest);
+            elbow = TwoBone(root, target, upper, lower, pole, out end);
+            return ElbowAbovePlane(root, end, elbow, floor, out onPlane) ? onPlane : elbow;
+        }
+
+        private static bool ElbowAbovePlane(Vector3 root, Vector3 end, Vector3 elbow, float floor, out Vector3 result)
+        {
+            Vector3 axis = (end - root).normalized;
+            Vector3 centre = root + (axis * Vector3.Dot(elbow - root, axis));
+            Vector3 radial = elbow - centre;
+            float radius = radial.magnitude;
+            Vector3 vertical = Vector3.ProjectOnPlane(Vector3.up, axis);
+            float rise = vertical.magnitude;
+            if (radius < 1e-7f || rise < 1e-7f)
+            {
+                result = elbow;
+                return elbow.y >= floor - 1e-6f;
+            }
+
+            float up = (floor - centre.y) / (radius * rise);
+            if (up > 1f + 1e-5f)
+            {
+                result = elbow;
+                return false;
+            }
+
+            vertical /= rise;
+            up = Mathf.Clamp(up, -1f, 1f);
+            Vector3 side = Vector3.Cross(axis, vertical).normalized;
+            float across = Mathf.Sqrt(Mathf.Max(0f, 1f - (up * up))) * (Vector3.Dot(radial, side) < 0f ? -1f : 1f);
+            result = centre + (radius * ((vertical * up) + (side * across)));
+            return true;
         }
     }
 }

@@ -1,0 +1,16 @@
+{
+  "source": "Harmony4D test/03_grappling2.zip, sequence 043_grappling2, original frame 301. Visually inspected foreground mat regions; cam05 has a notch excluding the feet. Image-mask membership is not verified point visibility or accepted floor calibration.",
+  "frame": 301,
+  "fit_cameras": ["cam01", "cam05"],
+  "heldout_camera": "cam11",
+  "images": {
+    "cam01": "cam01/pose-000300-frame-000301.jpg",
+    "cam05": "cam05/pose-000300-frame-000301.jpg",
+    "cam11": "cam11/pose-000300-frame-000301.jpg"
+  },
+  "polygons": {
+    "cam01": [[400, 1400], [3350, 1400], [3350, 2050], [400, 2050]],
+    "cam05": [[400, 1450], [1800, 1450], [1800, 1560], [2400, 1560], [2400, 1450], [3350, 1450], [3350, 2050], [400, 2050]],
+    "cam11": [[400, 1450], [3350, 1450], [3350, 2050], [400, 2050]]
+  }
+}

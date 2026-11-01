@@ -199,16 +199,62 @@ namespace Wrestling.Data.Animation
         /// </summary>
         public static Trunk Place(ActorKey key, Body body, bool compactBase)
         {
+            Trunk trunk;
+            if (key.GroundFrom.HasValue && key.GroundTo.HasValue)
+            {
+                Trunk a = PlaceDiscrete(key, body, compactBase, key.GroundFrom.Value, key.GroundFromLying);
+                Trunk b = PlaceDiscrete(key, body, compactBase, key.GroundTo.Value, key.GroundToLying);
+                float t = Clamp01(key.GroundBlend);
+                Quaternion rotation = Quaternion.Slerp(Orientation(a), Orientation(b), t);
+                Vector3 pelvis = Vector3.Lerp(a.Pelvis, b.Pelvis, t);
+                trunk = new Trunk
+                {
+                    Pelvis = pelvis,
+                    Neck = pelvis + (Vector3.Transform(Vector3.UnitY, rotation) * Lerp((a.Neck - a.Pelvis).Length(), (b.Neck - b.Pelvis).Length(), t)),
+                    Front = Vector3.Transform(Vector3.UnitZ, rotation),
+                    Left = -Vector3.Transform(Vector3.UnitX, rotation),
+                };
+                // Preserve endpoint geometry exactly (bridging has its own neck height).
+                if (t <= 0f) trunk = a;
+                else if (t >= 1f) trunk = b;
+            }
+            else
+            {
+                trunk = PlaceDiscrete(key, body, compactBase, key.Ground);
+            }
+
+            double heading = key.Heading * Math.PI / 180.0;
+            var forward = new Vector3((float)Math.Cos(heading), 0f, (float)Math.Sin(heading));
+            var left = new Vector3(-forward.Z, 0f, forward.X);
+            Turn(ref trunk, key, forward, left, body);
+            return trunk;
+        }
+
+        private static Quaternion Orientation(Trunk trunk)
+        {
+            Vector3 right = -trunk.Left;
+            Vector3 up = trunk.Spine;
+            Vector3 front = Vector3.Normalize(Vector3.Cross(right, up));
+            right = Vector3.Normalize(Vector3.Cross(up, front));
+            return Quaternion.CreateFromRotationMatrix(new Matrix4x4(
+                right.X, right.Y, right.Z, 0f,
+                up.X, up.Y, up.Z, 0f,
+                front.X, front.Y, front.Z, 0f,
+                0f, 0f, 0f, 1f));
+        }
+
+        private static Trunk PlaceDiscrete(ActorKey key, Body body, bool compactBase, GroundState ground, bool? forceLying = null)
+        {
             double heading = key.Heading * Math.PI / 180.0;
             var forward = new Vector3((float)Math.Cos(heading), 0f, (float)Math.Sin(heading));
             var left = new Vector3(-forward.Z, 0f, forward.X);
             var centre = new Vector3(key.X, 0f, key.Z);
             var trunk = new Trunk { Left = left };
-            if (IsLying(key.Ground, key.Roll))
+            if (forceLying ?? IsLying(ground, key.Roll))
             {
-                float roll = key.Ground == GroundState.Prone ? Math.Min(key.Roll, 90f)
-                    : key.Ground == GroundState.Supine || key.Ground == GroundState.Bridge ? Math.Max(key.Roll, 90f) : key.Roll;
-                bool bridge = key.Ground == GroundState.Bridge;
+                float roll = ground == GroundState.Prone ? Math.Min(key.Roll, 90f)
+                    : ground == GroundState.Supine || ground == GroundState.Bridge ? Math.Max(key.Roll, 90f) : key.Roll;
+                bool bridge = ground == GroundState.Bridge;
                 float rest = LyingRestHeight(roll, body.TorsoHalfDepth, body.ShoulderHalfWidth, bridge);
                 float neckRest = rest - (bridge ? 0.1f : 0f);
                 trunk.Pelvis = centre - (forward * (body.Torso * 0.5f)) + (Vector3.UnitY * rest);
@@ -221,7 +267,7 @@ namespace Wrestling.Data.Animation
                 float hip;
                 float lean;
                 Vector3 pelvis;
-                switch (key.Ground)
+                switch (ground)
                 {
                     case GroundState.Standing:
                         hip = StandingHipHeight(key.Level, body.Thigh + body.Shin);
@@ -235,7 +281,7 @@ namespace Wrestling.Data.Animation
                         break;
                     default:
                     {
-                        float compact = compactBase && key.Ground == GroundState.BothKnees ? CompactBase(key.Posture) : 0f;
+                        float compact = compactBase && ground == GroundState.BothKnees ? CompactBase(key.Posture) : 0f;
                         float up = KneelingHipHeight(key.Level, body.Thigh);
                         float low = CompactHipHeight(key.Level);
                         hip = Lerp(up, low, compact);
@@ -253,7 +299,6 @@ namespace Wrestling.Data.Animation
                 trunk.Front = Vector3.Normalize(Vector3.Cross(spine, left));
             }
 
-            Turn(ref trunk, key, forward, left, body);
             return trunk;
         }
 

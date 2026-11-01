@@ -49,6 +49,20 @@ public class Fix64Tests
     }
 
     [Fact]
+    public void Multiply_FractionalFastPathMatchesExactArithmeticAtBoundaries()
+    {
+        long[] values = { 0, 1, -1, 1L << 31, -(1L << 31), uint.MaxValue, -(long)uint.MaxValue, 1L << 32, -(1L << 32) };
+        foreach (long a in values)
+        {
+            foreach (long b in values)
+            {
+                long expected = (long)RoundedDivide(new BigInteger(a) * b, OneBig);
+                Assert.Equal(expected, (Fix64.FromRaw(a) * Fix64.FromRaw(b)).Raw);
+            }
+        }
+    }
+
+    [Fact]
     public void Multiply_ThrowsOnOverflow()
     {
         Fix64 big = Fix64.FromInt(100_000);

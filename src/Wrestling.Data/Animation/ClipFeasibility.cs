@@ -104,6 +104,56 @@ namespace Wrestling.Data.Animation
             return errors;
         }
 
+        /// <summary>
+        /// Checks executor hip drops along the interpolated path, not just at authored keys.
+        /// This diagnostic intentionally retains the same gravity and held-body exceptions as
+        /// <see cref="Check"/>. It can expose legacy clips whose endpoints pass while their eased
+        /// motion does not; passing it establishes only this physical bound, not human realism.
+        /// </summary>
+        public static IReadOnlyList<string> CheckSampledPath(MoveClip clip, int minimumTicks)
+        {
+            var errors = new List<string>();
+            if (clip.Keys.Count < 2 || minimumTicks <= 0) return errors;
+            ClipKinematics.Body body = ClipKinematics.Body.Reference;
+            bool executorBottom = clip.Frame == ClipFrame.Bottom && IsBottom(clip, true);
+            bool opponentBottom = clip.Frame == ClipFrame.Bottom && !executorBottom;
+            float seconds = minimumTicks / (float)BoutClock.TicksPerSecond;
+            // Include quarter-tick samples, matching the presentation's 240 Hz physics targets.
+            int samples = minimumTicks * 4;
+            for (int rest = 0; rest < clip.Keys.Count - 1; rest++)
+            {
+                ClipKey from = clip.Keys[rest];
+                var fromTrunk = Place(from, body, executorBottom, opponentBottom).Executor;
+                if (rest > 0)
+                {
+                    var before = Place(clip.Keys[rest - 1], body, executorBottom, opponentBottom).Executor;
+                    if (before.Pelvis.Y > fromTrunk.Pelvis.Y + SmallestDrop) continue;
+                }
+
+                for (int sample = 1; sample <= samples; sample++)
+                {
+                    float t = sample / (float)samples;
+                    if (t <= from.T) continue;
+                    (ActorKey executor, ActorKey opponent) = clip.Sample(t);
+                    bool pulled = clip.Throw.Kind == ThrowKind.Throw && clip.Throw.Grips.Count > 0 && t > clip.Throw.From;
+                    if (pulled || Held(from.Executor) || Held(executor)) break;
+                    var key = new ClipKey { T = t, Executor = executor, Opponent = opponent };
+                    float height = Place(key, body, executorBottom, opponentBottom).Executor.Pelvis.Y;
+                    float drop = fromTrunk.Pelvis.Y - height;
+                    if (drop < SmallestDrop) continue;
+                    float span = (t - from.T) * seconds;
+                    float soonest = (float)Math.Sqrt(2f * drop / ClipKinematics.Gravity);
+                    if (span < soonest)
+                    {
+                        errors.Add($"{clip.Id}.keys[{rest}..sample@{F(t)}].executor: hips drop {F(drop)} m in {F(span)} s from rest along the sampled path, faster than free fall ({F(soonest)} s).");
+                        break;
+                    }
+                }
+            }
+
+            return errors;
+        }
+
         /// <summary>Both trunks at a key, the held one seated on its carrier.</summary>
         public static (ClipKinematics.Trunk Executor, ClipKinematics.Trunk Opponent) Place(ClipKey key, ClipKinematics.Body body, bool executorBottom, bool opponentBottom)
         {

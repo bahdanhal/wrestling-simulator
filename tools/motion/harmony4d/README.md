@@ -49,3 +49,31 @@ python harmony_compare.py REPO OUT OUT/events.json
 ```
 
 For each segment in `segments.json`: hip heights (as shares of stature), trunk lean and the distance between the bodies, real against keyed, and how much faster than real the engine's phase plays it; then depth, timing and speed over all real shots and level changes.
+
+## 6. Review the character against the camera
+
+The [native-time review workflow](../../../docs/research/motion-review.md) renders the take's
+joint tracks beside the game rig. Fetch corresponding camera images by pose index, with a
+manifest retaining the original archive frame numbers:
+
+```bash
+python harmony_images.py test/03_grappling2.zip 043_grappling2 OUT/test/03_grappling2/043_grappling2.npz --from-index 176 --to-index 204 --camera cam01 --take ../../../data/motion/takes/harmony4d.test-grappling2-043.json --output OUT/camera
+python harmony_review.py --camera OUT/camera --review OUT/rig --output OUT/comparison
+```
+
+`harmony_review.py` requires matching source manifests and a complete consecutive Unity frame
+sequence. It preserves the full camera images, writes a contact sheet and native-rate video when
+`ffmpeg` is available, and records that the viewpoints differ. Use an empty output directory.
+
+Offline checks for the download bounds and frame/provenance mapping:
+
+```bash
+python -m unittest test_harmony_images.py test_harmony_review.py
+```
+
+For manually marked multi-view landmarks, `harmony_camera.py` fetches the released fisheye camera
+calibration and triangulates image points with reprojection residuals and provenance. See the
+input format and limits in [motion-review.md](../../../docs/research/motion-review.md). The
+included 2D poses are model-derived; the tool does not treat them as independent evidence of
+toe, heel or mat contact. Run `python -m unittest discover -p 'test_harmony_*.py'` for all offline
+download, mapping and camera-geometry checks.

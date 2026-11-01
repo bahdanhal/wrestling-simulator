@@ -3,8 +3,8 @@ using UnityEngine;
 namespace Wrestling.Presentation
 {
     /// <summary>
-    /// One wrestler on the mat: an instance of the base character model, scaled to their height,
-    /// shaped by blend shapes for build and face, dressed in their corner's singlet, and posed
+    /// One wrestler on the mat: an instance of the base character model, fitted to their height,
+    /// leg ratio and reach, shaped by blend shapes for build and face, dressed in their corner's singlet, and posed
     /// every frame from the pose solver. After posing, its twist bones and corrective shapes
     /// follow the final bones (<see cref="UpdateDeformation"/>). Display only.
     /// </summary>
@@ -34,6 +34,9 @@ namespace Wrestling.Presentation
 
         /// <summary>The wrestler's standing height in metres.</summary>
         public float Height { get; private set; }
+
+        /// <summary>Extended fingertip-to-fingertip reach measured at construction.</summary>
+        public float Wingspan { get; private set; }
 
         public void Build(CharacterLibrary.CharacterBase characterBase, WrestlerLook look, Color singlet)
         {
@@ -120,6 +123,9 @@ namespace Wrestling.Presentation
                 }
             }
 
+            // Fit segment lengths once, while the model is still in its bind pose. Both the pose
+            // solver and the physical articulation then measure the same athlete's proportions.
+            Wingspan = CharacterMorphology.Apply(transform, look);
             _rig = new CharacterRig(transform);
             var bones = new System.Collections.Generic.Dictionary<string, Transform>(System.StringComparer.Ordinal);
             foreach (Transform t in _model.GetComponentsInChildren<Transform>(true))

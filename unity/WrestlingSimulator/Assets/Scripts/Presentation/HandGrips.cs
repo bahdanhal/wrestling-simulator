@@ -41,6 +41,7 @@ namespace Wrestling.Presentation
 
         private readonly GripLink[] _links = new GripLink[4];
         private readonly Grip[] _grips = new Grip[4];
+        private readonly bool[] _activeGrips = new bool[4];
         private readonly int[] _lastGripped = new int[4];
 
         /// <summary>Holds currently made (0–4).</summary>
@@ -61,12 +62,28 @@ namespace Wrestling.Presentation
         /// <summary>Hands the engine has in a grip now (0–4).</summary>
         public int Gripping { get; private set; }
 
+        /// <summary>Engine-gripping hands whose physical link is currently holding.</summary>
+        public int ActiveHolding
+        {
+            get
+            {
+                int count = 0;
+                for (int i = 0; i < _links.Length; i++)
+                {
+                    count += _activeGrips[i] && _links[i] != null && _links[i].Holding ? 1 : 0;
+                }
+
+                return count;
+            }
+        }
+
         public void Clear()
         {
             for (int i = 0; i < _links.Length; i++)
             {
                 _links[i] = null;
                 _grips[i] = null;
+                _activeGrips[i] = false;
             }
 
             Gripping = 0;
@@ -84,6 +101,7 @@ namespace Wrestling.Presentation
                 var corner = (Corner)(i / 2);
                 var side = (GripSide)(i % 2);
                 Grip grip = suspended ? null : GripOn(engine, corner, side);
+                _activeGrips[i] = grip != null;
                 if (grip == null)
                 {
                     bool lingering = !suspended && _links[i] != null && _links[i].Holding && engine.Tick - _lastGripped[i] <= GraceTicks;

@@ -19,6 +19,11 @@ namespace Wrestling.Presentation
         public float Balance;
         public float TorsoRotation;
         public GroundState Ground;
+        public GroundState? GroundFrom;
+        public GroundState? GroundTo;
+        public float GroundBlend;
+        public bool GroundFromLying;
+        public bool GroundToLying;
         public Stance Stance;
 
         /// <summary>Which side a lying wrestler rolls towards: +1 their left, -1 their right (display staging).</summary>
@@ -67,6 +72,11 @@ namespace Wrestling.Presentation
                 Balance = Mathf.Lerp(a.Balance, b.Balance, t),
                 TorsoRotation = Mathf.Lerp(a.TorsoRotation, b.TorsoRotation, t),
                 Ground = t < 0.5f ? a.Ground : b.Ground,
+                GroundFrom = b.GroundFrom,
+                GroundTo = b.GroundTo,
+                GroundBlend = b.GroundBlend,
+                GroundFromLying = b.GroundFromLying,
+                GroundToLying = b.GroundToLying,
                 Stance = t < 0.5f ? a.Stance : b.Stance,
                 RollSide = b.RollSide,
                 Lift = Mathf.Lerp(a.Lift, b.Lift, t),

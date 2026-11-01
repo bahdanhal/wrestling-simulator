@@ -29,8 +29,8 @@
   "phases": [
     {
       "id": "snap",
-      "minimumTicks": 10,
-      "maximumTicks": 16,
+      "minimumTicks": 42,
+      "maximumTicks": 60,
       "attributes": [
         {
           "attribute": "snapDownsAndFrontHeadlock",

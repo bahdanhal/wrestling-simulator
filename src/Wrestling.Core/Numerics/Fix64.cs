@@ -76,7 +76,18 @@ namespace Wrestling.Core.Numerics
         public static Fix64 operator *(Fix64 a, Fix64 b)
         {
             bool negative = (a.Raw < 0) != (b.Raw < 0);
-            MultiplyUnsigned(UnsignedAbs(a.Raw), UnsignedAbs(b.Raw), out ulong high, out ulong low);
+            ulong left = UnsignedAbs(a.Raw);
+            ulong right = UnsignedAbs(b.Raw);
+            // Two fractional magnitudes fit in one native product. In particular, this
+            // avoids the four partial products for the common probability calculations.
+            if ((left | right) <= uint.MaxValue)
+            {
+                ulong product = left * right;
+                ulong rounded = (product >> FractionalBits) + ((product & 0xFFFFFFFFUL) >= (1UL << 31) ? 1UL : 0UL);
+                return new Fix64(ApplySign(rounded, negative));
+            }
+
+            MultiplyUnsigned(left, right, out ulong high, out ulong low);
 
             // Divide the 128-bit product by 2^32, rounding half away from zero.
             ulong roundedLow = unchecked(low + (1UL << (FractionalBits - 1)));

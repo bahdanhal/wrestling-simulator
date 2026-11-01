@@ -6,7 +6,7 @@ namespace Wrestling.Presentation
 {
     /// <summary>
     /// How a wrestler looks: which base model and skin, the blend-shape weights for build and
-    /// face, and the overall scale. Build comes from the wrestler's body and strength; skin and
+    /// face, height, leg ratio and reach. Build comes from the wrestler's body and strength; skin and
     /// face come from a stable hash of their identity, so a wrestler always looks the same.
     /// </summary>
     public sealed class WrestlerLook
@@ -34,6 +34,8 @@ namespace Wrestling.Presentation
             Female = wrestler.Gender == Gender.Female;
             Skin = skinCount > 0 ? (int)(hash % (uint)skinCount) : 0;
             HeightMetres = wrestler.Body.HeightCm / 100f;
+            WingspanMetres = wrestler.Body.WingspanCm / 100f;
+            LegRatio = wrestler.Body.LegRatio.ToFloat();
             MassKg = wrestler.Body.NaturalWeightKg.ToFloat();
 
             var weights = new Dictionary<string, float>();
@@ -68,6 +70,11 @@ namespace Wrestling.Presentation
         public int Skin { get; }
 
         public float HeightMetres { get; }
+
+        public float WingspanMetres { get; }
+
+        /// <summary>Hip-to-ankle segment length as a share of standing height.</summary>
+        public float LegRatio { get; }
 
         public float MassKg { get; }
 

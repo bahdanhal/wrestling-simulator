@@ -475,13 +475,13 @@ namespace Wrestling.Editor
         private const int VideoHeight = 720;
 
         /// <summary>Renders <see cref="VideoTicks"/> ticks live at 30 frames per second and encodes them with ffmpeg.</summary>
-        internal static void CaptureVideo(BoutViewer viewer, Camera camera, string file, int ticks = VideoTicks, Action eachFrame = null)
+        internal static void CaptureVideo(BoutViewer viewer, Camera camera, string file, int ticks = VideoTicks, Action eachFrame = null, bool livePlayback = false)
         {
             string name = Path.GetFileNameWithoutExtension(file);
             PhysicalBody.Trace = line => Debug.Log($"[trace] {name}: {line}");
             try
             {
-                CaptureVideoFrames(viewer, camera, file, ticks, eachFrame);
+                CaptureVideoFrames(viewer, camera, file, ticks, eachFrame, livePlayback);
             }
             finally
             {
@@ -489,7 +489,7 @@ namespace Wrestling.Editor
             }
         }
 
-        private static void CaptureVideoFrames(BoutViewer viewer, Camera camera, string file, int ticks, Action eachFrame)
+        private static void CaptureVideoFrames(BoutViewer viewer, Camera camera, string file, int ticks, Action eachFrame, bool livePlayback)
         {
             string ffmpeg = new[] { "/Users/bahdan/git/brew/bin/ffmpeg", "/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg", "/usr/bin/ffmpeg" }.FirstOrDefault(File.Exists);
             if (ffmpeg == null)
@@ -518,7 +518,15 @@ namespace Wrestling.Editor
                 camera.Render();
                 for (int frame = 0; frame < ticks / 2; frame++)
                 {
-                    viewer.FastForward(2);
+                    if (livePlayback)
+                    {
+                        viewer.PlayFrame(1f / 60f);
+                        viewer.PlayFrame(1f / 60f);
+                    }
+                    else
+                    {
+                        viewer.FastForward(2);
+                    }
                     eachFrame?.Invoke();
                     camera.targetTexture = target;
                     Canvas.ForceUpdateCanvases();

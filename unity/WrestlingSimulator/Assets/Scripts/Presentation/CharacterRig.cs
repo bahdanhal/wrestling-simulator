@@ -49,6 +49,12 @@ namespace Wrestling.Presentation
         private readonly Transform _spine1;
         private readonly Dictionary<string, Transform> _byName = new Dictionary<string, Transform>(StringComparer.Ordinal);
         private readonly Vector3 _pelvisToHips;
+        private readonly Vector3 _hipOffsetL;
+        private readonly Vector3 _hipOffsetR;
+        private readonly float _thighL;
+        private readonly float _thighR;
+        private readonly float _shinL;
+        private readonly float _shinR;
         private readonly List<FingerJoint> _leftFingers = new List<FingerJoint>();
         private readonly List<FingerJoint> _rightFingers = new List<FingerJoint>();
         private readonly SkeletonCalibration _calibration;
@@ -111,6 +117,12 @@ namespace Wrestling.Presentation
 
             // Where the rig's hips bone sits relative to the pose pelvis, in the hips segment's frame.
             _pelvisToHips = Quaternion.Inverse(_rotations[(int)Bone.Hips]) * (_bones[(int)Bone.Hips].position - bind.Pelvis);
+            _hipOffsetL = Quaternion.Inverse(_rotations[(int)Bone.Hips]) * (bind.HipL - bind.Pelvis);
+            _hipOffsetR = Quaternion.Inverse(_rotations[(int)Bone.Hips]) * (bind.HipR - bind.Pelvis);
+            _thighL = Vector3.Distance(bind.HipL, bind.KneeL);
+            _thighR = Vector3.Distance(bind.HipR, bind.KneeR);
+            _shinL = Vector3.Distance(bind.KneeL, bind.AnkleL);
+            _shinR = Vector3.Distance(bind.KneeR, bind.AnkleR);
             CollectFingers(byName, "Left", _leftFingers, _bones[(int)Bone.LeftHand]);
             CollectFingers(byName, "Right", _rightFingers, _bones[(int)Bone.RightHand]);
             if (byName.TryGetValue("Jaw", out _jaw))
@@ -170,6 +182,84 @@ namespace Wrestling.Presentation
 
         /// <summary>Segment lengths measured from the model, for the pose solver.</summary>
         public BodyProportions Body { get; }
+
+        /// <summary>Recorded ankle targets and the reachable positions used by this model's legs.</summary>
+        public readonly struct RecordedLegsResult
+        {
+            public RecordedLegsResult(Vector3 leftTarget, Vector3 rightTarget, Vector3 leftReached, Vector3 rightReached)
+            {
+                LeftTarget = leftTarget;
+                RightTarget = rightTarget;
+                LeftReached = leftReached;
+                RightReached = rightReached;
+            }
+
+            public Vector3 LeftTarget { get; }
+            public Vector3 RightTarget { get; }
+            public Vector3 LeftReached { get; }
+            public Vector3 RightReached { get; }
+            public float LeftResidual => Vector3.Distance(LeftTarget, LeftReached);
+            public float RightResidual => Vector3.Distance(RightTarget, RightReached);
+            public float MaxResidual => Mathf.Max(LeftResidual, RightResidual);
+        }
+
+        /// <summary>
+        /// Fits fixed-length legs to recorded ankle trajectories in their existing common pair
+        /// transform. The pelvis trajectory is unchanged. Unreachable targets remain explicit in
+        /// the result; this does not infer foot contacts, move the pelvis or place soles on a mat.
+        /// </summary>
+        public RecordedLegsResult RetargetRecordedLegs(ref Pose pose)
+        {
+            Vector3 targetL = pose.AnkleL;
+            Vector3 targetR = pose.AnkleR;
+            Vector3 toeL = pose.ToeL - targetL;
+            Vector3 toeR = pose.ToeR - targetR;
+            Vector3 poleL = pose.KneeL - Vector3.Lerp(pose.HipL, targetL, 0.5f);
+            Vector3 poleR = pose.KneeR - Vector3.Lerp(pose.HipR, targetR, 0.5f);
+            // The normal construction derives pelvis pitch from the thighs. Freeze the recorded
+            // frame before changing knees, otherwise the solve itself would move its hip anchors.
+            Vector3 pelvisFront = pose.PelvisFront;
+            pose.PelvisUp = pose.PelvisAxis;
+            pose.PelvisNormal = pelvisFront;
+            pose.UnconstrainedFeet = true;
+            Skeleton.Compute(in pose, _positions, _rotations, null, in _calibration);
+            Quaternion pelvis = _rotations[(int)Bone.Hips];
+            pose.HipL = pose.Pelvis + (pelvis * _hipOffsetL);
+            pose.HipR = pose.Pelvis + (pelvis * _hipOffsetR);
+            pose.KneeL = RecordedKnee(pose.HipL, targetL, _thighL, _shinL, poleL, pelvisFront, out pose.AnkleL);
+            pose.KneeR = RecordedKnee(pose.HipR, targetR, _thighR, _shinR, poleR, pelvisFront, out pose.AnkleR);
+            pose.ToeL = pose.AnkleL + toeL;
+            pose.ToeR = pose.AnkleR + toeR;
+            return new RecordedLegsResult(targetL, targetR, pose.AnkleL, pose.AnkleR);
+        }
+
+        private static Vector3 RecordedKnee(Vector3 hip, Vector3 target, float thigh, float shin, Vector3 pole, Vector3 fallback, out Vector3 ankle)
+        {
+            Vector3 delta = target - hip;
+            float distance = delta.magnitude;
+            Vector3 direction = distance > 1e-7f ? delta / distance : Vector3.down;
+            float reach = Mathf.Clamp(distance, Mathf.Abs(thigh - shin), thigh + shin);
+            ankle = hip + (direction * reach);
+            Vector3 bend = Vector3.ProjectOnPlane(pole, direction);
+            if (bend.sqrMagnitude < 1e-10f)
+            {
+                bend = Vector3.ProjectOnPlane(fallback, direction);
+            }
+
+            if (bend.sqrMagnitude < 1e-10f)
+            {
+                bend = Vector3.ProjectOnPlane(Mathf.Abs(direction.y) < 0.9f ? Vector3.up : Vector3.forward, direction);
+            }
+
+            if (reach < 1e-7f)
+            {
+                return hip + (bend.normalized * thigh);
+            }
+
+            float along = ((thigh * thigh) + (reach * reach) - (shin * shin)) / (2f * reach);
+            float across = Mathf.Sqrt(Mathf.Max(0f, (thigh * thigh) - (along * along)));
+            return hip + (direction * along) + (bend.normalized * across);
+        }
 
         /// <summary>
         /// Poses the rig. <paramref name="leftGrip"/> and <paramref name="rightGrip"/> are how firmly

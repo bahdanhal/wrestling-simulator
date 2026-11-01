@@ -1,0 +1,2584 @@
+{
+  "camera_provenance": {
+    "archive": "test/03_grappling2.zip",
+    "archive_url": "https://huggingface.co/datasets/Jyun-Ting/Harmony4D/resolve/main/test/03_grappling2.zip",
+    "sequence": "043_grappling2",
+    "camera": "cam01",
+    "npz": "043_grappling2.npz (downloaded source pose sequence)",
+    "source": {
+      "title": "Harmony4D test/03_grappling2.zip, sequence 043_grappling2",
+      "url": "https://huggingface.co/datasets/Jyun-Ting/Harmony4D",
+      "author": "Rawal Khirodkar, Jyun-Ting Song, Jinkun Cao, Zhengyi Luo, Kris Kitani (Carnegie Mellon University), Harmony4D, NeurIPS 2024",
+      "license": "MIT",
+      "notes": "Multi-view triangulated COCO-17 3D keypoints (processed_data/poses3d), 20 fps, both people. Floor fitted to the ankles; hands are the wrists, neck the mid-shoulders, head the mid-ears; toes are not tracked and are placed one foot-length ahead of the ankle along the pelvis's facing. Converted with the motion tools documented in docs/research/footage-sources.md."
+    },
+    "images": [
+      {
+        "pose_index": 176,
+        "original_frame": 177,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00177.jpg",
+        "file": "pose-000176-frame-000177.jpg"
+      },
+      {
+        "pose_index": 177,
+        "original_frame": 178,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00178.jpg",
+        "file": "pose-000177-frame-000178.jpg"
+      },
+      {
+        "pose_index": 178,
+        "original_frame": 179,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00179.jpg",
+        "file": "pose-000178-frame-000179.jpg"
+      },
+      {
+        "pose_index": 179,
+        "original_frame": 180,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00180.jpg",
+        "file": "pose-000179-frame-000180.jpg"
+      },
+      {
+        "pose_index": 180,
+        "original_frame": 181,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00181.jpg",
+        "file": "pose-000180-frame-000181.jpg"
+      },
+      {
+        "pose_index": 181,
+        "original_frame": 182,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00182.jpg",
+        "file": "pose-000181-frame-000182.jpg"
+      },
+      {
+        "pose_index": 182,
+        "original_frame": 183,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00183.jpg",
+        "file": "pose-000182-frame-000183.jpg"
+      },
+      {
+        "pose_index": 183,
+        "original_frame": 184,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00184.jpg",
+        "file": "pose-000183-frame-000184.jpg"
+      },
+      {
+        "pose_index": 184,
+        "original_frame": 185,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00185.jpg",
+        "file": "pose-000184-frame-000185.jpg"
+      },
+      {
+        "pose_index": 185,
+        "original_frame": 186,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00186.jpg",
+        "file": "pose-000185-frame-000186.jpg"
+      },
+      {
+        "pose_index": 186,
+        "original_frame": 187,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00187.jpg",
+        "file": "pose-000186-frame-000187.jpg"
+      },
+      {
+        "pose_index": 187,
+        "original_frame": 188,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00188.jpg",
+        "file": "pose-000187-frame-000188.jpg"
+      },
+      {
+        "pose_index": 188,
+        "original_frame": 189,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00189.jpg",
+        "file": "pose-000188-frame-000189.jpg"
+      },
+      {
+        "pose_index": 189,
+        "original_frame": 190,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00190.jpg",
+        "file": "pose-000189-frame-000190.jpg"
+      },
+      {
+        "pose_index": 190,
+        "original_frame": 191,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00191.jpg",
+        "file": "pose-000190-frame-000191.jpg"
+      },
+      {
+        "pose_index": 191,
+        "original_frame": 192,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00192.jpg",
+        "file": "pose-000191-frame-000192.jpg"
+      },
+      {
+        "pose_index": 192,
+        "original_frame": 193,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00193.jpg",
+        "file": "pose-000192-frame-000193.jpg"
+      },
+      {
+        "pose_index": 193,
+        "original_frame": 194,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00194.jpg",
+        "file": "pose-000193-frame-000194.jpg"
+      },
+      {
+        "pose_index": 194,
+        "original_frame": 195,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00195.jpg",
+        "file": "pose-000194-frame-000195.jpg"
+      },
+      {
+        "pose_index": 195,
+        "original_frame": 196,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00196.jpg",
+        "file": "pose-000195-frame-000196.jpg"
+      },
+      {
+        "pose_index": 196,
+        "original_frame": 197,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00197.jpg",
+        "file": "pose-000196-frame-000197.jpg"
+      },
+      {
+        "pose_index": 197,
+        "original_frame": 198,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00198.jpg",
+        "file": "pose-000197-frame-000198.jpg"
+      },
+      {
+        "pose_index": 198,
+        "original_frame": 199,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00199.jpg",
+        "file": "pose-000198-frame-000199.jpg"
+      },
+      {
+        "pose_index": 199,
+        "original_frame": 200,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00200.jpg",
+        "file": "pose-000199-frame-000200.jpg"
+      },
+      {
+        "pose_index": 200,
+        "original_frame": 201,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00201.jpg",
+        "file": "pose-000200-frame-000201.jpg"
+      },
+      {
+        "pose_index": 201,
+        "original_frame": 202,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00202.jpg",
+        "file": "pose-000201-frame-000202.jpg"
+      },
+      {
+        "pose_index": 202,
+        "original_frame": 203,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00203.jpg",
+        "file": "pose-000202-frame-000203.jpg"
+      },
+      {
+        "pose_index": 203,
+        "original_frame": 204,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00204.jpg",
+        "file": "pose-000203-frame-000204.jpg"
+      },
+      {
+        "pose_index": 204,
+        "original_frame": 205,
+        "archive_member": "03_grappling2/043_grappling2/exo/cam01/images/00205.jpg",
+        "file": "pose-000204-frame-000205.jpg"
+      }
+    ]
+  },
+  "review_provenance": {
+    "take": "harmony4d.test-grappling2-043",
+    "fromFrame": 176,
+    "toFrame": 204,
+    "executor": 1,
+    "redActorIndex": 1,
+    "blueActorIndex": 0,
+    "fps": 20.0,
+    "frameIntervalSeconds": 0.05,
+    "durationBetweenEndpointsSeconds": 1.4,
+    "encodedFrameCount": 29,
+    "contactSheetFrames": [
+      176,
+      182,
+      187,
+      193,
+      198,
+      204
+    ],
+    "source": {
+      "Title": "Harmony4D test/03_grappling2.zip, sequence 043_grappling2",
+      "Url": "https://huggingface.co/datasets/Jyun-Ting/Harmony4D",
+      "Author": "Rawal Khirodkar, Jyun-Ting Song, Jinkun Cao, Zhengyi Luo, Kris Kitani (Carnegie Mellon University), Harmony4D, NeurIPS 2024",
+      "License": "MIT",
+      "Notes": "Multi-view triangulated COCO-17 3D keypoints (processed_data/poses3d), 20 fps, both people. Floor fitted to the ankles; hands are the wrists, neck the mid-shoulders, head the mid-ears; toes are not tracked and are placed one foot-length ahead of the ankle along the pelvis's facing. Converted with the motion tools documented in docs/research/footage-sources.md."
+    },
+    "actors": [
+      {
+        "Name": "aria01",
+        "HeightMetres": 1.71
+      },
+      {
+        "Name": "aria02",
+        "HeightMetres": 1.76
+      }
+    ],
+    "generatedBodyProfiles": [
+      {
+        "role": "red/executor",
+        "HeightCm": 175,
+        "WingspanCm": 185,
+        "legRatio": 0.47
+      },
+      {
+        "role": "blue/opponent",
+        "HeightCm": 176,
+        "WingspanCm": 176,
+        "legRatio": 0.49
+      }
+    ],
+    "globalScale": 1.01152742,
+    "ankleTrajectoryRetargeting": true,
+    "unreachableAnkleFrameCount": 48,
+    "maximumUnreachableResidualMetres": 0.06725867,
+    "maximumActualToReachedErrorMetres": 1.38510757e-06,
+    "ankleFrames": [
+      {
+        "frame": 176,
+        "role": "executor",
+        "leftTarget": [
+          0.03505957,
+          0.0222536027,
+          0.355875641
+        ],
+        "rightTarget": [
+          -0.0506159067,
+          -0.00141613837,
+          -0.188454241
+        ],
+        "leftReached": [
+          0.03334272,
+          0.08302611,
+          0.3376266
+        ],
+        "rightReached": [
+          -0.04885173,
+          0.0367766023,
+          -0.184557676
+        ],
+        "leftActual": [
+          0.03334272,
+          0.0830259547,
+          0.3376268
+        ],
+        "rightActual": [
+          -0.04885161,
+          0.036776334,
+          -0.184557557
+        ],
+        "leftUnreachableResidualMetres": 0.063476555,
+        "rightUnreachableResidualMetres": 0.03843151,
+        "leftActualToSourceErrorMetres": 0.06347634,
+        "rightActualToSourceErrorMetres": 0.03843126,
+        "leftActualToReachedErrorMetres": 2.60770321e-07,
+        "rightActualToReachedErrorMetres": 3.16803039e-07
+      },
+      {
+        "frame": 176,
+        "role": "opponent",
+        "leftTarget": [
+          0.82382,
+          0.04572104,
+          -0.1888437
+        ],
+        "rightTarget": [
+          1.01176012,
+          0.00849683,
+          0.2173002
+        ],
+        "leftReached": [
+          0.82382,
+          0.0457210541,
+          -0.1888437
+        ],
+        "rightReached": [
+          1.01176012,
+          0.008496821,
+          0.2173002
+        ],
+        "leftActual": [
+          0.8238207,
+          0.0457207337,
+          -0.188843533
+        ],
+        "rightActual": [
+          1.01176059,
+          0.008496327,
+          0.217299983
+        ],
+        "leftUnreachableResidualMetres": 1.49011612e-08,
+        "rightUnreachableResidualMetres": 9.313226e-09,
+        "leftActualToSourceErrorMetres": 7.948411e-07,
+        "rightActualToSourceErrorMetres": 7.28187047e-07,
+        "leftActualToReachedErrorMetres": 8.006861e-07,
+        "rightActualToReachedErrorMetres": 7.217864e-07
+      },
+      {
+        "frame": 177,
+        "role": "executor",
+        "leftTarget": [
+          0.0506899357,
+          0.0299412124,
+          0.32233116
+        ],
+        "rightTarget": [
+          -0.0500488281,
+          -0.000303458248,
+          -0.189645022
+        ],
+        "leftReached": [
+          0.0475108624,
+          0.08794272,
+          0.305337548
+        ],
+        "rightReached": [
+          -0.0484979153,
+          0.0384565,
+          -0.186862677
+        ],
+        "leftActual": [
+          0.0475108624,
+          0.0879426152,
+          0.3053376
+        ],
+        "rightActual": [
+          -0.0484979153,
+          0.0384561531,
+          -0.186862648
+        ],
+        "leftUnreachableResidualMetres": 0.0605232529,
+        "rightUnreachableResidualMetres": 0.03889063,
+        "leftActualToSourceErrorMetres": 0.0605231375,
+        "rightActualToSourceErrorMetres": 0.0388902873,
+        "leftActualToReachedErrorMetres": 1.20137e-07,
+        "rightActualToReachedErrorMetres": 3.47731458e-07
+      },
+      {
+        "frame": 177,
+        "role": "opponent",
+        "leftTarget": [
+          0.820588,
+          0.06342277,
+          -0.224298567
+        ],
+        "rightTarget": [
+          1.0113219,
+          0.00960951,
+          0.218887657
+        ],
+        "leftReached": [
+          0.820588,
+          0.0634228,
+          -0.224298567
+        ],
+        "rightReached": [
+          1.0113219,
+          0.00960952,
+          0.218887657
+        ],
+        "leftActual": [
+          0.8205887,
+          0.0634219646,
+          -0.224298552
+        ],
+        "rightActual": [
+          1.01132214,
+          0.009609129,
+          0.218887329
+        ],
+        "leftUnreachableResidualMetres": 2.98023224e-08,
+        "rightUnreachableResidualMetres": 1.02445483e-08,
+        "leftActualToSourceErrorMetres": 1.07670553e-06,
+        "rightActualToSourceErrorMetres": 5.56242867e-07,
+        "leftActualToReachedErrorMetres": 1.09915641e-06,
+        "rightActualToReachedErrorMetres": 5.63307765e-07
+      },
+      {
+        "frame": 178,
+        "role": "executor",
+        "leftTarget": [
+          0.06346059,
+          0.0312561952,
+          0.270883828
+        ],
+        "rightTarget": [
+          -0.050950408,
+          0.00404611,
+          -0.190512523
+        ],
+        "leftReached": [
+          0.0594643354,
+          0.0868384838,
+          0.256385058
+        ],
+        "rightReached": [
+          -0.04989016,
+          0.0444182158,
+          -0.188710049
+        ],
+        "leftActual": [
+          0.0594643354,
+          0.0868380442,
+          0.2563852
+        ],
+        "rightActual": [
+          -0.04989016,
+          0.0444177836,
+          -0.18870993
+        ],
+        "leftUnreachableResidualMetres": 0.05758103,
+        "rightUnreachableResidualMetres": 0.04042623,
+        "leftActualToSourceErrorMetres": 0.0575805679,
+        "rightActualToSourceErrorMetres": 0.0404258035,
+        "leftActualToReachedErrorMetres": 4.64153828e-07,
+        "rightActualToReachedErrorMetres": 4.48274875e-07
+      },
+      {
+        "frame": 178,
+        "role": "opponent",
+        "leftTarget": [
+          0.8225268,
+          0.07495418,
+          -0.288654923
+        ],
+        "rightTarget": [
+          1.0106796,
+          0.01183487,
+          0.2197676
+        ],
+        "leftReached": [
+          0.8225268,
+          0.07495421,
+          -0.288654923
+        ],
+        "rightReached": [
+          1.0106796,
+          0.01183486,
+          0.2197676
+        ],
+        "leftActual": [
+          0.822527766,
+          0.0749537,
+          -0.288655072
+        ],
+        "rightActual": [
+          1.01068008,
+          0.0118342247,
+          0.219767228
+        ],
+        "leftUnreachableResidualMetres": 2.98023224e-08,
+        "rightUnreachableResidualMetres": 1.02445483e-08,
+        "leftActualToSourceErrorMetres": 1.07992309e-06,
+        "rightActualToSourceErrorMetres": 8.84704e-07,
+        "leftActualToReachedErrorMetres": 1.09361224e-06,
+        "rightActualToReachedErrorMetres": 8.772584e-07
+      },
+      {
+        "frame": 179,
+        "role": "executor",
+        "leftTarget": [
+          0.06468511,
+          0.02832277,
+          0.210913345
+        ],
+        "rightTarget": [
+          -0.0523766279,
+          0.00728299748,
+          -0.190693378
+        ],
+        "leftReached": [
+          0.0607988834,
+          0.0773690343,
+          0.200934052
+        ],
+        "rightReached": [
+          -0.05160582,
+          0.04676169,
+          -0.189458847
+        ],
+        "leftActual": [
+          0.0607990026,
+          0.07736913,
+          0.200934052
+        ],
+        "rightActual": [
+          -0.05160582,
+          0.0467616729,
+          -0.189458847
+        ],
+        "leftUnreachableResidualMetres": 0.05020184,
+        "rightUnreachableResidualMetres": 0.03950551,
+        "leftActualToSourceErrorMetres": 0.0502019264,
+        "rightActualToSourceErrorMetres": 0.0395054929,
+        "leftActualToReachedErrorMetres": 1.53597654e-07,
+        "rightActualToReachedErrorMetres": 1.86264515e-08
+      },
+      {
+        "frame": 179,
+        "role": "opponent",
+        "leftTarget": [
+          0.8257028,
+          0.077483,
+          -0.379807562
+        ],
+        "rightTarget": [
+          1.01114309,
+          0.0139590781,
+          0.222222492
+        ],
+        "leftReached": [
+          0.8257028,
+          0.077483,
+          -0.379807532
+        ],
+        "rightReached": [
+          1.01114309,
+          0.01395905,
+          0.222222492
+        ],
+        "leftActual": [
+          0.8257035,
+          0.07748245,
+          -0.3798076
+        ],
+        "rightActual": [
+          1.01114333,
+          0.0139584336,
+          0.222222149
+        ],
+        "leftUnreachableResidualMetres": 2.98023224e-08,
+        "rightUnreachableResidualMetres": 2.79396772e-08,
+        "leftActualToSourceErrorMetres": 9.03580656e-07,
+        "rightActualToSourceErrorMetres": 7.678889e-07,
+        "leftActualToReachedErrorMetres": 9.05053867e-07,
+        "rightActualToReachedErrorMetres": 7.44594558e-07
+      },
+      {
+        "frame": 180,
+        "role": "executor",
+        "leftTarget": [
+          0.05345249,
+          0.0255916435,
+          0.152778581
+        ],
+        "rightTarget": [
+          -0.05400729,
+          0.00677723344,
+          -0.191581637
+        ],
+        "leftReached": [
+          0.04998672,
+          0.06860411,
+          0.146460786
+        ],
+        "rightReached": [
+          -0.05374682,
+          0.0491451621,
+          -0.190719023
+        ],
+        "leftActual": [
+          0.04998684,
+          0.06860377,
+          0.146460891
+        ],
+        "rightActual": [
+          -0.0537467,
+          0.04914492,
+          -0.190719008
+        ],
+        "leftUnreachableResidualMetres": 0.04361191,
+        "rightUnreachableResidualMetres": 0.04237751,
+        "leftActualToSourceErrorMetres": 0.04361155,
+        "rightActualToSourceErrorMetres": 0.042377267,
+        "leftActualToReachedErrorMetres": 3.77561435e-07,
+        "rightActualToReachedErrorMetres": 2.70308249e-07
+      },
+      {
+        "frame": 180,
+        "role": "opponent",
+        "leftTarget": [
+          0.829028,
+          0.07444842,
+          -0.482154
+        ],
+        "rightTarget": [
+          1.01116788,
+          0.0125429407,
+          0.22531043
+        ],
+        "leftReached": [
+          0.829028,
+          0.07444841,
+          -0.482154
+        ],
+        "rightReached": [
+          1.01116788,
+          0.012542963,
+          0.22531043
+        ],
+        "leftActual": [
+          0.8290285,
+          0.07444774,
+          -0.482154
+        ],
+        "rightActual": [
+          1.01116812,
+          0.012542407,
+          0.225310162
+        ],
+        "leftUnreachableResidualMetres": 1.49011612e-08,
+        "rightUnreachableResidualMetres": 2.23517418e-08,
+        "leftActualToSourceErrorMetres": 8.28891757e-07,
+        "rightActualToSourceErrorMetres": 6.43090857e-07,
+        "leftActualToReachedErrorMetres": 8.167481e-07,
+        "rightActualToReachedErrorMetres": 6.617563e-07
+      },
+      {
+        "frame": 181,
+        "role": "executor",
+        "leftTarget": [
+          0.0337712765,
+          0.0203317013,
+          0.105546281
+        ],
+        "rightTarget": [
+          -0.05501628,
+          0.005057637,
+          -0.19262062
+        ],
+        "leftReached": [
+          0.0313154459,
+          0.05976659,
+          0.101384975
+        ],
+        "rightReached": [
+          -0.05509448,
+          0.0509059429,
+          -0.192248091
+        ],
+        "leftActual": [
+          0.0313154459,
+          0.0597660169,
+          0.1013851
+        ],
+        "rightActual": [
+          -0.05509448,
+          0.0509056561,
+          -0.192248
+        ],
+        "leftUnreachableResidualMetres": 0.03972981,
+        "rightUnreachableResidualMetres": 0.0458498858,
+        "leftActualToSourceErrorMetres": 0.03972923,
+        "rightActualToSourceErrorMetres": 0.0458496,
+        "leftActualToReachedErrorMetres": 5.87510272e-07,
+        "rightActualToReachedErrorMetres": 3.00458e-07
+      },
+      {
+        "frame": 181,
+        "role": "opponent",
+        "leftTarget": [
+          0.8399662,
+          0.0640296862,
+          -0.5738721
+        ],
+        "rightTarget": [
+          1.011051,
+          0.00718184467,
+          0.226457864
+        ],
+        "leftReached": [
+          0.8399662,
+          0.06402969,
+          -0.5738721
+        ],
+        "rightReached": [
+          1.011051,
+          0.00718182325,
+          0.226457849
+        ],
+        "leftActual": [
+          0.839966655,
+          0.06402898,
+          -0.573872149
+        ],
+        "rightActual": [
+          1.01105154,
+          0.007181019,
+          0.226457521
+        ],
+        "leftUnreachableResidualMetres": 7.450581e-09,
+        "rightUnreachableResidualMetres": 2.6093657e-08,
+        "leftActualToSourceErrorMetres": 8.55520057e-07,
+        "rightActualToSourceErrorMetres": 1.01315322e-06,
+        "leftActualToReachedErrorMetres": 8.61694332e-07,
+        "rightActualToReachedErrorMetres": 9.907452e-07
+      },
+      {
+        "frame": 182,
+        "role": "executor",
+        "leftTarget": [
+          0.0183576345,
+          0.0116325654,
+          0.07903562
+        ],
+        "rightTarget": [
+          -0.05498433,
+          0.005057637,
+          -0.19276005
+        ],
+        "leftReached": [
+          0.0163084269,
+          0.05879265,
+          0.074995324
+        ],
+        "rightReached": [
+          -0.0557266474,
+          0.05970639,
+          -0.192815915
+        ],
+        "leftActual": [
+          0.0163084269,
+          0.0587924942,
+          0.07499525
+        ],
+        "rightActual": [
+          -0.0557266474,
+          0.05970635,
+          -0.1928159
+        ],
+        "leftUnreachableResidualMetres": 0.0473771766,
+        "rightUnreachableResidualMetres": 0.0546538234,
+        "leftActualToSourceErrorMetres": 0.0473770276,
+        "rightActualToSourceErrorMetres": 0.0546537824,
+        "leftActualToReachedErrorMetres": 1.73296087e-07,
+        "rightActualToReachedErrorMetres": 4.36034036e-08
+      },
+      {
+        "frame": 182,
+        "role": "opponent",
+        "leftTarget": [
+          0.8567549,
+          0.04400144,
+          -0.638340533
+        ],
+        "rightTarget": [
+          1.00904262,
+          0.00303458236,
+          0.223060951
+        ],
+        "leftReached": [
+          0.8567549,
+          0.04400146,
+          -0.638340533
+        ],
+        "rightReached": [
+          1.00904262,
+          0.00303459167,
+          0.223060936
+        ],
+        "leftActual": [
+          0.8567556,
+          0.04400081,
+          -0.638340652
+        ],
+        "rightActual": [
+          1.00904286,
+          0.00303399586,
+          0.223060638
+        ],
+        "leftUnreachableResidualMetres": 1.86264515e-08,
+        "rightUnreachableResidualMetres": 1.75721588e-08,
+        "leftActualToSourceErrorMetres": 9.627407e-07,
+        "rightActualToSourceErrorMetres": 7.0622076e-07,
+        "leftActualToReachedErrorMetres": 9.750943e-07,
+        "rightActualToReachedErrorMetres": 7.075699e-07
+      },
+      {
+        "frame": 183,
+        "role": "executor",
+        "leftTarget": [
+          0.010696888,
+          0.00525994273,
+          0.07404708
+        ],
+        "rightTarget": [
+          -0.05447936,
+          0.008193373,
+          -0.191763356
+        ],
+        "leftReached": [
+          0.008877397,
+          0.0568834543,
+          0.07082392
+        ],
+        "rightReached": [
+          -0.0554511547,
+          0.06263435,
+          -0.19092159
+        ],
+        "leftActual": [
+          0.008877516,
+          0.0568832271,
+          0.07082401
+        ],
+        "rightActual": [
+          -0.0554511547,
+          0.06263423,
+          -0.190921441
+        ],
+        "leftUnreachableResidualMetres": 0.0517560281,
+        "rightUnreachableResidualMetres": 0.0544561557,
+        "leftActualToSourceErrorMetres": 0.05175579,
+        "rightActualToSourceErrorMetres": 0.0544560365,
+        "leftActualToReachedErrorMetres": 2.71741982e-07,
+        "rightActualToReachedErrorMetres": 1.90827976e-07
+      },
+      {
+        "frame": 183,
+        "role": "opponent",
+        "leftTarget": [
+          0.865389,
+          0.0255916435,
+          -0.666666746
+        ],
+        "rightTarget": [
+          1.00370109,
+          0.0120371766,
+          0.221393839
+        ],
+        "leftReached": [
+          0.865389,
+          0.0255916715,
+          -0.666666746
+        ],
+        "rightReached": [
+          1.00370109,
+          0.012037158,
+          0.221393839
+        ],
+        "leftActual": [
+          0.865389466,
+          0.02559111,
+          -0.6666668
+        ],
+        "rightActual": [
+          1.00370157,
+          0.0120363934,
+          0.2213936
+        ],
+        "leftUnreachableResidualMetres": 2.79396772e-08,
+        "rightUnreachableResidualMetres": 1.86264515e-08,
+        "leftActualToSourceErrorMetres": 7.174352e-07,
+        "rightActualToSourceErrorMetres": 9.474627e-07,
+        "leftActualToReachedErrorMetres": 7.384184e-07,
+        "rightActualToReachedErrorMetres": 9.321236e-07
+      },
+      {
+        "frame": 184,
+        "role": "executor",
+        "leftTarget": [
+          0.008311987,
+          0.00445072073,
+          0.0799574852
+        ],
+        "rightTarget": [
+          -0.05266881,
+          0.0130487038,
+          -0.193255663
+        ],
+        "leftReached": [
+          0.006775379,
+          0.05263394,
+          0.07758444
+        ],
+        "rightReached": [
+          -0.0534260273,
+          0.05864072,
+          -0.191575751
+        ],
+        "leftActual": [
+          0.00677549839,
+          0.0526335463,
+          0.0775845647
+        ],
+        "rightActual": [
+          -0.0534262657,
+          0.05864041,
+          -0.191575631
+        ],
+        "leftUnreachableResidualMetres": 0.04826609,
+        "rightUnreachableResidualMetres": 0.0456292368,
+        "leftActualToSourceErrorMetres": 0.0482656844,
+        "rightActualToSourceErrorMetres": 0.0456289351,
+        "leftActualToReachedErrorMetres": 4.31490918e-07,
+        "rightActualToReachedErrorMetres": 4.08238122e-07
+      },
+      {
+        "frame": 184,
+        "role": "opponent",
+        "leftTarget": [
+          0.8628229,
+          0.0144648422,
+          -0.670191646
+        ],
+        "rightTarget": [
+          1.00363147,
+          0.0314585,
+          0.206039637
+        ],
+        "leftReached": [
+          0.8628229,
+          0.0144648552,
+          -0.670191646
+        ],
+        "rightReached": [
+          1.00363147,
+          0.031458497,
+          0.206039637
+        ],
+        "leftActual": [
+          0.862823844,
+          0.0144638838,
+          -0.6701917
+        ],
+        "rightActual": [
+          1.00363147,
+          0.0314578936,
+          0.2060394
+        ],
+        "leftUnreachableResidualMetres": 1.3038516e-08,
+        "rightUnreachableResidualMetres": 3.7252903e-09,
+        "leftActualToSourceErrorMetres": 1.35330913e-06,
+        "rightActualToSourceErrorMetres": 6.523514e-07,
+        "leftActualToReachedErrorMetres": 1.36257336e-06,
+        "rightActualToReachedErrorMetres": 6.48885248e-07
+      },
+      {
+        "frame": 185,
+        "role": "executor",
+        "leftTarget": [
+          0.00636589527,
+          0.00333804055,
+          0.08523466
+        ],
+        "rightTarget": [
+          -0.0475451946,
+          0.0281204619,
+          -0.194794238
+        ],
+        "leftReached": [
+          0.00520133972,
+          0.0499168038,
+          0.08390515
+        ],
+        "rightReached": [
+          -0.0483503342,
+          0.05963576,
+          -0.192630976
+        ],
+        "leftActual": [
+          0.005201459,
+          0.0499165542,
+          0.08390534
+        ],
+        "rightActual": [
+          -0.0483503342,
+          0.0596355274,
+          -0.192630917
+        ],
+        "leftUnreachableResidualMetres": 0.0466122851,
+        "rightUnreachableResidualMetres": 0.03159971,
+        "leftActualToSourceErrorMetres": 0.046612028,
+        "rightActualToSourceErrorMetres": 0.0315994881,
+        "leftActualToReachedErrorMetres": 3.33470723e-07,
+        "rightActualToReachedErrorMetres": 2.38534966e-07
+      },
+      {
+        "frame": 185,
+        "role": "opponent",
+        "leftTarget": [
+          0.861203551,
+          0.009407205,
+          -0.670490265
+        ],
+        "rightTarget": [
+          1.036528,
+          0.0422818474,
+          0.1446105
+        ],
+        "leftReached": [
+          0.861203551,
+          0.009407222,
+          -0.670490265
+        ],
+        "rightReached": [
+          1.036528,
+          0.0422818661,
+          0.1446105
+        ],
+        "leftActual": [
+          0.861204267,
+          0.009406453,
+          -0.6704904
+        ],
+        "rightActual": [
+          1.03652823,
+          0.0422811769,
+          0.144610509
+        ],
+        "leftUnreachableResidualMetres": 1.76951289e-08,
+        "rightUnreachableResidualMetres": 1.86264515e-08,
+        "leftActualToSourceErrorMetres": 1.04435151e-06,
+        "rightActualToSourceErrorMetres": 7.118327e-07,
+        "leftActualToReachedErrorMetres": 1.05715742e-06,
+        "rightActualToReachedErrorMetres": 7.2940577e-07
+      },
+      {
+        "frame": 186,
+        "role": "executor",
+        "leftTarget": [
+          0.008127689,
+          0.005057637,
+          0.08842816
+        ],
+        "rightTarget": [
+          -0.0234572887,
+          0.0442037471,
+          -0.209883809
+        ],
+        "leftReached": [
+          0.007724285,
+          0.04668361,
+          0.08768462
+        ],
+        "rightReached": [
+          -0.02400279,
+          0.05742514,
+          -0.208498478
+        ],
+        "leftActual": [
+          0.007724285,
+          0.0466833562,
+          0.0876847357
+        ],
+        "rightActual": [
+          -0.02400279,
+          0.05742487,
+          -0.208498374
+        ],
+        "leftUnreachableResidualMetres": 0.0416345671,
+        "rightUnreachableResidualMetres": 0.0133049609,
+        "leftActualToSourceErrorMetres": 0.0416343138,
+        "rightActualToSourceErrorMetres": 0.0133047011,
+        "leftActualToReachedErrorMetres": 2.799674e-07,
+        "rightActualToReachedErrorMetres": 2.91264342e-07
+      },
+      {
+        "frame": 186,
+        "role": "opponent",
+        "leftTarget": [
+          0.8604826,
+          0.008800289,
+          -0.67278403
+        ],
+        "rightTarget": [
+          1.11103141,
+          0.03429078,
+          0.0253673289
+        ],
+        "leftReached": [
+          0.8604826,
+          0.008800268,
+          -0.67278403
+        ],
+        "rightReached": [
+          1.11103141,
+          0.03429079,
+          0.02536735
+        ],
+        "leftActual": [
+          0.8604833,
+          0.008799383,
+          -0.6727841
+        ],
+        "rightActual": [
+          1.11103189,
+          0.0342903063,
+          0.0253671743
+        ],
+        "leftUnreachableResidualMetres": 2.04890966e-08,
+        "rightUnreachableResidualMetres": 2.33388775e-08,
+        "leftActualToSourceErrorMetres": 1.15525449e-06,
+        "rightActualToSourceErrorMetres": 6.892819e-07,
+        "leftActualToReachedErrorMetres": 1.13927058e-06,
+        "rightActualToReachedErrorMetres": 7.01829265e-07
+      },
+      {
+        "frame": 187,
+        "role": "executor",
+        "leftTarget": [
+          0.0147794485,
+          0.0111268014,
+          0.09237772
+        ],
+        "rightTarget": [
+          0.0472977161,
+          0.0495648421,
+          -0.262324
+        ],
+        "leftReached": [
+          0.015027523,
+          0.0498762727,
+          0.09217829
+        ],
+        "rightReached": [
+          0.0444412231,
+          0.0733844042,
+          -0.257731766
+        ],
+        "leftActual": [
+          0.0150276423,
+          0.0498761162,
+          0.09217839
+        ],
+        "rightActual": [
+          0.0444411039,
+          0.0733844,
+          -0.257731766
+        ],
+        "leftUnreachableResidualMetres": 0.03875078,
+        "rightUnreachableResidualMetres": 0.0244258,
+        "leftActualToSourceErrorMetres": 0.0387506224,
+        "rightActualToSourceErrorMetres": 0.0244258083,
+        "leftActualToReachedErrorMetres": 2.19254773e-07,
+        "rightActualToReachedErrorMetres": 1.19441893e-07
+      },
+      {
+        "frame": 187,
+        "role": "opponent",
+        "leftTarget": [
+          0.859878659,
+          0.0105198855,
+          -0.676225245
+        ],
+        "rightTarget": [
+          1.20363128,
+          0.0311550442,
+          -0.137201533
+        ],
+        "leftReached": [
+          0.859878659,
+          0.0105198622,
+          -0.676225245
+        ],
+        "rightReached": [
+          1.20363128,
+          0.03115505,
+          -0.137201518
+        ],
+        "leftActual": [
+          0.8598796,
+          0.0105191981,
+          -0.6762254
+        ],
+        "rightActual": [
+          1.20363152,
+          0.0311543718,
+          -0.1372016
+        ],
+        "leftUnreachableResidualMetres": 2.32830644e-08,
+        "rightUnreachableResidualMetres": 1.59144466e-08,
+        "leftActualToSourceErrorMetres": 1.18906371e-06,
+        "rightActualToSourceErrorMetres": 7.173119e-07,
+        "leftActualToReachedErrorMetres": 1.17575883e-06,
+        "rightActualToReachedErrorMetres": 7.24240863e-07
+      },
+      {
+        "frame": 188,
+        "role": "executor",
+        "leftTarget": [
+          0.0342965126,
+          0.0299412124,
+          0.09495221
+        ],
+        "rightTarget": [
+          0.138757467,
+          0.0403599441,
+          -0.3352543
+        ],
+        "leftReached": [
+          0.03490758,
+          0.0486093163,
+          0.09486538
+        ],
+        "rightReached": [
+          0.12954545,
+          0.08764213,
+          -0.321469247
+        ],
+        "leftActual": [
+          0.0349077,
+          0.0486093834,
+          0.09486544
+        ],
+        "rightActual": [
+          0.129545569,
+          0.0876418948,
+          -0.321469247
+        ],
+        "leftUnreachableResidualMetres": 0.0186783038,
+        "rightUnreachableResidualMetres": 0.0501048379,
+        "leftActualToSourceErrorMetres": 0.0186783746,
+        "rightActualToSourceErrorMetres": 0.05010459,
+        "leftActualToReachedErrorMetres": 1.4919776e-07,
+        "rightActualToReachedErrorMetres": 2.66560079e-07
+      },
+      {
+        "frame": 188,
+        "role": "opponent",
+        "leftTarget": [
+          0.8603035,
+          0.009912969,
+          -0.6803107
+        ],
+        "rightTarget": [
+          1.29970682,
+          0.0500706062,
+          -0.3193741
+        ],
+        "leftReached": [
+          0.8603035,
+          0.009912968,
+          -0.6803107
+        ],
+        "rightReached": [
+          1.29970682,
+          0.0500705838,
+          -0.3193741
+        ],
+        "leftActual": [
+          0.860304236,
+          0.009912184,
+          -0.680310845
+        ],
+        "rightActual": [
+          1.299707,
+          0.05007004,
+          -0.319374651
+        ],
+        "leftUnreachableResidualMetres": 9.313226e-10,
+        "rightUnreachableResidualMetres": 2.23517418e-08,
+        "leftActualToSourceErrorMetres": 1.06804953e-06,
+        "rightActualToSourceErrorMetres": 8.156259e-07,
+        "leftActualToReachedErrorMetres": 1.06736593e-06,
+        "rightActualToReachedErrorMetres": 8.002701e-07
+      },
+      {
+        "frame": 189,
+        "role": "executor",
+        "leftTarget": [
+          0.08410251,
+          0.07282997,
+          0.09633759
+        ],
+        "rightTarget": [
+          0.2063694,
+          0.01921902,
+          -0.378802717
+        ],
+        "leftReached": [
+          0.08410251,
+          0.07282996,
+          0.09633759
+        ],
+        "rightReached": [
+          0.19161284,
+          0.081189096,
+          -0.357223034
+        ],
+        "leftActual": [
+          0.0841020346,
+          0.07282951,
+          0.09633779
+        ],
+        "rightActual": [
+          0.19161272,
+          0.08118899,
+          -0.3572229
+        ],
+        "leftUnreachableResidualMetres": 7.450581e-09,
+        "rightUnreachableResidualMetres": 0.06725867,
+        "leftActualToSourceErrorMetres": 6.937047e-07,
+        "rightActualToSourceErrorMetres": 0.06725864,
+        "leftActualToReachedErrorMetres": 6.887658e-07,
+        "rightActualToReachedErrorMetres": 1.98247051e-07
+      },
+      {
+        "frame": 189,
+        "role": "opponent",
+        "leftTarget": [
+          0.8619479,
+          0.006676081,
+          -0.6868316
+        ],
+        "rightTarget": [
+          1.38892,
+          0.08395677,
+          -0.511929452
+        ],
+        "leftReached": [
+          0.8619479,
+          0.006676078,
+          -0.6868316
+        ],
+        "rightReached": [
+          1.38892,
+          0.08395678,
+          -0.511929452
+        ],
+        "leftActual": [
+          0.8619484,
+          0.00667534349,
+          -0.6868316
+        ],
+        "rightActual": [
+          1.38892019,
+          0.08395576,
+          -0.5119298
+        ],
+        "leftUnreachableResidualMetres": 3.259629e-09,
+        "rightUnreachableResidualMetres": 7.450581e-09,
+        "leftActualToSourceErrorMetres": 8.783157e-07,
+        "rightActualToSourceErrorMetres": 1.10067037e-06,
+        "leftActualToReachedErrorMetres": 8.75580042e-07,
+        "rightActualToReachedErrorMetres": 1.10753331e-06
+      },
+      {
+        "frame": 190,
+        "role": "executor",
+        "leftTarget": [
+          0.178363562,
+          0.122192517,
+          0.09875973
+        ],
+        "rightTarget": [
+          0.230013967,
+          -0.0009103747,
+          -0.387168944
+        ],
+        "leftReached": [
+          0.178363562,
+          0.1221925,
+          0.09875973
+        ],
+        "rightReached": [
+          0.220302224,
+          0.0438802242,
+          -0.371259272
+        ],
+        "leftActual": [
+          0.178362966,
+          0.122191705,
+          0.0987599
+        ],
+        "rightActual": [
+          0.2203021,
+          0.0438797958,
+          -0.371259451
+        ],
+        "leftUnreachableResidualMetres": 1.49011612e-08,
+        "rightUnreachableResidualMetres": 0.0485142581,
+        "leftActualToSourceErrorMetres": 1.02062074e-06,
+        "rightActualToSourceErrorMetres": 0.04851383,
+        "leftActualToReachedErrorMetres": 1.00880425e-06,
+        "rightActualToReachedErrorMetres": 4.792901e-07
+      },
+      {
+        "frame": 190,
+        "role": "opponent",
+        "leftTarget": [
+          0.864793658,
+          0.00283227675,
+          -0.6931498
+        ],
+        "rightTarget": [
+          1.46018517,
+          0.117741793,
+          -0.7138909
+        ],
+        "leftReached": [
+          0.864793658,
+          0.00283229351,
+          -0.6931498
+        ],
+        "rightReached": [
+          1.46018517,
+          0.117741823,
+          -0.7138909
+        ],
+        "leftActual": [
+          0.8647939,
+          0.0028314325,
+          -0.693150163
+        ],
+        "rightActual": [
+          1.46018517,
+          0.11774116,
+          -0.7138915
+        ],
+        "leftUnreachableResidualMetres": 1.67638063e-08,
+        "rightUnreachableResidualMetres": 2.98023224e-08,
+        "leftActualToSourceErrorMetres": 9.473589e-07,
+        "rightActualToSourceErrorMetres": 8.69677763e-07,
+        "leftActualToReachedErrorMetres": 9.623282e-07,
+        "rightActualToReachedErrorMetres": 8.916138e-07
+      },
+      {
+        "frame": 191,
+        "role": "executor",
+        "leftTarget": [
+          0.304887176,
+          0.1290709,
+          0.100666188
+        ],
+        "rightTarget": [
+          0.236889839,
+          -0.00515879,
+          -0.384195328
+        ],
+        "leftReached": [
+          0.304887176,
+          0.129070878,
+          0.100666188
+        ],
+        "rightReached": [
+          0.2324177,
+          0.0198754072,
+          -0.37511012
+        ],
+        "leftActual": [
+          0.304886818,
+          0.129070118,
+          0.100666419
+        ],
+        "rightActual": [
+          0.232417822,
+          0.01987521,
+          -0.375110149
+        ],
+        "leftUnreachableResidualMetres": 1.49011612e-08,
+        "rightUnreachableResidualMetres": 0.0270046666,
+        "leftActualToSourceErrorMetres": 8.84111159e-07,
+        "rightActualToSourceErrorMetres": 0.0270044543,
+        "leftActualToReachedErrorMetres": 8.710809e-07,
+        "rightActualToReachedErrorMetres": 2.32554811e-07
+      },
+      {
+        "frame": 191,
+        "role": "opponent",
+        "leftTarget": [
+          0.8656596,
+          0.00718184467,
+          -0.705867231
+        ],
+        "rightTarget": [
+          1.49728525,
+          0.1384781,
+          -0.90960896
+        ],
+        "leftReached": [
+          0.8656596,
+          0.00718182325,
+          -0.705867231
+        ],
+        "rightReached": [
+          1.49728525,
+          0.1384781,
+          -0.90960896
+        ],
+        "leftActual": [
+          0.8656601,
+          0.00718090637,
+          -0.705867469
+        ],
+        "rightActual": [
+          1.497285,
+          0.1384778,
+          -0.9096097
+        ],
+        "leftUnreachableResidualMetres": 2.142042e-08,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 1.079184e-06,
+        "rightActualToSourceErrorMetres": 8.10710844e-07,
+        "leftActualToReachedErrorMetres": 1.06061259e-06,
+        "rightActualToReachedErrorMetres": 8.10710844e-07
+      },
+      {
+        "frame": 192,
+        "role": "executor",
+        "leftTarget": [
+          0.464660048,
+          0.09356629,
+          0.0920091346
+        ],
+        "rightTarget": [
+          0.238143682,
+          -0.00101152749,
+          -0.38486138
+        ],
+        "leftReached": [
+          0.464660048,
+          0.0935663,
+          0.0920091346
+        ],
+        "rightReached": [
+          0.234945536,
+          0.0238664746,
+          -0.375254869
+        ],
+        "leftActual": [
+          0.464659333,
+          0.09356585,
+          0.0920092762
+        ],
+        "rightActual": [
+          0.234945536,
+          0.0238663964,
+          -0.375254929
+        ],
+        "leftUnreachableResidualMetres": 7.450581e-09,
+        "rightUnreachableResidualMetres": 0.0268594157,
+        "leftActualToSourceErrorMetres": 8.513898e-07,
+        "rightActualToSourceErrorMetres": 0.0268593226,
+        "leftActualToReachedErrorMetres": 8.55260453e-07,
+        "rightActualToReachedErrorMetres": 9.835048e-08
+      },
+      {
+        "frame": 192,
+        "role": "opponent",
+        "leftTarget": [
+          0.865416646,
+          0.01031758,
+          -0.7230226
+        ],
+        "rightTarget": [
+          1.50110662,
+          0.136455059,
+          -1.0818541
+        ],
+        "leftReached": [
+          0.865416646,
+          0.010317564,
+          -0.7230226
+        ],
+        "rightReached": [
+          1.50110662,
+          0.136455059,
+          -1.0818541
+        ],
+        "leftActual": [
+          0.8654171,
+          0.0103166346,
+          -0.7230229
+        ],
+        "rightActual": [
+          1.50110662,
+          0.136454865,
+          -1.08185482
+        ],
+        "leftUnreachableResidualMetres": 1.58324838e-08,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 1.09989514e-06,
+        "rightActualToSourceErrorMetres": 7.410238e-07,
+        "leftActualToReachedErrorMetres": 1.08631821e-06,
+        "rightActualToReachedErrorMetres": 7.410238e-07
+      },
+      {
+        "frame": 193,
+        "role": "executor",
+        "leftTarget": [
+          0.6493989,
+          0.05826398,
+          0.06699625
+        ],
+        "rightTarget": [
+          0.240473509,
+          -0.0006069165,
+          -0.381904483
+        ],
+        "leftReached": [
+          0.6493989,
+          0.0582639575,
+          0.06699625
+        ],
+        "rightReached": [
+          0.237864614,
+          0.03711891,
+          -0.3668135
+        ],
+        "leftActual": [
+          0.649399161,
+          0.0582636744,
+          0.066996336
+        ],
+        "rightActual": [
+          0.237864614,
+          0.03711846,
+          -0.3668135
+        ],
+        "leftUnreachableResidualMetres": 2.23517418e-08,
+        "rightUnreachableResidualMetres": 0.04071587,
+        "leftActualToSourceErrorMetres": 3.97682385e-07,
+        "rightActualToSourceErrorMetres": 0.0407154523,
+        "leftActualToReachedErrorMetres": 3.80782268e-07,
+        "rightActualToReachedErrorMetres": 4.50760126e-07
+      },
+      {
+        "frame": 193,
+        "role": "opponent",
+        "leftTarget": [
+          0.8631946,
+          0.01031758,
+          -0.73571527
+        ],
+        "rightTarget": [
+          1.47185838,
+          0.09295937,
+          -1.22514713
+        ],
+        "leftReached": [
+          0.8631946,
+          0.010317564,
+          -0.73571527
+        ],
+        "rightReached": [
+          1.47185838,
+          0.0929593444,
+          -1.22514713
+        ],
+        "leftActual": [
+          0.8631948,
+          0.0103173116,
+          -0.735715568
+        ],
+        "rightActual": [
+          1.47185814,
+          0.09295911,
+          -1.22514772
+        ],
+        "leftUnreachableResidualMetres": 1.58324838e-08,
+        "rightUnreachableResidualMetres": 2.23517418e-08,
+        "leftActualToSourceErrorMetres": 4.66480145e-07,
+        "rightActualToSourceErrorMetres": 6.901345e-07,
+        "leftActualToReachedErrorMetres": 4.5756002e-07,
+        "rightActualToReachedErrorMetres": 6.82247048e-07
+      },
+      {
+        "frame": 194,
+        "role": "executor",
+        "leftTarget": [
+          0.7902907,
+          0.0422818474,
+          0.0382975
+        ],
+        "rightTarget": [
+          0.242287874,
+          -0.00323688774,
+          -0.3795796
+        ],
+        "leftReached": [
+          0.765544534,
+          0.09115511,
+          0.0412666723
+        ],
+        "rightReached": [
+          0.2418834,
+          0.0522305965,
+          -0.356679916
+        ],
+        "leftActual": [
+          0.765544534,
+          0.09115491,
+          0.04126669
+        ],
+        "rightActual": [
+          0.2418834,
+          0.0522302836,
+          -0.356679916
+        ],
+        "leftUnreachableResidualMetres": 0.054861512,
+        "rightUnreachableResidualMetres": 0.06001001,
+        "leftActualToSourceErrorMetres": 0.0548613332,
+        "rightActualToSourceErrorMetres": 0.0600097179,
+        "leftActualToReachedErrorMetres": 2.02026172e-07,
+        "rightActualToReachedErrorMetres": 3.12924385e-07
+      },
+      {
+        "frame": 194,
+        "role": "opponent",
+        "leftTarget": [
+          0.86388886,
+          0.004248415,
+          -0.738418043
+        ],
+        "rightTarget": [
+          1.43712175,
+          0.03580807,
+          -1.31546688
+        ],
+        "leftReached": [
+          0.86388886,
+          0.00424844027,
+          -0.738418043
+        ],
+        "rightReached": [
+          1.43712175,
+          0.0358080864,
+          -1.31546688
+        ],
+        "leftActual": [
+          0.86388886,
+          0.00424751546,
+          -0.73841846
+        ],
+        "rightActual": [
+          1.43712151,
+          0.0358077027,
+          -1.31546748
+        ],
+        "leftUnreachableResidualMetres": 2.514571e-08,
+        "rightUnreachableResidualMetres": 1.49011612e-08,
+        "leftActualToSourceErrorMetres": 9.916989e-07,
+        "rightActualToSourceErrorMetres": 7.403587e-07,
+        "leftActualToReachedErrorMetres": 1.014566e-06,
+        "rightActualToReachedErrorMetres": 7.478932e-07
+      },
+      {
+        "frame": 195,
+        "role": "executor",
+        "leftTarget": [
+          0.8491818,
+          0.0260974076,
+          0.0221747961
+        ],
+        "rightTarget": [
+          0.245553136,
+          -0.001213833,
+          -0.373986
+        ],
+        "leftReached": [
+          0.824308753,
+          0.07702869,
+          0.0260308236
+        ],
+        "rightReached": [
+          0.248810053,
+          0.0537009835,
+          -0.350721121
+        ],
+        "leftActual": [
+          0.824308753,
+          0.07702845,
+          0.0260308851
+        ],
+        "rightActual": [
+          0.248809934,
+          0.0537007563,
+          -0.3507211
+        ],
+        "leftUnreachableResidualMetres": 0.0568113662,
+        "rightUnreachableResidualMetres": 0.0597285479,
+        "leftActualToSourceErrorMetres": 0.0568111576,
+        "rightActualToSourceErrorMetres": 0.059728343,
+        "leftActualToReachedErrorMetres": 2.46214626e-07,
+        "rightActualToReachedErrorMetres": 2.58337536e-07
+      },
+      {
+        "frame": 195,
+        "role": "opponent",
+        "leftTarget": [
+          0.8688885,
+          0.00475417869,
+          -0.735581756
+        ],
+        "rightTarget": [
+          1.42095125,
+          -0.000101152742,
+          -1.34794927
+        ],
+        "leftReached": [
+          0.8688885,
+          0.00475418568,
+          -0.735581756
+        ],
+        "rightReached": [
+          1.42095125,
+          -0.000101149082,
+          -1.34794927
+        ],
+        "leftActual": [
+          0.8688885,
+          0.00475330325,
+          -0.7355819
+        ],
+        "rightActual": [
+          1.420951,
+          -0.000101394486,
+          -1.34794962
+        ],
+        "leftUnreachableResidualMetres": 6.98491931e-09,
+        "rightUnreachableResidualMetres": 3.65980668e-09,
+        "leftActualToSourceErrorMetres": 8.835223e-07,
+        "rightActualToSourceErrorMetres": 4.93134e-07,
+        "leftActualToReachedErrorMetres": 8.90443857e-07,
+        "rightActualToReachedErrorMetres": 4.949384e-07
+      },
+      {
+        "frame": 196,
+        "role": "executor",
+        "leftTarget": [
+          0.8538314,
+          0.009002593,
+          0.0185457971
+        ],
+        "rightTarget": [
+          0.253414035,
+          0.0039449567,
+          -0.362199724
+        ],
+        "leftReached": [
+          0.8370923,
+          0.0496485233,
+          0.0222540274
+        ],
+        "rightReached": [
+          0.259693265,
+          0.0579794049,
+          -0.338345259
+        ],
+        "leftActual": [
+          0.8370923,
+          0.0496483631,
+          0.02225406
+        ],
+        "rightActual": [
+          0.259693384,
+          0.0579792,
+          -0.338345259
+        ],
+        "leftUnreachableResidualMetres": 0.0441139564,
+        "rightUnreachableResidualMetres": 0.0593985356,
+        "leftActualToSourceErrorMetres": 0.04411381,
+        "rightActualToSourceErrorMetres": 0.05939836,
+        "leftActualToReachedErrorMetres": 1.63287169e-07,
+        "rightActualToReachedErrorMetres": 2.37046748e-07
+      },
+      {
+        "frame": 196,
+        "role": "opponent",
+        "leftTarget": [
+          0.876073241,
+          0.0109244967,
+          -0.7345919
+        ],
+        "rightTarget": [
+          1.42304552,
+          -0.00556340069,
+          -1.344606
+        ],
+        "leftReached": [
+          0.876073241,
+          0.0109245181,
+          -0.7345919
+        ],
+        "rightReached": [
+          1.42304552,
+          -0.00556337833,
+          -1.344606
+        ],
+        "leftActual": [
+          0.8760735,
+          0.0109233661,
+          -0.7345921
+        ],
+        "rightActual": [
+          1.42304552,
+          -0.005563839,
+          -1.34460652
+        ],
+        "leftUnreachableResidualMetres": 2.142042e-08,
+        "rightUnreachableResidualMetres": 2.23517418e-08,
+        "leftActualToSourceErrorMetres": 1.16924423e-06,
+        "rightActualToSourceErrorMetres": 6.475969e-07,
+        "leftActualToReachedErrorMetres": 1.18996968e-06,
+        "rightActualToReachedErrorMetres": 6.62925231e-07
+      },
+      {
+        "frame": 197,
+        "role": "executor",
+        "leftTarget": [
+          0.856974,
+          0.00101152749,
+          0.0195612125
+        ],
+        "rightTarget": [
+          0.266192079,
+          0.0136556206,
+          -0.333799243
+        ],
+        "leftReached": [
+          0.848937154,
+          0.0252559781,
+          0.0222801864
+        ],
+        "rightReached": [
+          0.2750486,
+          0.06368673,
+          -0.3111078
+        ],
+        "leftActual": [
+          0.848937154,
+          0.0252556987,
+          0.0222801883
+        ],
+        "rightActual": [
+          0.2750486,
+          0.06368626,
+          -0.311107755
+        ],
+        "leftUnreachableResidualMetres": 0.0256861281,
+        "rightUnreachableResidualMetres": 0.05564576,
+        "leftActualToSourceErrorMetres": 0.0256858636,
+        "rightActualToSourceErrorMetres": 0.0556453653,
+        "leftActualToReachedErrorMetres": 2.79402968e-07,
+        "rightActualToReachedErrorMetres": 4.73155865e-07
+      },
+      {
+        "frame": 197,
+        "role": "opponent",
+        "leftTarget": [
+          0.881469131,
+          0.0119360238,
+          -0.731885
+        ],
+        "rightTarget": [
+          1.4244324,
+          -0.00556340069,
+          -1.34105837
+        ],
+        "leftReached": [
+          0.881469131,
+          0.0119360089,
+          -0.731885
+        ],
+        "rightReached": [
+          1.4244324,
+          -0.00556337833,
+          -1.34105837
+        ],
+        "leftActual": [
+          0.881469369,
+          0.0119352248,
+          -0.731885254
+        ],
+        "rightActual": [
+          1.42443216,
+          -0.005563726,
+          -1.34105885
+        ],
+        "leftUnreachableResidualMetres": 1.49011612e-08,
+        "rightUnreachableResidualMetres": 2.23517418e-08,
+        "leftActualToSourceErrorMetres": 8.67298866e-07,
+        "rightActualToSourceErrorMetres": 6.246323e-07,
+        "leftActualToReachedErrorMetres": 8.5358954e-07,
+        "rightActualToReachedErrorMetres": 6.365658e-07
+      },
+      {
+        "frame": 198,
+        "role": "executor",
+        "leftTarget": [
+          0.8607942,
+          0.00101152749,
+          0.02242007
+        ],
+        "rightTarget": [
+          0.2921797,
+          0.02356859,
+          -0.274403781
+        ],
+        "leftReached": [
+          0.856647849,
+          0.0165832639,
+          0.02478344
+        ],
+        "rightReached": [
+          0.3011912,
+          0.0658900142,
+          -0.256030142
+        ],
+        "leftActual": [
+          0.8566481,
+          0.016582964,
+          0.0247833766
+        ],
+        "rightActual": [
+          0.30119133,
+          0.0658898,
+          -0.2560302
+        ],
+        "leftUnreachableResidualMetres": 0.016286701,
+        "rightUnreachableResidualMetres": 0.0470095836,
+        "leftActualToSourceErrorMetres": 0.0162863433,
+        "rightActualToSourceErrorMetres": 0.0470093861,
+        "leftActualToReachedErrorMetres": 3.88311264e-07,
+        "rightActualToReachedErrorMetres": 2.53866972e-07
+      },
+      {
+        "frame": 198,
+        "role": "opponent",
+        "leftTarget": [
+          0.8837565,
+          0.00890144147,
+          -0.728424
+        ],
+        "rightTarget": [
+          1.422099,
+          -0.00809222,
+          -1.33697081
+        ],
+        "leftReached": [
+          0.8837565,
+          0.008901417,
+          -0.728424
+        ],
+        "rightReached": [
+          1.422099,
+          -0.008092225,
+          -1.33697081
+        ],
+        "leftActual": [
+          0.883756757,
+          0.008900439,
+          -0.7284241
+        ],
+        "rightActual": [
+          1.422099,
+          -0.008092611,
+          -1.3369714
+        ],
+        "leftUnreachableResidualMetres": 2.42143869e-08,
+        "rightUnreachableResidualMetres": 4.656613e-09,
+        "leftActualToSourceErrorMetres": 1.03179786e-06,
+        "rightActualToSourceErrorMetres": 7.12933343e-07,
+        "leftActualToReachedErrorMetres": 1.00829675e-06,
+        "rightActualToReachedErrorMetres": 7.10389145e-07
+      },
+      {
+        "frame": 199,
+        "role": "executor",
+        "leftTarget": [
+          0.862598062,
+          0.00262997136,
+          0.0251093842
+        ],
+        "rightTarget": [
+          0.339914083,
+          0.03651614,
+          -0.171338022
+        ],
+        "leftReached": [
+          0.858458638,
+          0.0218445063,
+          0.028717801
+        ],
+        "rightReached": [
+          0.344057441,
+          0.05707419,
+          -0.164115757
+        ],
+        "leftActual": [
+          0.858458638,
+          0.0218442474,
+          0.0287178177
+        ],
+        "rightActual": [
+          0.34405756,
+          0.0570737273,
+          -0.164115742
+        ],
+        "leftUnreachableResidualMetres": 0.01998384,
+        "rightUnreachableResidualMetres": 0.0221802127,
+        "leftActualToSourceErrorMetres": 0.0199835934,
+        "rightActualToSourceErrorMetres": 0.0221798122,
+        "leftActualToReachedErrorMetres": 2.5944982e-07,
+        "rightActualToReachedErrorMetres": 4.773026e-07
+      },
+      {
+        "frame": 199,
+        "role": "opponent",
+        "leftTarget": [
+          0.883299,
+          0.00354034617,
+          -0.725153267
+        ],
+        "rightTarget": [
+          1.41981947,
+          -0.005361095,
+          -1.33279753
+        ],
+        "leftReached": [
+          0.883299,
+          0.003540337,
+          -0.725153267
+        ],
+        "rightReached": [
+          1.41981947,
+          -0.00536108,
+          -1.33279753
+        ],
+        "leftActual": [
+          0.883299232,
+          0.00353910727,
+          -0.7251534
+        ],
+        "rightActual": [
+          1.419819,
+          -0.005361501,
+          -1.33279812
+        ],
+        "leftUnreachableResidualMetres": 9.080395e-09,
+        "rightUnreachableResidualMetres": 1.49011612e-08,
+        "leftActualToSourceErrorMetres": 1.267244e-06,
+        "rightActualToSourceErrorMetres": 8.645965e-07,
+        "leftActualToReachedErrorMetres": 1.25836823e-06,
+        "rightActualToReachedErrorMetres": 8.71694056e-07
+      },
+      {
+        "frame": 200,
+        "role": "executor",
+        "leftTarget": [
+          0.864734769,
+          0.01031758,
+          0.0279486962
+        ],
+        "rightTarget": [
+          0.41035068,
+          0.06301816,
+          -0.0236485023
+        ],
+        "leftReached": [
+          0.859045863,
+          0.0397843122,
+          0.0347015858
+        ],
+        "rightReached": [
+          0.41035068,
+          0.06301814,
+          -0.0236485
+        ],
+        "leftActual": [
+          0.8590461,
+          0.0397839732,
+          0.0347015969
+        ],
+        "rightActual": [
+          0.410350919,
+          0.06301774,
+          -0.0236481261
+        ],
+        "leftUnreachableResidualMetres": 0.0307612345,
+        "rightUnreachableResidualMetres": 1.50171253e-08,
+        "leftActualToSourceErrorMetres": 0.0307608675,
+        "rightActualToSourceErrorMetres": 6.103226e-07,
+        "leftActualToReachedErrorMetres": 4.145965e-07,
+        "rightActualToReachedErrorMetres": 5.99068471e-07
+      },
+      {
+        "frame": 200,
+        "role": "opponent",
+        "leftTarget": [
+          0.883085132,
+          0.000202305484,
+          -0.724541843
+        ],
+        "rightTarget": [
+          1.42075264,
+          0.01699366,
+          -1.32216215
+        ],
+        "leftReached": [
+          0.883085132,
+          0.000202298164,
+          -0.724541843
+        ],
+        "rightReached": [
+          1.42075264,
+          0.0169936419,
+          -1.32216215
+        ],
+        "leftActual": [
+          0.8830856,
+          0.000201209972,
+          -0.724541843
+        ],
+        "rightActual": [
+          1.42075241,
+          0.016993558,
+          -1.32216263
+        ],
+        "leftUnreachableResidualMetres": 7.31961336e-09,
+        "rightUnreachableResidualMetres": 1.86264515e-08,
+        "leftActualToSourceErrorMetres": 1.19478864e-06,
+        "rightActualToSourceErrorMetres": 5.42874e-07,
+        "leftActualToReachedErrorMetres": 1.18808077e-06,
+        "rightActualToReachedErrorMetres": 5.396691e-07
+      },
+      {
+        "frame": 201,
+        "role": "executor",
+        "leftTarget": [
+          0.867820144,
+          0.0147683006,
+          0.0359227061
+        ],
+        "rightTarget": [
+          0.479689956,
+          0.104895391,
+          0.1518232
+        ],
+        "leftReached": [
+          0.862598538,
+          0.0451298952,
+          0.0435839146
+        ],
+        "rightReached": [
+          0.479689956,
+          0.104895413,
+          0.1518232
+        ],
+        "leftActual": [
+          0.862598538,
+          0.0451297,
+          0.0435838737
+        ],
+        "rightActual": [
+          0.479689956,
+          0.104894914,
+          0.151823834
+        ],
+        "leftUnreachableResidualMetres": 0.0317456424,
+        "rightUnreachableResidualMetres": 2.23517418e-08,
+        "leftActualToSourceErrorMetres": 0.031745445,
+        "rightActualToSourceErrorMetres": 7.987078e-07,
+        "leftActualToReachedErrorMetres": 1.980019e-07,
+        "rightActualToReachedErrorMetres": 8.1225e-07
+      },
+      {
+        "frame": 201,
+        "role": "opponent",
+        "leftTarget": [
+          0.8834344,
+          -0.00404611,
+          -0.7289382
+        ],
+        "rightTarget": [
+          1.43286765,
+          0.06109626,
+          -1.27138376
+        ],
+        "leftReached": [
+          0.8834344,
+          -0.0040460825,
+          -0.7289382
+        ],
+        "rightReached": [
+          1.43286765,
+          0.06109625,
+          -1.27138376
+        ],
+        "leftActual": [
+          0.8834349,
+          -0.00404732,
+          -0.72893846
+        ],
+        "rightActual": [
+          1.43286765,
+          0.0610959865,
+          -1.27138448
+        ],
+        "leftUnreachableResidualMetres": 2.7474016e-08,
+        "rightUnreachableResidualMetres": 7.450581e-09,
+        "leftActualToSourceErrorMetres": 1.32247158e-06,
+        "rightActualToSourceErrorMetres": 7.6520945e-07,
+        "leftActualToReachedErrorMetres": 1.3476598e-06,
+        "rightActualToReachedErrorMetres": 7.625934e-07
+      },
+      {
+        "frame": 202,
+        "role": "executor",
+        "leftTarget": [
+          0.8707074,
+          0.0134533141,
+          0.04891512
+        ],
+        "rightTarget": [
+          0.5152246,
+          0.120169453,
+          0.3188702
+        ],
+        "leftReached": [
+          0.8635162,
+          0.0536219478,
+          0.0601694733
+        ],
+        "rightReached": [
+          0.5152246,
+          0.120169461,
+          0.3188702
+        ],
+        "leftActual": [
+          0.8635162,
+          0.0536219925,
+          0.0601695068
+        ],
+        "rightActual": [
+          0.5152246,
+          0.120169044,
+          0.318870932
+        ],
+        "leftUnreachableResidualMetres": 0.0423307531,
+        "rightUnreachableResidualMetres": 7.450581e-09,
+        "leftActualToSourceErrorMetres": 0.0423308052,
+        "rightActualToSourceErrorMetres": 8.503133e-07,
+        "leftActualToReachedErrorMetres": 5.58793545e-08,
+        "rightActualToReachedErrorMetres": 8.53928839e-07
+      },
+      {
+        "frame": 202,
+        "role": "opponent",
+        "leftTarget": [
+          0.8822936,
+          -0.00768760871,
+          -0.7332369
+        ],
+        "rightTarget": [
+          1.42793691,
+          0.106614992,
+          -1.17674458
+        ],
+        "leftReached": [
+          0.8822936,
+          -0.00768762827,
+          -0.7332369
+        ],
+        "rightReached": [
+          1.42793691,
+          0.106615007,
+          -1.17674458
+        ],
+        "leftActual": [
+          0.8822938,
+          -0.00768838637,
+          -0.7332373
+        ],
+        "rightActual": [
+          1.42793691,
+          0.106614776,
+          -1.17674565
+        ],
+        "leftUnreachableResidualMetres": 1.95577741e-08,
+        "rightUnreachableResidualMetres": 1.49011612e-08,
+        "leftActualToSourceErrorMetres": 9.141513e-07,
+        "rightActualToSourceErrorMetres": 1.09442408e-06,
+        "leftActualToReachedErrorMetres": 8.975727e-07,
+        "rightActualToReachedErrorMetres": 1.09746316e-06
+      },
+      {
+        "frame": 203,
+        "role": "executor",
+        "leftTarget": [
+          0.8716415,
+          0.0127452454,
+          0.06050477
+        ],
+        "rightTarget": [
+          0.5261637,
+          0.08011297,
+          0.4457022
+        ],
+        "leftReached": [
+          0.8602878,
+          0.06917101,
+          0.0788993537
+        ],
+        "rightReached": [
+          0.5261637,
+          0.08011299,
+          0.4457022
+        ],
+        "leftActual": [
+          0.860288,
+          0.06917084,
+          0.0788992941
+        ],
+        "rightActual": [
+          0.5261637,
+          0.08011273,
+          0.4457027
+        ],
+        "leftUnreachableResidualMetres": 0.0604246221,
+        "rightUnreachableResidualMetres": 2.23517418e-08,
+        "leftActualToSourceErrorMetres": 0.0604244,
+        "rightActualToSourceErrorMetres": 5.599348e-07,
+        "leftActualToReachedErrorMetres": 2.99602277e-07,
+        "rightActualToReachedErrorMetres": 5.698111e-07
+      },
+      {
+        "frame": 203,
+        "role": "opponent",
+        "leftTarget": [
+          0.8786677,
+          -0.005866859,
+          -0.7350236
+        ],
+        "rightTarget": [
+          1.387163,
+          0.136859655,
+          -1.03948009
+        ],
+        "leftReached": [
+          0.8786677,
+          -0.005866885,
+          -0.7350236
+        ],
+        "rightReached": [
+          1.387163,
+          0.136859655,
+          -1.03948009
+        ],
+        "leftActual": [
+          0.8786682,
+          -0.00586813549,
+          -0.735024
+        ],
+        "rightActual": [
+          1.38716328,
+          0.136859208,
+          -1.03948069
+        ],
+        "leftUnreachableResidualMetres": 2.60770321e-08,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 1.40869133e-06,
+        "rightActualToSourceErrorMetres": 7.822755e-07,
+        "leftActualToReachedErrorMetres": 1.38510757e-06,
+        "rightActualToReachedErrorMetres": 7.822755e-07
+      },
+      {
+        "frame": 204,
+        "role": "executor",
+        "leftTarget": [
+          0.85913384,
+          0.0201293956,
+          0.09674788
+        ],
+        "rightTarget": [
+          0.5294591,
+          0.0247824211,
+          0.5115544
+        ],
+        "leftReached": [
+          0.8486079,
+          0.0703187,
+          0.11446628
+        ],
+        "rightReached": [
+          0.5294591,
+          0.02478242,
+          0.5115544
+        ],
+        "leftActual": [
+          0.8486079,
+          0.07031847,
+          0.114466205
+        ],
+        "rightActual": [
+          0.5294591,
+          0.0247823112,
+          0.5115545
+        ],
+        "leftUnreachableResidualMetres": 0.0542559028,
+        "rightUnreachableResidualMetres": 1.86264515e-09,
+        "leftActualToSourceErrorMetres": 0.0542556643,
+        "rightActualToSourceErrorMetres": 1.25019426e-07,
+        "leftActualToReachedErrorMetres": 2.42687719e-07,
+        "rightActualToReachedErrorMetres": 1.233853e-07
+      },
+      {
+        "frame": 204,
+        "role": "opponent",
+        "leftTarget": [
+          0.8741468,
+          -0.0009103747,
+          -0.7309981
+        ],
+        "rightTarget": [
+          1.305878,
+          0.144344971,
+          -0.8839995
+        ],
+        "leftReached": [
+          0.8741468,
+          -0.000910401344,
+          -0.7309981
+        ],
+        "rightReached": [
+          1.305878,
+          0.144344985,
+          -0.8839995
+        ],
+        "leftActual": [
+          0.874147058,
+          -0.0009111405,
+          -0.7309985
+        ],
+        "rightActual": [
+          1.30587828,
+          0.144344181,
+          -0.8840004
+        ],
+        "leftUnreachableResidualMetres": 2.66591087e-08,
+        "rightUnreachableResidualMetres": 1.49011612e-08,
+        "leftActualToSourceErrorMetres": 9.04120839e-07,
+        "rightActualToSourceErrorMetres": 1.21652261e-06,
+        "leftActualToReachedErrorMetres": 8.816531e-07,
+        "rightActualToReachedErrorMetres": 1.22624874e-06
+      }
+    ],
+    "notes": "Frames are consecutive original samples. Left uses unmodified MotionPlayback joint positions. Right optionally retargets legs with the actual rig's per-side lengths while retaining the common pair scale and pelvis trajectory. Unreachable ankles are explicitly reported, not preserved. Toe vectors and foot roll are inferred; there are no verified foot-contact labels. The source floor is fitted to ankle samples, not measured shoe soles. Panel offsets are display-only. No physics or production clip assignment."
+  },
+  "fps": 20.0,
+  "from_pose_index": 176,
+  "to_pose_index": 204,
+  "contact_sheet_pose_indices": [
+    176,
+    182,
+    187,
+    193,
+    198,
+    204
+  ],
+  "video": "native-rate.mp4",
+  "notes": "Camera images and Unity frames are resized preserving aspect ratio and padded; no crop or image reconstruction. Camera view differs from the aligned model side view; no pixel alignment is implied."
+}

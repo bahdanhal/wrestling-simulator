@@ -1,0 +1,23 @@
+{
+  "source": {
+    "title": "Harmony4D test/03_grappling2.zip, sequence 043_grappling2",
+    "url": "https://huggingface.co/datasets/Jyun-Ting/Harmony4D",
+    "author": "Rawal Khirodkar, Jyun-Ting Song, Jinkun Cao, Zhengyi Luo, Kris Kitani (Carnegie Mellon University), Harmony4D, NeurIPS 2024",
+    "license": "MIT"
+  },
+  "archiveFrame": 301,
+  "poseIndex": 300,
+  "reviewer": "Codex visual inspection, independently checked by a second agent; not an expert capture review",
+  "status": "approximate candidates, not an accepted mat calibration",
+  "uncertainty": "Approximately +/- 8-12 original-image pixels at thick, blurred tape centerline intersections. Two views were marked directly from the photographs. Corner identity was inspected across views and compared with swapped alternatives. A three-point plane cannot independently validate planarity; additional views and mat points are required before replacing the ankle-based floor.",
+  "features": {
+    "red_corner_a": "Red/red tape junction: upper-left end in cam01; upper-left red corner in cam11.",
+    "red_corner_b": "Other end of the same short red edge: lower-left corner in both views.",
+    "green_corner_c": "Visible lower endpoint of the green edge, adjoining the long near red edge."
+  },
+  "landmarks": {
+    "red_corner_a": { "cam01": [1697, 1178], "cam11": [1635, 1228] },
+    "red_corner_b": { "cam01": [1632, 1221], "cam11": [1662, 1274] },
+    "green_corner_c": { "cam01": [1930, 1266], "cam11": [2000, 1230] }
+  }
+}

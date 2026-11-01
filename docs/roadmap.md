@@ -7,21 +7,21 @@
 1. **All of Harmony4D:** every useful segment in the 127 grappling and MMA sequences (stance, circling, hand fighting, collar ties, pummelling, shots, snap-downs, body locks, takedowns, scrambles, clinches), checked against the camera images and imported as takes with attribution.
 2. **Elite Olympic capture with a partner club:** every phase of all 51 techniques plus counters and transitions, both sides, several repetitions, in all three styles (Greco-Roman, freestyle, women's), including par terre and big throws; neutral wrestling at elite level; referee restarts, handshakes, walk-ons, celebrations, ceremonies. Written consent and licence from every athlete (design open item 7).
 3. **Capture rig:** 8–12 synchronised, calibrated cameras round a mat.
-4. **Multi-view reconstruction tool:** whole-body 2D keypoints per camera (body, hands, feet, face), identity tracking through contact, triangulation, floor fit, smoothing. Validated against Harmony4D's own images and 3D poses, which are ground truth for this.
+4. **Multi-view reconstruction tool:** whole-body 2D keypoints per camera (body, hands, feet, face), identity tracking through contact, triangulation, floor fit, smoothing. Validated against Harmony4D's images and reference 3D annotations, including camera reprojection checks; triangulated joints do not establish palm contacts, sole contacts or head orientation.
 5. **Hands, feet and head from the data:** grip hand shapes, toes and head orientation, rather than placed from the facing.
 6. **Timing references for elite throws** from the 2018 Worlds footage (single camera gives timing even without 3D).
 7. **Licence records:** attribution for every take; share-alike handling for CC BY-SA sources.
 
 ## Simulation matched to reality
 
-8. **Real phase durations** for all 80 technique phases, measured per technique; counter windows scaled with them.
+8. **Real phase durations** for all 74 technique phases, measured per technique; counter windows scaled with them.
 9. **Neutral tempo and spacing:** level-change rates, stance distance (real shots start 1.15 m apart, our clips 0.80 m), movement speeds.
 10. **Calibration against real competition statistics:** victory types, points per bout and period, points by type, passivity and cautions, upset rates (design 15.1, open item 3).
 11. **Balance tools** reporting against those targets: attribute sensitivity, technique reports, career reports (design 15.2).
 
 ## Animation
 
-12. **Recorded motion for every technique phase**, replacing all 80 keyed clips. The keyed clips are removed once every phase is covered.
+12. **Recorded motion for every technique phase**, replacing all 74 keyed clips. The keyed clips are removed once every phase is covered.
 13. **Recorded neutral wrestling** driven by the engine's state: stance, circling, hand fighting, ties, pressure, edge play, step-outs, restarts, par terre start positions.
 14. **Motion matching** over all takes: pose, velocity, contact and engine-state features, paired search for both wrestlers, inertialized transitions, so any phase flows into the next from the current pose.
 15. **Retargeting** to each wrestler's own proportions (per segment, not just height), with contacts preserved by IK.
@@ -31,9 +31,10 @@
 ## Physics
 
 18. **Contact-only balance** (`ContactSolver` driving it) and a **footwork controller** on real motion; both failed only because keyed stances lean on the opponent.
+    **Anatomical joints:** the current physical knees and elbows are unrestricted spherical joints without passive anatomical stops. Calibrated knee flexion and separate elbow/forearm coordinates need sourced motion-limit profiles and validation under load; simply clamping the current rotation-vector components would constrain the wrong motions.
 19. **Throw physics** checked against real throw kinematics (flight about 0.75 s, rotation and carry speeds).
 20. **Imitation-learned controllers** (`tools/imitation`, on GPU) for throws the bodies cannot follow by tracking.
-21. **Open defects:** lost-motion frames 8.2% (up from 6.2% after the loaded-wrist change, mostly women's bouts), worst sunk foot −7 cm.
+21. **Open defects:** visible tracking, grip and stepping errors still need comparison with real footage. The lab baseline before individual limb proportions and continuous ground construction was 3.5% lost-motion frames (6.7% in women's bouts), with −1.3 cm worst active-physics foot penetration. These model measurements diagnose defects; they are not realism targets. The earlier −7 cm reading was an unstepped collider at a restart.
 22. **Mobile physics cost** within the frame budget.
 
 ## Realism validation

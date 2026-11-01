@@ -93,6 +93,12 @@ dotnet run --project src/Wrestling.Sim -c Release -- motion-assign --clip anim.h
 
 Every take records its source and licence. See `docs/research/footage-sources.md`.
 
+Review motion against the original camera images at its native timing before assigning it. The
+[source-review workflow](docs/research/motion-review.md) renders aligned joint tracks beside the
+character rig and combines them with exactly matched source-camera frames. It keeps source
+limitations and differences in body proportions visible. Use the physics lab below for diagnosis
+and regression checks; realism is judged against real wrestlers and footage.
+
 ## Physics lab
 
 The wrestlers' bodies are physically simulated (display only). The lab plays real bouts live and measures how the bodies follow the motion, overlap, keep their footing and hold grips, and what they cost per frame:
@@ -101,13 +107,15 @@ The wrestlers' bodies are physically simulated (display only). The lab plays rea
 /Applications/Unity/Hub/Editor/6000.6.7f1/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath unity/WrestlingSimulator -executeMethod Wrestling.Editor.PhysicsLab.RunFromCommandLine -labSeconds 60 -labBouts 3 -logFile -
 ```
 
+For each style the report identifies the seed, engine tick, corner and clip at the lowest foot position, so that moment can be replayed with the clip renderer below. The reported foot position is measured from the physical collider while physics is active, before any display-only corrections; reset frames have an unstepped collider and are excluded. Add `-clipNoJump` to replay from the start with the same live stepping and restart handling as the lab; jumping directly to a moment can produce different physical motion.
+
 Any stretch of a bout can be rendered as video, with the animation's pelvis targets marked (add `-clipLog` for a line per frame):
 
 ```bash
 /Applications/Unity/Hub/Editor/6000.6.7f1/Unity.app/Contents/MacOS/Unity -batchmode -projectPath unity/WrestlingSimulator -executeMethod Wrestling.Editor.PhysicsLab.ClipFromCommandLine -clipStyle gr -clipSeed 6 -clipFrom 2380 -clipTicks 150 -clipOutput clip.mp4 -logFile -
 ```
 
-Latest lab run (4 bouts × 45 s per style, `-labBouts 4`): pelvis 7.3 cm from its animated place on average, a body off its motion (over 25 cm) in 8.2% of frames (mostly recovering from scrambles and throws), standing collapses 0.9%, mean overlap 0.1 cm, 87% of gripping hands holding the opponent, and 76% of the balance force and turn the bodies use could be made by their mat contacts alone (the rest stands in for stepping and leaning on the opponent). After the physics step each holding hand is put back on what it holds on the shown bones (`PostPhysicsReprojector`): the palms the physics leaves 9.0 cm from their holds on average are shown 0.4 cm from them (what remains is holds being torn off). Before the biomechanics pass (feasible clips, compact par terre base, anatomical seats, shoulder reach cone) the same run gave 8.3 cm, 9.8% and 80% of grips held; before the production refactoring (spine torsion, wrist and hand poses, grip sockets, load compliance) 11.2 cm, 14.5% and 67%. Bodies give under what they bear (`-labNoCompliance` turns that off to compare). The physics always steps at exactly 1/240 s whatever the frame rate (a frame takes the whole steps its time holds and carries the rest over), so the bodies behave the same on every device: `-labFps N` and `-labJitter F` play the lab at another frame rate or with each frame's time varied by up to ±F. At 30, 60 and 120 fps and at 60 fps ±50% the pelvis error stays 7–10 cm and lost frames 8–12%, within the spread between bouts (jerk figures are per frame, so they only compare at one frame rate). The physics costs about 1 ms per frame for both wrestlers on an Apple Silicon Mac (about 2 ms in the lab, which also solves the contact forces). Add `-clipSide` to a clip for a profile camera.
+Reference lab run before individual limb proportions and continuous ground construction (4 bouts × 45 s per style, `-labBouts 4`): pelvis 5.4 cm from its animated place on average, a body off its motion (over 25 cm) in 3.5% of frames, standing collapses 0.1%, mean overlap 0.1 cm, 81% of engine-gripping hands physically holding the opponent, and 75% of the balance force and turn the bodies use could be made by their mat contacts alone (the rest stands in for stepping and leaning on the opponent). After the physics step each holding hand is put back on what it holds on the shown bones (`PostPhysicsReprojector`): the palms the physics leaves 9.7 cm from their holds on average are shown 0.2 cm from them (what remains is holds being torn off). Earlier grip percentages included lingering holds after the engine released a grip and are not comparable to this corrected measurement. Bodies give under what they bear (`-labNoCompliance` turns that off to compare). The physics always steps at exactly 1/240 s whatever the frame rate (a frame takes the whole steps its time holds and carries the rest over), so the bodies behave the same on every device: `-labFps N` and `-labJitter F` play the lab at another frame rate or with each frame's time varied by up to ±F. At 30, 60 and 120 fps and at 60 fps ±50% the pelvis error stays 7–10 cm and lost frames 8–12%, within the spread between bouts (jerk figures are per frame, so they only compare at one frame rate). The physics costs about 1 ms per frame for both wrestlers on an Apple Silicon Mac (about 2 ms in the lab, which also solves the contact forces). Add `-clipSide` to a clip for a profile camera.
 
 ## Determinism check
 

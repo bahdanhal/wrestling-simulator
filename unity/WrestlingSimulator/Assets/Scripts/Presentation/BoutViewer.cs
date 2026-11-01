@@ -46,6 +46,10 @@ namespace Wrestling.Presentation
         private TechniqueExecution _throwTechnique;
         private int _throwPhase = -1;
         private readonly Pose[] _lastPoses = new Pose[2];
+        private readonly CharacterRig.RecordedLegsResult?[] _recordedLegs = new CharacterRig.RecordedLegsResult?[2];
+
+        /// <summary>Recorded ankle targets and any unreachable residuals before physical tracking, when a recorded phase is active.</summary>
+        public CharacterRig.RecordedLegsResult? RecordedLegs(Corner corner) => _recordedLegs[(int)corner];
         private List<(string Thrower, string Thrown)> _throwGrips = new List<(string, string)>();
         private Corner _thrown;
         private bool _turning;
@@ -342,7 +346,7 @@ namespace Wrestling.Presentation
                 bluePose = Blend(_lastPoses[1], r.Blue, entry);
             }
 
-            if (redAnchor.Weight <= 0f && blueAnchor.Weight <= 0f)
+            if (!recorded && redAnchor.Weight <= 0f && blueAnchor.Weight <= 0f)
             {
                 // Held bodies are in contact by construction; only free bodies need separating.
                 BodyContact.Separate(ref redPose, _redFigure.Body, _shown[0].Ground, ref bluePose, _blueFigure.Body, _shown[1].Ground);
@@ -369,7 +373,7 @@ namespace Wrestling.Presentation
                 ReachHeldPoints(ref bluePose, _blueFigure.Body, Corner.Blue);
             }
 
-            if (_throwTechnique != null)
+            if (!recorded && _throwTechnique != null)
             {
                 // Throughout a throw the thrower's hands stay on the grip points of the opponent's actual body.
                 Corner thrower = _thrown.Opponent();
@@ -385,7 +389,7 @@ namespace Wrestling.Presentation
                 }
             }
 
-            if (!snapped && deltaTime > 0f && PhysicalCompliance)
+            if (!recorded && !snapped && deltaTime > 0f && PhysicalCompliance)
             {
                 // The bodies give under what they bore last frame; a body held on the other goes down with its carrier.
                 bool engaged = engine.ActiveTechnique != null && !engine.IsStopped;
@@ -400,11 +404,14 @@ namespace Wrestling.Presentation
                 _compliance[1].Reset();
             }
 
-            if (!snapped && deltaTime > 0f)
+            if (!recorded && !snapped && deltaTime > 0f)
             {
                 PlantFeet(ref redPose, _redFigure);
                 PlantFeet(ref bluePose, _blueFigure);
             }
+
+            _recordedLegs[0] = recorded ? _redFigure.Rig.RetargetRecordedLegs(ref redPose) : (CharacterRig.RecordedLegsResult?)null;
+            _recordedLegs[1] = recorded ? _blueFigure.Rig.RetargetRecordedLegs(ref bluePose) : (CharacterRig.RecordedLegsResult?)null;
 
             SolveExpressions(engine, ref redPose, ref bluePose);
             _lastPoses[0] = redPose;
@@ -1054,6 +1061,9 @@ namespace Wrestling.Presentation
                 Spine = Vector3.Slerp(a.Spine, b.Spine, t).normalized,
                 Left = Vector3.Slerp(a.Left, b.Left, t).normalized,
                 ChestNormal = Vector3.Slerp(a.ChestNormal, b.ChestNormal, t).normalized,
+                PelvisUp = Vector3.Slerp(a.PelvisAxis, b.PelvisAxis, t).normalized,
+                PelvisNormal = Vector3.Slerp(a.PelvisFront, b.PelvisFront, t).normalized,
+                UnconstrainedFeet = a.UnconstrainedFeet || b.UnconstrainedFeet,
             };
         }
 
