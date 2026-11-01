@@ -24,8 +24,8 @@
   "phases": [
     {
       "id": "lift",
-      "minimumTicks": 16,
-      "maximumTicks": 26,
+      "minimumTicks": 28,
+      "maximumTicks": 42,
       "attributes": [
         {
           "attribute": "counterWrestling",

@@ -42,12 +42,12 @@
           }
         },
         {
-          "t": 0.35,
+          "t": 0.4,
           "executor": {
             "x": 0.08,
             "z": 0.0,
             "heading": 0.0,
-            "level": 0.6,
+            "level": 0.56,
             "posture": 0.8,
             "ground": "standing",
             "roll": 0.0,
@@ -77,7 +77,7 @@
           }
         },
         {
-          "t": 0.55,
+          "t": 0.6,
           "executor": {
             "x": 0.08,
             "z": 0.0,
@@ -112,7 +112,7 @@
           }
         },
         {
-          "t": 0.8,
+          "t": 0.85,
           "executor": {
             "x": 0.03,
             "z": 0.0,
@@ -187,8 +187,8 @@
         "pivot": "Spine2",
         "axis": "lateral",
         "degrees": -200,
-        "from": 0.35,
-        "to": 0.8,
+        "from": 0.4,
+        "to": 0.85,
         "grips": [
           {
             "thrower": "RightForeArm",

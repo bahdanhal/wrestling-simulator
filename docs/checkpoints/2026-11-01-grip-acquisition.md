@@ -146,3 +146,36 @@ through the throw window, then both bodies fall. The phase lasts 16–26 ticks (
 throw must turn the body 200° in about 0.12–0.2 s. A lift and arch takes far longer (the front
 suplex's own lift plus arch is 32–52 ticks). The phase timing is engine data that changes the
 contest, so it needs a deliberate decision and a balance run, not a presentation patch.
+
+## Follow-up: counter-lift timing, with balance run
+
+**Change.** `technique.all.counter_lift` phase `lift`: 16–26 → 28–42 ticks (0.47–0.70 s). One phase
+holds both the lift and the arch. The front suplex's own lift plus arch is 32–52 ticks, and the
+counter starts from a position already loaded, so slightly shorter is consistent. The clip is
+retimed for it: load key at 0.4, throw from 0.4 to 0.85.
+
+**Balance** ([report](../research/balance/2026-11-01-counter-lift-timing.md)): across 2,000 bouts
+per style (`wrestling-sim balance`), victory types, points per bout, attempts and attack success
+change by 0.5 points or less. Across 1,000 viewer-style bouts per style, counter-lift starts and
+outcomes stay within seed-to-seed noise (Greco-Roman: 239 → 240 starts, completed 164 → 156,
+blocked 74 → 83). The contest itself does not depend on phase length; only clock time and
+random-draw order change. Side finding: in Greco-Roman the front suplex is countered in 565 of 777
+attempts (73%). That is worth a balance look of its own.
+
+**Throw still not shown.** Render (seed 87, same scoring counter-lift):
+[`gr-seed87-counter-lift-28-42-ticks.png`](../images/realism-review/counter-lift/gr-seed87-counter-lift-28-42-ticks.png).
+Here the counter-lifter sinks to the knees while the attacker stays up. With the 16-tick phase the
+pair went down together with the attacker underneath. Neither shows a lift.
+- Diagnosis: the working front suplex arch (seed 63) closes the pelvis gap from 0.78 to 0.05 m while
+  the thrown hips rise from 0.73 to 1.25 m. In the counter-lift the gap stays 0.68–0.76 m against a
+  0.31 m target for most of the phase. It closes only at the end of the turn, and the attacker's hips
+  never pass 0.78 m. The counter starts the moment the front suplex is released (the counter-lifter
+  was the thrown body a tick earlier, pelvis 0.2 m off target), so the pair begins apart and loose.
+- Tried and removed: a presentation-only `turnFrom` (hold and draw in from `from`, turn from
+  `turnFrom`), so a one-phase throw loads before it turns like the suplex's separate lift phase.
+  The draw-in did not close the gap (still 0.72–0.76 m) and the attacker's hips peaked at 0.88 m.
+  It was reverted rather than kept unproven.
+- Next: find why the throw's grips and squeeze cannot draw in a chest-to-chest opponent here
+  (grip forces, the released body's state, or the thrower's own balance limit), using the per-step
+  `PhysicalBody.Trace` on this seed. Splitting the counter-lift into lift and arch phases like the
+  suplex is the engine-side alternative, but it adds a contest roll and needs its own balance run.
