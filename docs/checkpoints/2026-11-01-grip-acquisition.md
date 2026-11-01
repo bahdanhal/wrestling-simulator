@@ -116,3 +116,33 @@ The pair stays connected chest to chest, but the blocker's hip drop is barely vi
   duck-under, slide-by and two-on-one (57–110°), and `counter_lift` against front suplex (180°, the
   same bug as hip block). `counter_throw_landing` differs by 90–180°, but mid-flight facing may not be
   the right comparison for a landing counter.
+
+## Follow-up: counter-lift against the front suplex
+
+**Cause.** `counter_lift` is used only against the front suplex's lift phase, which is chest to
+chest. Its clip started with the attacker's back to the counter-lifter (a rear lift), 180° off.
+
+**Change.** `anim.counter_lift.lift` is now a chest-to-chest counter-suplex built on the front
+suplex's own mechanics: the defender, already sagging under the lift, drops a little more,
+takes the chest (load from 0.35), and arches the attacker back over (lateral −200° from 0.35 to
+0.8, same forearm grips on Spine2/Spine as the suplex), landing supine behind. The defender's
+first drop is limited so it passes the free-fall check at the phase's 16-tick minimum. The facing
+test now covers six standing counters (hip block, counter-lift, re-arch, sprawl, whizzer, front
+headlock spin, within 35°). It names `step_around` and `counter_throw_landing` as not yet covered.
+
+**Rendered** (Greco-Roman, viewer bouts found with the viewer's own wrestler generation):
+- Seed 87 tick 8011, counter-lift scores 5 (grand amplitude to danger). New:
+  [`gr-seed87-counter-lift-new.png`](../images/realism-review/counter-lift/gr-seed87-counter-lift-new.png);
+  old clip at the same moment: [`gr-seed87-counter-lift-old.png`](../images/realism-review/counter-lift/gr-seed87-counter-lift-old.png).
+  With the old clip the attacker is flung away upright (pelvis 0.69–0.79 m from target, the
+  counter-lifter's 0.6 m). With the new clip the pair stays chest to chest and goes to the mat
+  together with the attacker underneath (at most 0.43 and 0.31 m).
+- Seed 26 tick 3385, blocked counter-lift: entry chest to chest, no spin
+  ([`gr-seed26-counter-lift-blocked-new.png`](../images/realism-review/counter-lift/gr-seed26-counter-lift-blocked-new.png)).
+- The physics lab is unchanged (its bouts contain no counter-lift).
+
+**Not fixed.** Neither clip shows a real arched throw: the attacker's hips stay near 0.71 m
+through the throw window, then both bodies fall. The phase lasts 16–26 ticks (0.27–0.43 s), so the
+throw must turn the body 200° in about 0.12–0.2 s. A lift and arch takes far longer (the front
+suplex's own lift plus arch is 32–52 ticks). The phase timing is engine data that changes the
+contest, so it needs a deliberate decision and a balance run, not a presentation patch.
