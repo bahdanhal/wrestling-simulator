@@ -179,3 +179,46 @@ pair went down together with the attacker underneath. Neither shows a lift.
   (grip forces, the released body's state, or the thrower's own balance limit), using the per-step
   `PhysicalBody.Trace` on this seed. Splitting the counter-lift into lift and arch phases like the
   suplex is the engine-side alternative, but it adds a contest roll and needs its own balance run.
+
+## Follow-up: why the counter-lift cannot draw the attacker in (trace)
+
+Traced with the new `-clipTrace` clip option: the throw's per-step forces, plus which segments of
+the two bodies touch. Runs: Greco-Roman seed 87 (`-clipFrom 7975`, counter-lift turn starts at tick
+8011) and the front suplex at seed 63 (`-clipFrom 9660`).
+
+**What holds the attacker off is body contact, not strength.**
+- With contact, the attacker's centre of mass stays 0.46–0.53 m from the counter-lifter's chest
+  (the fulcrum) for the whole turn. The throw's legs are capped by how loaded the body is (0.24–0.38
+  here), and the trunk turns 15° of the planned 200°.
+- Same seed with `-clipNoContact`: the attacker is drawn onto the chest at once (0.07–0.14 m,
+  loaded 1.0), the lift uses up to 2.9 kN of the 4.1 kN available, and the trunk turns 81°. The
+  bodies pass through each other, so this is a diagnosis, not a fix.
+- Touching segments every frame with contact: heads, both pairs of upper arms, and the chests
+  (gap 0–1 cm). The pair is already chest-to-chest. Seating the attacker's waist on the chest, which
+  the throw's squeeze asks for, needs the counter-lifter to get under them (a level change, head to
+  one side), and the clip has the counter-lifter level with the attacker when the turn starts
+  (executor level 0.56 against the attacker's 0.62).
+- Renders, same three moments (turn start, +0.27 s, +0.53 s):
+  [with contact](../images/realism-review/counter-lift/gr-seed87-counter-lift-contact.png) (jammed,
+  attacker's hips back, no lift) and
+  [without contact](../images/realism-review/counter-lift/gr-seed87-counter-lift-no-contact.png)
+  (lifted and thrown over, through the other body).
+
+**Correction to the earlier comparison.** The front suplex at seed 63 is not drawn in either: its
+centre of mass is 0.55 m off the fulcrum when the turn starts and 0.45 m at the end, and its trunk
+turns 18° of 200°. It reads as a suplex because its separate lift phase raises the opponent first
+and the carry lifts them further (hips 0.73 → 1.18 m) while the thrower falls back under them. The
+"gap closes 0.78 → 0.05 m" figure earlier was the pelvis's distance to its animated target, not to
+the thrower.
+
+**Tried and reverted: draw-in during the turn.** The carry's target keeps the offset from the
+fulcrum the body had when the turn started, rotated. Blending it to the seated offset over the first
+45° of the plan (so the carry pulls the body in rather than holding it out) brought the attacker to
+0.39 m, but they fell down and away instead of rising. In the physics lab (3 bouts × 60 s per
+style) the mean throw turn dropped from 40° to 22° (Greco-Roman's one throw 110° → 7°), grips held
+87 → 84%. Reverted; the lab after the revert matches the baseline exactly.
+
+**Next.** The fix is choreography first: a counter-lift clip where the counter-lifter changes level
+under the attacker, with the head to one side and hips in, before the turn starts. That should also
+apply to the other chest-to-chest throws (front suplex, salto, body lock). Separately, every
+physical throw turns far less than planned (lab mean 40° of about 200°), which needs its own look.

@@ -816,6 +816,39 @@ namespace Wrestling.Presentation
             return deepest;
         }
 
+        /// <summary>Pairs of segments (this body's first) whose surfaces are within <paramref name="within"/> metres of another body's, with the gap in cm (diagnostics: what touches what).</summary>
+        public string TouchingPairs(PhysicalBody other, float within)
+        {
+            var pairs = new List<string>();
+            foreach (Collider mine in _colliders)
+            {
+                foreach (Collider theirs in other._colliders)
+                {
+                    float gap;
+                    if (Physics.ComputePenetration(mine, mine.transform.position, mine.transform.rotation, theirs, theirs.transform.position, theirs.transform.rotation, out _, out float depth))
+                    {
+                        gap = -depth;
+                    }
+                    else
+                    {
+                        // Closest points by alternating projection, close enough for capsules and boxes.
+                        Vector3 q = theirs.ClosestPoint(mine.bounds.center);
+                        Vector3 p = mine.ClosestPoint(q);
+                        q = theirs.ClosestPoint(p);
+                        p = mine.ClosestPoint(q);
+                        gap = Vector3.Distance(p, q);
+                    }
+
+                    if (gap <= within)
+                    {
+                        pairs.Add(FormattableString.Invariant($"{mine.name}-{theirs.name} {gap * 100f:F0}"));
+                    }
+                }
+            }
+
+            return pairs.Count == 0 ? "none" : string.Join(", ", pairs);
+        }
+
         /// <summary>Lowest point of the feet above the mat (m): below zero means sunk into it (diagnostics).</summary>
         public float FootClearance => Mathf.Min(Lowest(Find("LeftFoot")), Lowest(Find("RightFoot")));
 
@@ -1816,7 +1849,7 @@ namespace Wrestling.Presentation
             _lastDemand = demand;
             if (Trace != null && (++_traceCount % 8) == 0)
             {
-                Trace(FormattableString.Invariant($"plan {targetAngle:F0}° got {_throwAngle:F0}° spin {spin:F0}°/s want {wantedRate:F0}°/s | com err {(target - centre).magnitude:F2} m | carry {carry.magnitude:F0} N couple {coupleEffort:F0} N avail {available:F0} N scale {scale:F2} | thrower support {_throwerBody.HeldSupport:F2} push {_throwerBody.GroundPush:F2} bw"));
+                Trace(FormattableString.Invariant($"plan {targetAngle:F0}° got {_throwAngle:F0}° spin {spin:F0}°/s want {wantedRate:F0}°/s | com err {(target - centre).magnitude:F2} m off fulcrum {Vector3.ProjectOnPlane(centre - pivot, _throwAxis).magnitude:F2} m, axis {_throwAxis:F2} want {target - pivot:F2} at {centre - pivot:F2} lift {lift:F0}/{legs:F0} loaded {Loaded():F2} | carry {carry.magnitude:F0} N couple {coupleEffort:F0} N avail {available:F0} N scale {scale:F2} | thrower support {_throwerBody.HeldSupport:F2} push {_throwerBody.GroundPush:F2} bw"));
             }
 
             Vector3 torque = Vector3.zero;

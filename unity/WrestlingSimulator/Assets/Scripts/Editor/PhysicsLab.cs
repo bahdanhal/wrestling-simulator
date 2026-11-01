@@ -141,6 +141,12 @@ namespace Wrestling.Editor
                     };
                 }
 
+                if (Array.IndexOf(args, "-clipTrace") >= 0)
+                {
+                    // The throw's own diagnostics: planned versus achieved turn, carry and strength.
+                    PhysicalBody.Trace = line => Debug.Log(FormattableString.Invariant($"[trace] tick {viewer.Session.Engine.Tick}: {line}"));
+                }
+
                 bool livePlayback = Array.IndexOf(args, "-clipNoJump") >= 0;
                 if (livePlayback)
                 {
@@ -186,6 +192,11 @@ namespace Wrestling.Editor
                             Vector3 focus = ((a + b) * 0.5f) + (Vector3.up * 0.15f);
                             camera.transform.SetPositionAndRotation(focus + (across * 3.2f) + (Vector3.up * 0.25f), Quaternion.LookRotation(-across - (Vector3.up * 0.08f), Vector3.up));
                             camera.fieldOfView = 40f;
+                        }
+
+                        if (PhysicalBody.Trace != null)
+                        {
+                            PhysicalBody.Trace(FormattableString.Invariant($"red-blue touching: {red.TouchingPairs(blue, 0.02f)}"));
                         }
 
                         markers[0].transform.position = red.PelvisTarget;
