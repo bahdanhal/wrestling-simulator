@@ -60,7 +60,8 @@
         {
           "technique": "technique.all.par_terre_reversal",
           "fromTick": 0,
-          "toTick": 10
+          "toTick": 10,
+          "animation": null
         }
       ],
       "endStates": [],

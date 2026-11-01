@@ -58,12 +58,14 @@
         {
           "technique": "technique.all.hip_block",
           "fromTick": 0,
-          "toTick": 10
+          "toTick": 10,
+          "animation": null
         },
         {
           "technique": "technique.all.step_around",
           "fromTick": 2,
-          "toTick": 14
+          "toTick": 14,
+          "animation": null
         }
       ],
       "endStates": [],
@@ -96,7 +98,8 @@
         {
           "technique": "technique.all.counter_throw_landing",
           "fromTick": 6,
-          "toTick": 22
+          "toTick": 22,
+          "animation": null
         }
       ],
       "endStates": [

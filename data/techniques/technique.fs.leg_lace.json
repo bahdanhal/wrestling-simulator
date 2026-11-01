@@ -90,12 +90,14 @@
         {
           "technique": "technique.all.par_terre_reversal",
           "fromTick": 0,
-          "toTick": 10
+          "toTick": 10,
+          "animation": null
         },
         {
           "technique": "technique.fs.granby_roll",
           "fromTick": 0,
-          "toTick": 12
+          "toTick": 12,
+          "animation": null
         }
       ],
       "endStates": [

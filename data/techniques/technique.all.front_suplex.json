@@ -58,12 +58,14 @@
         {
           "technique": "technique.all.hip_block",
           "fromTick": 0,
-          "toTick": 12
+          "toTick": 12,
+          "animation": "anim.hip_block.block_chest"
         },
         {
           "technique": "technique.all.counter_lift",
           "fromTick": 4,
-          "toTick": 18
+          "toTick": 18,
+          "animation": null
         }
       ],
       "endStates": [],
@@ -100,7 +102,8 @@
         {
           "technique": "technique.all.re_arch",
           "fromTick": 6,
-          "toTick": 26
+          "toTick": 26,
+          "animation": null
         }
       ],
       "endStates": [

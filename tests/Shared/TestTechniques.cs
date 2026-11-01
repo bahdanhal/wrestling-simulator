@@ -11,7 +11,7 @@ public static class TestTechniques
 {
     public static readonly WrestlingStyle[] AllStyles = { WrestlingStyle.GrecoRoman, WrestlingStyle.Freestyle, WrestlingStyle.Womens };
 
-    public static TechniqueDefinition HipToss(string counterId = "technique.all.hip_block") => new()
+    public static TechniqueDefinition HipToss(string counterId = "technique.all.hip_block", string? counterAnimation = null) => new()
     {
         SchemaVersion = 1,
         Id = "technique.all.hip_toss_overhook",
@@ -32,7 +32,7 @@ public static class TestTechniques
         Phases = new[]
         {
             Phase("entry", new[] { (WrestlerAttribute.Explosiveness, 40), (WrestlerAttribute.UpperBodyThrows, 40), (WrestlerAttribute.Balance, 20) },
-                new[] { new CounterWindow { Technique = counterId, FromTick = 0, ToTick = 10 } }, endStates: null),
+                new[] { new CounterWindow { Technique = counterId, FromTick = 0, ToTick = 10, Animation = counterAnimation } }, endStates: null),
             Phase("flight", new[] { (WrestlerAttribute.UpperBodyStrength, 50), (WrestlerAttribute.UpperBodyThrows, 50) },
                 System.Array.Empty<CounterWindow>(), new[] { EndState.DangerDirect, EndState.Flank, EndState.Scramble }),
         },
@@ -111,8 +111,8 @@ public static class TestTechniques
     };
 
     /// <summary>A small catalogue covering neutral attacks, a counter, par terre and an escape.</summary>
-    public static Wrestling.Core.Techniques.TechniqueCatalog EngineCatalog() =>
-        Wrestling.Core.Techniques.TechniqueCatalog.Create(new[] { HipToss(), HipBlock(), DoubleLeg(), GutWrench(), StandUp() });
+    public static Wrestling.Core.Techniques.TechniqueCatalog EngineCatalog(string? hipBlockAnimation = null) =>
+        Wrestling.Core.Techniques.TechniqueCatalog.Create(new[] { HipToss(counterAnimation: hipBlockAnimation), HipBlock(), DoubleLeg(), GutWrench(), StandUp() });
 
     private static PhaseDefinition Phase(string id, (WrestlerAttribute Attribute, int Percent)[] weights, CounterWindow[] counters, EndState[]? endStates) => new()
     {

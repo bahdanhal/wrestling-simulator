@@ -53,7 +53,8 @@
         {
           "technique": "technique.fs.sprawl",
           "fromTick": 0,
-          "toTick": 32
+          "toTick": 32,
+          "animation": null
         }
       ],
       "endStates": [],
@@ -90,7 +91,8 @@
         {
           "technique": "technique.fs.front_headlock_spin",
           "fromTick": 0,
-          "toTick": 14
+          "toTick": 14,
+          "animation": null
         }
       ],
       "endStates": [

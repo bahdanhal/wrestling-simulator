@@ -57,7 +57,8 @@
         {
           "technique": "technique.all.counter_throw_landing",
           "fromTick": 6,
-          "toTick": 20
+          "toTick": 20,
+          "animation": null
         }
       ],
       "endStates": [

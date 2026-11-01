@@ -15,7 +15,8 @@ public class MoveAnimationTests
     public void EveryTechniquePhaseHasItsClip()
     {
         int phases = Catalog.All.Sum(t => t.Phases.Count);
-        Assert.Equal(phases, Library.Count);
+        int entries = Catalog.All.Sum(t => MoveAnimationLibrary.EntryClips(Catalog, t.Id).Count());
+        Assert.Equal(phases + entries, Library.Count);
         foreach (TechniqueDefinition technique in Catalog.All)
         {
             foreach (PhaseDefinition phase in technique.Phases)
@@ -101,7 +102,7 @@ public class MoveAnimationTests
     public void LibraryRejectsMissingAndForeignClips()
     {
         MoveAnimationFile[] files = Library.All
-            .GroupBy(c => Catalog.All.First(t => t.Phases.Any(p => p.Animation == c.Id)).Id)
+            .GroupBy(c => Catalog.All.First(t => t.Phases.Any(p => p.Animation == c.Id) || MoveAnimationLibrary.EntryClips(Catalog, t.Id).Contains(c.Id)).Id)
             .Select(g => new MoveAnimationFile { SchemaVersion = 1, Technique = g.Key, Clips = g.ToList() })
             .ToArray();
         Assert.Equal(Library.Count, MoveAnimationLibrary.Create(files, Catalog).Count);
@@ -117,6 +118,64 @@ public class MoveAnimationTests
     {
         const string json = """{ "schemaVersion": 1, "technique": "technique.fs.sprawl", "clips": [], "speed": 2 }""";
         Assert.Throws<ContentLoadException>(() => MoveAnimationLoader.FromJson(json, "technique.fs.sprawl.json"));
+    }
+
+    [Fact]
+    public void CounterWindowClips_LiveInTheCountersFileAndMustExist()
+    {
+        MoveAnimationFile[] files = Library.All
+            .GroupBy(c => Catalog.All.First(t => t.Phases.Any(p => p.Animation == c.Id) || MoveAnimationLibrary.EntryClips(Catalog, t.Id).Contains(c.Id)).Id)
+            .Select(g => new MoveAnimationFile { SchemaVersion = 1, Technique = g.Key, Clips = g.ToList() })
+            .ToArray();
+        const string chest = "anim.hip_block.block_chest";
+        Assert.Contains(chest, MoveAnimationLibrary.EntryClips(Catalog, "technique.all.hip_block"));
+
+        // Missing from the counter's file.
+        MoveAnimationFile[] missing = files.Select(f => f.Technique != "technique.all.hip_block" ? f
+            : new MoveAnimationFile { SchemaVersion = 1, Technique = f.Technique, Clips = f.Clips.Where(c => c.Id != chest).ToList() }).ToArray();
+        ArgumentException noClip = Assert.Throws<ArgumentException>(() => MoveAnimationLibrary.Create(missing, Catalog));
+        Assert.Contains(chest, noClip.Message);
+
+        // Put in the attack's file instead of the counter's.
+        MoveClip moved = Library.Get(chest);
+        MoveAnimationFile[] foreign = missing.Select(f => f.Technique != "technique.all.body_lock_throw" ? f
+            : new MoveAnimationFile { SchemaVersion = 1, Technique = f.Technique, Clips = f.Clips.Append(moved).ToList() }).ToArray();
+        Assert.Throws<ArgumentException>(() => MoveAnimationLibrary.Create(foreign, Catalog));
+    }
+
+    [Fact]
+    public void HipBlockStartsFacingTheAttackerAsTheAttackLeftThem()
+    {
+        // A hip block against a turned-in hip throw is behind the attacker's hips; against a
+        // chest-to-chest lift it stays chest to chest. The counter's first key must face the
+        // attacker as the attack's clip does at the end of the window (at the phase's fastest).
+        int checkedWindows = 0;
+        foreach (TechniqueDefinition attack in Catalog.All)
+        {
+            foreach (PhaseDefinition phase in attack.Phases)
+            {
+                foreach (CounterWindow window in phase.CounterWindows.Where(w => w.Technique == "technique.all.hip_block"))
+                {
+                    (ActorKey attacker, ActorKey defender) = Library.Get(phase.Animation).Sample(Math.Min(1f, window.ToTick / (float)phase.MinimumTicks));
+                    float attackFacing = Wrap(attacker.Heading - defender.Heading);
+                    MoveClip counter = Library.Get(window.Animation ?? Catalog.Get(window.Technique).Phases[0].Animation);
+                    ClipKey first = counter.Keys[0];
+                    float counterFacing = Wrap(first.Opponent.Heading - first.Executor.Heading);
+                    Assert.True(Math.Abs(Wrap(attackFacing - counterFacing)) <= 30f,
+                        $"{attack.Id} {phase.Id}: attacker faces {attackFacing:F0} degrees from the defender, {counter.Id} starts at {counterFacing:F0}.");
+                    checkedWindows++;
+                }
+            }
+        }
+
+        Assert.True(checkedWindows >= 8);
+    }
+
+    /// <summary>An angle wrapped to (-180, 180] degrees.</summary>
+    private static float Wrap(float degrees)
+    {
+        float wrapped = ((degrees % 360f) + 360f) % 360f;
+        return wrapped > 180f ? wrapped - 360f : wrapped;
     }
 
     private static MoveClip Clip(params ClipKey[] keys) => new() { Id = "anim.test", Frame = ClipFrame.Executor, Keys = keys };

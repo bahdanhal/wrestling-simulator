@@ -58,7 +58,8 @@
         {
           "technique": "technique.all.hip_block",
           "fromTick": 0,
-          "toTick": 12
+          "toTick": 12,
+          "animation": "anim.hip_block.block_chest"
         }
       ],
       "endStates": [],
@@ -95,7 +96,8 @@
         {
           "technique": "technique.all.re_arch",
           "fromTick": 8,
-          "toTick": 28
+          "toTick": 28,
+          "animation": null
         }
       ],
       "endStates": [

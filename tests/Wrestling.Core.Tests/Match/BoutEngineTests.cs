@@ -199,6 +199,88 @@ public class BoutEngineTests
         Assert.True(counters > 0);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("anim.hip_block.block_chest")]
+    public void CounterFromWindow_PlaysTheWindowsClipForItsFirstPhaseOnly(string? windowAnimation)
+    {
+        TechniqueCatalog catalog = TestTechniques.EngineCatalog(windowAnimation);
+        string own = catalog.Get("technique.all.hip_block").Phases[0].Animation;
+        int seen = 0;
+        for (ulong seed = 1; seed <= 10; seed++)
+        {
+            var engine = new BoutEngine(new BoutSetup
+            {
+                Rules = Rules.Current,
+                Tuning = TuningData.Value,
+                Catalog = catalog,
+                Style = WrestlingStyle.Freestyle,
+                Red = Fighter("red", WrestlingStyle.Freestyle),
+                Blue = Fighter("blue", WrestlingStyle.Freestyle),
+                RedController = new ScriptedController { GripGoal = GripType.Overhook },
+                BlueController = new ScriptedController { GripGoal = GripType.Underhook, Attack = false, Counter = "technique.all.hip_block" },
+                Seed = seed,
+            });
+            while (!engine.IsFinished)
+            {
+                engine.Step();
+                TechniqueExecution? active = engine.ActiveTechnique;
+                if (active == null)
+                {
+                    continue;
+                }
+
+                if (active.Definition.Id == "technique.all.hip_block")
+                {
+                    seen++;
+                    Assert.Equal(windowAnimation ?? own, active.Animation);
+                    Assert.Equal(windowAnimation, active.EntryAnimation);
+                }
+                else
+                {
+                    // Attacks started by themselves play their phases' own clips.
+                    Assert.Null(active.EntryAnimation);
+                    Assert.Equal(active.Phase.Animation, active.Animation);
+                }
+            }
+        }
+
+        Assert.True(seen > 0);
+    }
+
+    [Fact]
+    public void CounterWindowAnimation_DoesNotChangeTheBout()
+    {
+        // The clip is presentation only: the same seed gives the same bout with or without it.
+        for (ulong seed = 1; seed <= 5; seed++)
+        {
+            BoutEngine Run(string? animation)
+            {
+                var engine = new BoutEngine(new BoutSetup
+                {
+                    Rules = Rules.Current,
+                    Tuning = TuningData.Value,
+                    Catalog = TestTechniques.EngineCatalog(animation),
+                    Style = WrestlingStyle.Freestyle,
+                    Red = Fighter("red", WrestlingStyle.Freestyle),
+                    Blue = Fighter("blue", WrestlingStyle.Freestyle),
+                    RedController = new ScriptedController { GripGoal = GripType.Overhook },
+                    BlueController = new ScriptedController { GripGoal = GripType.Underhook, Attack = false, Counter = "technique.all.hip_block" },
+                    Seed = seed,
+                });
+                engine.RunToEnd();
+                return engine;
+            }
+
+            BoutEngine plain = Run(null), chosen = Run("anim.hip_block.block_chest");
+            Assert.Equal(plain.Tick, chosen.Tick);
+            Assert.Equal(plain.Result!.Code, chosen.Result!.Code);
+            Assert.Equal(
+                plain.Events.Select(e => (e.Tick, e.Type, e.Wrestler, e.TechniqueId, e.Points)),
+                chosen.Events.Select(e => (e.Tick, e.Type, e.Wrestler, e.TechniqueId, e.Points)));
+        }
+    }
+
     [Fact]
     public void GrecoWrestlersNeverStartLegAttacks()
     {

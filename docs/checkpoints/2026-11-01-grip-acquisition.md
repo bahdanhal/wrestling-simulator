@@ -74,3 +74,45 @@ still large enough, and in the wrong direction, to reject both changes.
 - `dotnet build -c Release`: no warnings or errors. `dotnet test`: 414 passed.
 - `RecordedAcquisitionChecks`: passes. `RecordedBoutChecks`: passes. The lab is back at the
   baseline above after both reverts.
+
+## Follow-up: hip block against chest-to-chest attacks (resume item 1)
+
+**Cause.** The keyed `anim.hip_block.block` clip puts the attacker facing away from the blocker
+(heading 0), which matches turn-in throws (hip toss, headlock, arm and underhook throws) where
+the attacker has turned their back. Body lock, front suplex, salto and lateral drop are chest to
+chest. Against those the clip spun the attacker 180° while the engine (correctly) kept their lock,
+so the locked hands ended up behind them. In Freestyle seed 117 the shoulder-to-hold distance grew
+past 1 m and both holds tore at tick 2691–2692.
+
+**Change.**
+- Counter windows have an optional `animation` (every window states it; null keeps the counter's
+  own clip). A counter started from that window plays the clip for its first phase
+  (`TechniqueExecution.Animation`/`EntryAnimation`). The contest is unchanged; a test shows identical
+  bouts with and without it.
+- New clip `anim.hip_block.block_chest`: the pair stays chest to chest while the blocker sinks the
+  hips back and down (level 0.62 to 0.48, slight forward lean). It is used by the windows of
+  body lock (lock), front suplex (lift), salto (lift) and lateral drop (drop).
+- The content loader requires a window's clip to be in the counter's own animation file, feasible
+  at the counter's first-phase minimum, and present. Strict content JSON now also accepts null for
+  nullable-annotated reference properties (it already did for nullable value types).
+- Content test: every hip-block window's counter clip starts with the attacker facing the blocker
+  within 30° of how the attack's clip leaves them at the end of the window.
+
+**Measured.** In the same acquisition cases, body-lock holds went from 84% to 97% (attacker,
+recorded) and 72% to 91% (defender, recorded); keyed 75% to 80% and 55% to 57%. Seed 117 now keeps
+shoulder-to-hold at 0.25–0.49 m and both holds stay on through the block. The physics lab is
+identical to the baseline (its bouts contain no hip block against a lift). Render:
+[`fs-seed117-body-lock-hip-block.png`](../images/realism-review/hip-block/fs-seed117-body-lock-hip-block.png).
+The pair stays connected chest to chest, but the blocker's hip drop is barely visible.
+
+**Found, not fixed (pre-existing; the previous commit renders the same):**
+- During the recorded lock the attacker's grips physically lift the blocker's hips about 0.2 m
+  above their target. Through the block the blocker's pelvis stays 0.3–0.6 m from its target, so
+  the hip drop barely shows.
+- After the counter the neutral placement jumps about 0.5 m from where the bodies are, and both
+  pelvises are 0.5–0.75 m from their targets for the next half second. (Before: 0.44–0.62 m; with
+  holds now kept, the locked pair resists the jump slightly more.)
+- The same facing check across all counters finds other mismatches: `step_around` against arm drag,
+  duck-under, slide-by and two-on-one (57–110°), and `counter_lift` against front suplex (180°, the
+  same bug as hip block). `counter_throw_landing` differs by 90–180°, but mid-flight facing may not be
+  the right comparison for a landing counter.

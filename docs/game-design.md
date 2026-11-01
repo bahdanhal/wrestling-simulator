@@ -1052,7 +1052,7 @@ One file per technique under `data/techniques/`, named after its id (`technique.
       "staminaCost": 0.6,
       "burstCost": 3,
       "outcomes": ["clean", "stalled", "blocked"],
-      "counterWindows": [{ "technique": "technique.all.hip_block", "fromTick": 0, "toTick": 10 }],
+      "counterWindows": [{ "technique": "technique.all.hip_block", "fromTick": 0, "toTick": 10, "animation": null }],
       "endStates": [],
       "animation": "anim.hip_toss.entry"
     }
@@ -1062,7 +1062,7 @@ One file per technique under `data/techniques/`, named after its id (`technique.
 }
 ```
 
-Catalogue validation: ids are unique and match file names; attacks have a family legal in every listed style; required grips are legal in every style; attribute percentages sum to exactly 100 per phase; only the final phase has end states; every counter window points at an existing counter or defence available in the same styles.
+Catalogue validation: ids are unique and match file names; attacks have a family legal in every listed style; required grips are legal in every style; attribute percentages sum to exactly 100 per phase; only the final phase has end states; every counter window points at an existing counter or defence available in the same styles. A counter window's `animation` (null for the counter's own clip) names the clip the counter's first phase plays when started from that window, for attacks that leave the bodies arranged differently (a hip block behind a turned-in hip throw versus chest to chest against a lift). It changes presentation only, never the contest, and the clip must be in the counter's own animation file and feasible at its first phase's minimum length.
 
 ### 13.5 Wrestler (excerpt, as stored in a save)
 

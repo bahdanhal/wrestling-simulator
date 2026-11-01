@@ -63,12 +63,14 @@
         {
           "technique": "technique.all.counter_throw_landing",
           "fromTick": 6,
-          "toTick": 24
+          "toTick": 24,
+          "animation": null
         },
         {
           "technique": "technique.all.hip_block",
           "fromTick": 0,
-          "toTick": 8
+          "toTick": 8,
+          "animation": "anim.hip_block.block_chest"
         }
       ],
       "endStates": [

@@ -41,7 +41,7 @@ namespace Wrestling.Editor
                     for (int i = 0; i < 1800 && !session.Engine.IsFinished; i++)
                     {
                         session.StepTicks(1);
-                        string clip = session.Engine.ActiveTechnique?.Phase.Animation;
+                        string clip = session.Engine.ActiveTechnique?.Animation;
                         if (clip != null && clips.Contains(clip) && !cases.ContainsKey(clip))
                             cases.Add(clip, (style, seed, session.Engine.Tick));
                         if (cases.Count == phases.Length) break;
@@ -86,7 +86,7 @@ namespace Wrestling.Editor
                     var expected = baseline.Engine;
                     if (actual.Tick != expected.Tick || actual.Sheet.Points(Corner.Red) != expected.Sheet.Points(Corner.Red)
                         || actual.Sheet.Points(Corner.Blue) != expected.Sheet.Points(Corner.Blue)
-                        || actual.Position != expected.Position || actual.ActiveTechnique?.Phase.Animation != expected.ActiveTechnique?.Phase.Animation)
+                        || actual.Position != expected.Position || actual.ActiveTechnique?.Animation != expected.ActiveTechnique?.Animation)
                         throw new InvalidOperationException("Recorded presentation changed the authoritative simulation.");
                 }
                 if (recordedFrames < 2) throw new InvalidOperationException("Recorded phase was not exercised: " + item.Key);

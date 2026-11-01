@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -68,7 +70,7 @@ namespace Wrestling.Data.Json
 
         public static string Serialize<T>(T value) => JsonConvert.SerializeObject(value, CreateSettings());
 
-        /// <summary>Marks every property as required; nullable value types must be present but may be null.</summary>
+        /// <summary>Marks every property as required; nullable value types and nullable-annotated references must be present but may be null.</summary>
         private sealed class StrictContractResolver : CamelCasePropertyNamesContractResolver
         {
             protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
@@ -82,8 +84,57 @@ namespace Wrestling.Data.Json
                 }
 
                 bool nullableValueType = property.PropertyType != null && Nullable.GetUnderlyingType(property.PropertyType) != null;
-                property.Required = nullableValueType ? Required.AllowNull : Required.Always;
+                bool nullableReference = property.PropertyType != null && !property.PropertyType.IsValueType && IsNullableReference(member);
+                property.Required = nullableValueType || nullableReference ? Required.AllowNull : Required.Always;
                 return property;
+            }
+
+            /// <summary>
+            /// Reads the compiler's nullable annotation (C# 8+): a <c>string?</c> property carries
+            /// NullableAttribute with first flag 2, or inherits flag 2 from its type's NullableContextAttribute.
+            /// </summary>
+            private static bool IsNullableReference(MemberInfo member)
+            {
+                byte? own = Flag(member.CustomAttributes, "System.Runtime.CompilerServices.NullableAttribute");
+                if (own.HasValue)
+                {
+                    return own.Value == 2;
+                }
+
+                for (Type? type = member.DeclaringType; type != null; type = type.DeclaringType)
+                {
+                    byte? context = Flag(type.CustomAttributes, "System.Runtime.CompilerServices.NullableContextAttribute");
+                    if (context.HasValue)
+                    {
+                        return context.Value == 2;
+                    }
+                }
+
+                return false;
+            }
+
+            private static byte? Flag(IEnumerable<CustomAttributeData> attributes, string name)
+            {
+                foreach (CustomAttributeData attribute in attributes)
+                {
+                    if (attribute.AttributeType.FullName != name || attribute.ConstructorArguments.Count != 1)
+                    {
+                        continue;
+                    }
+
+                    object? value = attribute.ConstructorArguments[0].Value;
+                    if (value is byte single)
+                    {
+                        return single;
+                    }
+
+                    if (value is IReadOnlyCollection<CustomAttributeTypedArgument> flags && flags.Count > 0)
+                    {
+                        return (byte)flags.First().Value!;
+                    }
+                }
+
+                return null;
             }
         }
     }

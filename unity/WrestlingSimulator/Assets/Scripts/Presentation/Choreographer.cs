@@ -92,7 +92,7 @@ namespace Wrestling.Presentation
             RecordedContacts = Array.Empty<MotionContactSample>();
             RecordedTakeId = null;
             TechniqueExecution active = engine.ActiveTechnique;
-            if (active == null || engine.IsStopped || !_motion.TryGet(active.Phase.Animation, out MotionPhase phase, out MotionTake take))
+            if (active == null || engine.IsStopped || !_motion.TryGet(active.Animation, out MotionPhase phase, out MotionTake take))
             {
                 _motionTechnique = null;
                 _motionPhase = -1;
@@ -129,7 +129,7 @@ namespace Wrestling.Presentation
                 _motionPhase = active.PhaseIndex;
                 _recordedStartTick = engine.Tick;
 #if UNITY_EDITOR
-                Debug.Log($"[motion] {active.Phase.Animation} starts at tick {engine.Tick}, executor {active.Executor}");
+                Debug.Log($"[motion] {active.Animation} starts at tick {engine.Tick}, executor {active.Executor}");
 #endif
             }
 
@@ -201,7 +201,7 @@ namespace Wrestling.Presentation
                 return;
             }
 
-            MoveClip clip = _library.Get(active.Phase.Animation);
+            MoveClip clip = _library.Get(active.Animation);
             CurrentClip = clip.Id;
             Corner executor = active.Executor;
             WrestlerFrame executorFrame = executor == Corner.Red ? red : blue;

@@ -176,11 +176,11 @@ namespace Wrestling.Core.Match
             string? counter = defending.Intent.Counter;
             if (counter != null && !defending.CounterIntentUsed)
             {
-                bool open = execution.Phase.CounterWindows.Any(w => w.Technique == counter && execution.PhaseTick >= w.FromTick && execution.PhaseTick <= w.ToTick);
-                if (open && CanCounter(defender, counter))
+                CounterWindow? open = execution.Phase.CounterWindows.FirstOrDefault(w => w.Technique == counter && execution.PhaseTick >= w.FromTick && execution.PhaseTick <= w.ToTick);
+                if (open != null && CanCounter(defender, counter))
                 {
                     defending.CounterIntentUsed = true;
-                    StartCounter(execution, Catalog.Get(counter));
+                    StartCounter(execution, open);
                     return;
                 }
             }
@@ -191,8 +191,9 @@ namespace Wrestling.Core.Match
             }
         }
 
-        private void StartCounter(TechniqueExecution interrupted, TechniqueDefinition counter)
+        private void StartCounter(TechniqueExecution interrupted, CounterWindow window)
         {
+            TechniqueDefinition counter = Catalog.Get(window.Technique);
             WrestlerRuntime attacker = Wrestler(interrupted.Executor);
             attacker.Body.Balance -= Tuning.FailedAttackBalanceLoss;
             attacker.AttackReadyTick = Tick + _rates.AttackRecoveryTicks;
@@ -200,6 +201,7 @@ namespace Wrestling.Core.Match
             Corner defender = interrupted.Executor.Opponent();
             ActiveTechnique = null;
             Begin(defender, counter, interrupted.Side == GripSide.Left ? GripSide.Right : GripSide.Left, Wrestler(defender).Intent.ExecutionQuality);
+            ActiveTechnique!.EntryAnimation = window.Animation;
         }
 
         /// <summary>Resolves the end of a phase with the sigmoid contest of design section 5.7.</summary>
@@ -266,11 +268,10 @@ namespace Wrestling.Core.Match
                 case PhaseOutcome.Countered:
                     // Turning a failed attack into a counter takes counter-wrestling skill.
                     Fix64 counterChance = Wrestler(defender).Effective(WrestlerAttribute.CounterWrestling) * CounterOutcomeShare;
-                    TechniqueDefinition? counter = !_random.Chance(counterChance) ? null : execution.Phase.CounterWindows
+                    CounterWindow? counter = !_random.Chance(counterChance) ? null : execution.Phase.CounterWindows
                         .Where(w => CanCounter(defender, w.Technique))
-                        .Select(w => Catalog.Get(w.Technique))
-                        .OrderByDescending(c => Wrestler(defender).Known(c.Id)!.Proficiency)
-                        .ThenBy(c => c.Id, System.StringComparer.Ordinal)
+                        .OrderByDescending(w => Wrestler(defender).Known(w.Technique)!.Proficiency)
+                        .ThenBy(w => w.Technique, System.StringComparer.Ordinal)
                         .FirstOrDefault();
                     if (counter != null)
                     {

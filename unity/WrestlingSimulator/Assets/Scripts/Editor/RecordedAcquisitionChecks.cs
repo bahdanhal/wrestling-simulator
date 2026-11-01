@@ -202,7 +202,7 @@ namespace Wrestling.Editor
                         if (active == null || (ReferenceEquals(active, last) && active.PhaseIndex == lastPhase)) continue;
                         last = active;
                         lastPhase = active.PhaseIndex;
-                        string clip = active.Phase.Animation;
+                        string clip = active.Animation;
                         if (!clips.Contains(clip)) continue;
                         string key = $"{clip}|{style}|{active.Executor}";
                         counts.TryGetValue(key, out int count);

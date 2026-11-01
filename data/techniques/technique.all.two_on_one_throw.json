@@ -58,7 +58,8 @@
         {
           "technique": "technique.all.step_around",
           "fromTick": 2,
-          "toTick": 12
+          "toTick": 12,
+          "animation": null
         }
       ],
       "endStates": [

@@ -167,6 +167,14 @@ namespace Wrestling.Core.Techniques
         public int FromTick { get; init; }
 
         public int ToTick { get; init; }
+
+        /// <summary>
+        /// The clip the counter's first phase plays when started from this window, when the attack
+        /// leaves the bodies arranged differently from the counter's own clip (a hip block against a
+        /// turned-in hip throw is behind the attacker's hips; against a chest-to-chest lift it is chest to
+        /// chest). Null plays the counter's own clip. Presentation only: it never changes the contest.
+        /// </summary>
+        public string? Animation { get; init; }
     }
 
     public sealed class PhaseDefinition
@@ -412,6 +420,10 @@ namespace Wrestling.Core.Techniques
                 foreach (CounterWindow window in phase.CounterWindows)
                 {
                     context.RequireNotEmpty(window.Technique, phasePath + ".counterWindows[].technique");
+                    if (window.Animation != null)
+                    {
+                        context.RequireNotEmpty(window.Animation, phasePath + ".counterWindows[].animation");
+                    }
                     if (window.FromTick < 0 || window.ToTick < window.FromTick || window.ToTick > phase.MaximumTicks)
                     {
                         context.Error($"{phasePath}.counterWindows[{window.Technique}] must lie within the phase.");

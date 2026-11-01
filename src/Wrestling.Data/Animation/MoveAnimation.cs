@@ -440,6 +440,14 @@ namespace Wrestling.Data.Animation
                     minimumTicks[phase.Animation] = minimumTicks.TryGetValue(phase.Animation, out int ticks) ? Math.Min(ticks, phase.MinimumTicks) : phase.MinimumTicks;
                 }
 
+                // Clips counter windows choose for this technique's first phase belong to its file too.
+                foreach (string entry in EntryClips(catalog, technique.Id))
+                {
+                    phaseClips.Add(entry);
+                    int first = technique.Phases[0].MinimumTicks;
+                    minimumTicks[entry] = minimumTicks.TryGetValue(entry, out int ticks) ? Math.Min(ticks, first) : first;
+                }
+
                 ClipFrame expectedFrame = IsParTerre(technique) ? ClipFrame.Bottom : ClipFrame.Executor;
                 foreach (MoveClip clip in file.Clips)
                 {
@@ -479,6 +487,14 @@ namespace Wrestling.Data.Animation
                     {
                         errors.Add($"{technique.Id} phase '{phase.Id}' has no clip '{phase.Animation}'.");
                     }
+
+                    foreach (CounterWindow window in phase.CounterWindows)
+                    {
+                        if (window.Animation != null && !clips.ContainsKey(window.Animation))
+                        {
+                            errors.Add($"{technique.Id} phase '{phase.Id}' counter '{window.Technique}' has no clip '{window.Animation}' in that counter's animation file.");
+                        }
+                    }
                 }
             }
 
@@ -489,6 +505,13 @@ namespace Wrestling.Data.Animation
 
             return new MoveAnimationLibrary(clips);
         }
+
+        /// <summary>Clips that counter windows anywhere in the catalogue choose for <paramref name="counter"/>'s first phase.</summary>
+        public static IEnumerable<string> EntryClips(TechniqueCatalog catalog, string counter) =>
+            catalog.All.SelectMany(t => t.Phases).SelectMany(p => p.CounterWindows)
+                .Where(w => w.Technique == counter && w.Animation != null)
+                .Select(w => w.Animation!)
+                .Distinct(StringComparer.Ordinal);
 
         /// <summary>Techniques that start only from par terre are animated relative to the bottom wrestler.</summary>
         public static bool IsParTerre(TechniqueDefinition technique) =>

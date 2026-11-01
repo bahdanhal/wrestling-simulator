@@ -182,6 +182,12 @@ namespace Wrestling.Core.Match
 
         public PhaseDefinition Phase => Definition.Phases[PhaseIndex];
 
+        /// <summary>The first phase's clip when a counter window chose one (see <see cref="CounterWindow.Animation"/>).</summary>
+        public string? EntryAnimation { get; internal set; }
+
+        /// <summary>The clip the current phase plays: the counter window's choice for the first phase, otherwise the phase's own.</summary>
+        public string Animation => PhaseIndex == 0 && EntryAnimation != null ? EntryAnimation : Phase.Animation;
+
         public bool IsLastPhase => PhaseIndex == Definition.Phases.Count - 1;
     }
 }

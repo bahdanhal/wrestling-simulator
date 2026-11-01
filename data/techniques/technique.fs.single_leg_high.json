@@ -53,12 +53,14 @@
         {
           "technique": "technique.fs.sprawl",
           "fromTick": 0,
-          "toTick": 12
+          "toTick": 12,
+          "animation": null
         },
         {
           "technique": "technique.fs.whizzer",
           "fromTick": 4,
-          "toTick": 16
+          "toTick": 16,
+          "animation": null
         }
       ],
       "endStates": [],
@@ -95,7 +97,8 @@
         {
           "technique": "technique.fs.whizzer",
           "fromTick": 0,
-          "toTick": 16
+          "toTick": 16,
+          "animation": null
         }
       ],
       "endStates": [
