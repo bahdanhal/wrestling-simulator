@@ -29,8 +29,8 @@
   "phases": [
     {
       "id": "lock",
-      "minimumTicks": 12,
-      "maximumTicks": 20,
+      "minimumTicks": 48,
+      "maximumTicks": 60,
       "attributes": [
         {
           "attribute": "bodyLockAndLifts",
@@ -58,7 +58,7 @@
         {
           "technique": "technique.all.hip_block",
           "fromTick": 0,
-          "toTick": 12
+          "toTick": 48
         }
       ],
       "endStates": [],

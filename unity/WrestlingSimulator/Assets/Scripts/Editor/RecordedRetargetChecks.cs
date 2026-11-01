@@ -16,6 +16,9 @@ namespace Wrestling.Editor
     public static class RecordedRetargetChecks
     {
         private const float ActualTolerance = 0.00025f;
+        private static int _unreachableWrists;
+        private static float _maxWristActual;
+        private static float _maxWristResidual;
 
         public static void RunFromCommandLine()
         {
@@ -33,6 +36,8 @@ namespace Wrestling.Editor
 
         private static void Run()
         {
+            _unreachableWrists = 0;
+            _maxWristActual = _maxWristResidual = 0f;
             var content = ContentLocator.LoadDirect();
             MotionTake[] takes = content.Motion.Takes.Where(t => t.Id.StartsWith("harmony4d.", StringComparison.Ordinal)).ToArray();
             if (takes.Length == 0)
@@ -100,6 +105,7 @@ namespace Wrestling.Editor
                         // limits. They must be reported while preserving pelvis and segment lengths.
                         Pose impossible = figure.Rig.Bind;
                         impossible.AnkleL = impossible.Pelvis + (Vector3.up * 5f);
+                        impossible.HandL = impossible.Pelvis + (Vector3.up * 5f);
                         Pose calibrated = impossible;
                         var initial = figure.Rig.RetargetRecordedLegs(ref calibrated);
                         impossible.PelvisUp = calibrated.PelvisUp;
@@ -121,6 +127,7 @@ namespace Wrestling.Editor
             }
 
             Debug.Log(FormattableString.Invariant($"[retarget] PASS {samples} source actor-frames across {takes.Length} real takes, two morphologies, both sexes and both mirror states; actual-to-reached max {maxActual:F6} m. Unreachable ankle targets {unreachable}, explicit residual max {maxResidual:F4} m. These are trajectory/rig correctness checks, not sole-contact or realism acceptance."));
+            Debug.Log(FormattableString.Invariant($"[retarget-arms] PASS actual-to-reached max {_maxWristActual:F6} m; unreachable wrist targets {_unreachableWrists}, explicit residual max {_maxWristResidual:F4} m (including deliberately impossible targets). Wrist preservation is not palm-contact preservation."));
         }
 
         private static void Check(CharacterRig rig, in Pose source, ref int unreachable, ref float maxActual, ref float maxResidual)
@@ -135,8 +142,39 @@ namespace Wrestling.Editor
             Require(Vector3.Distance(pelvisAxis.normalized, fit.PelvisAxis) < 1e-5f, "Retarget changed the source pelvis construction frame.");
             Require(Vector3.Distance(toeL, fit.ToeL - fit.AnkleL) < 1e-5f && Vector3.Distance(toeR, fit.ToeR - fit.AnkleR) < 1e-5f, "Retarget changed the supplied inferred toe vectors.");
             rig.Apply(in fit, 0f, 0f);
+            Vector3 neck = rig.Find("Neck").position;
+            Vector3 pelvisBone = rig.Find("Hips").position;
+            rig.Apply(in fit, 0f, 0f, true);
+            Require(Vector3.Distance(neck, rig.Find("Neck").position) < 1e-6f
+                && Vector3.Distance(pelvisBone, rig.Find("Hips").position) < 1e-6f, "Wrist retarget moved the trunk.");
+            CharacterRig.RecordedArmsResult arms = rig.RecordedArms.Value;
+            CheckArm(rig, true, arms.LeftTarget, arms.LeftReached, arms.LeftResidual);
+            CheckArm(rig, false, arms.RightTarget, arms.RightReached, arms.RightResidual);
             CheckLeg(rig, true, fit.HipL, fit.AnkleL, result.LeftTarget, result.LeftResidual, ref unreachable, ref maxActual, ref maxResidual);
             CheckLeg(rig, false, fit.HipR, fit.AnkleR, result.RightTarget, result.RightResidual, ref unreachable, ref maxActual, ref maxResidual);
+        }
+
+        private static void CheckArm(CharacterRig rig, bool left, Vector3 target, Vector3 reached, float residual)
+        {
+            string side = left ? "Left" : "Right";
+            Vector3 shoulder = rig.Find(side + "Arm").position;
+            Vector3 elbow = rig.Find(side + "ForeArm").position;
+            Vector3 wrist = rig.Find(side + "Hand").position;
+            Finite(shoulder); Finite(elbow); Finite(wrist);
+            float upper = Vector3.Distance(left ? rig.Bind.ShoulderL : rig.Bind.ShoulderR, left ? rig.Bind.ElbowL : rig.Bind.ElbowR);
+            float forearm = Vector3.Distance(left ? rig.Bind.ElbowL : rig.Bind.ElbowR, left ? rig.Bind.HandL : rig.Bind.HandR);
+            Require(Mathf.Abs(Vector3.Distance(shoulder, elbow) - upper) < ActualTolerance
+                && Mathf.Abs(Vector3.Distance(elbow, wrist) - forearm) < ActualTolerance, "Retarget stretched arm segments.");
+            float actualError = Vector3.Distance(wrist, reached);
+            Require(actualError < ActualTolerance, $"Actual {side} wrist missed its reachable endpoint by {actualError:F6} m.");
+            float distance = Vector3.Distance(shoulder, target);
+            float expectedResidual = Mathf.Max(0f, distance - upper - forearm, Mathf.Abs(upper - forearm) - distance);
+            Require(Mathf.Abs(residual - expectedResidual) < ActualTolerance, "Wrist residual did not match reachable interval.");
+            if (residual <= 1e-5f)
+                Require(Vector3.Distance(wrist, target) < ActualTolerance, "Reachable source wrist was not preserved.");
+            else _unreachableWrists++;
+            _maxWristActual = Mathf.Max(_maxWristActual, actualError);
+            _maxWristResidual = Mathf.Max(_maxWristResidual, residual);
         }
 
         private static void CheckLeg(CharacterRig rig, bool left, Vector3 hip, Vector3 reached, Vector3 target, float residual, ref int unreachable, ref float maxActual, ref float maxResidual)

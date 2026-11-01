@@ -69,6 +69,7 @@ namespace Wrestling.Presentation
         /// corner, with how far the entry has eased in (0 the pose on screen, 1 the recording).
         /// </summary>
         public (Pose Red, Pose Blue, float Entry)? Recorded { get; private set; }
+        public (Pose Red, Pose Blue, float Seconds)? RecordedNext { get; private set; }
 
         /// <summary>
         /// Looks up recorded motion for the active phase; on a new phase it aligns the take to the
@@ -77,6 +78,7 @@ namespace Wrestling.Presentation
         public void ApplyRecorded(BoutEngine engine, float alpha, Pose[] shownPoses, float[] heights)
         {
             Recorded = null;
+            RecordedNext = null;
             TechniqueExecution active = engine.ActiveTechnique;
             if (active == null || engine.IsStopped || !_motion.TryGet(active.Phase.Animation, out MotionPhase phase, out MotionTake take))
             {
@@ -99,6 +101,12 @@ namespace Wrestling.Presentation
 
             float progress = active.PhaseLength > 0 ? (active.PhaseTick + alpha) / active.PhaseLength : 1f;
             (Pose executorPose, Pose opponentPose) = _playback.Sample(progress);
+            float available = (active.PhaseLength - active.PhaseTick - alpha) / BoutClock.TicksPerSecond;
+            float nextSeconds = available > 1e-5f ? Mathf.Min(1f / BoutClock.TicksPerSecond, available) : 1f / BoutClock.TicksPerSecond;
+            float phaseSeconds = active.PhaseLength / (float)BoutClock.TicksPerSecond;
+            var next = _playback.Sample(progress + (phaseSeconds > 0f ? nextSeconds / phaseSeconds : 0f));
+            RecordedNext = active.Executor == Corner.Red
+                ? (next.Executor, next.Opponent, nextSeconds) : (next.Opponent, next.Executor, nextSeconds);
             float entry = Mathf.SmoothStep(0f, 1f, (engine.Tick - _recordedStartTick + alpha) / EntryBlendTicks);
             Recorded = active.Executor == Corner.Red ? (executorPose, opponentPose, entry) : (opponentPose, executorPose, entry);
         }

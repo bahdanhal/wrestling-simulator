@@ -32,8 +32,8 @@ Current rough completion estimate and the next implementation milestone: [progre
 
 ## Physics
 
-18. **Contact-only balance** (`ContactSolver` driving it) and a **footwork controller** on real motion; both failed only because keyed stances lean on the opponent.
-    **Anatomical joints:** the current physical knees and elbows are unrestricted spherical joints without passive anatomical stops. Calibrated knee flexion and separate elbow/forearm coordinates need sourced motion-limit profiles and validation under load; simply clamping the current rotation-vector components would constrain the wrong motions.
+18. **Contact-only balance** (`ContactSolver` driving it) and a **footwork controller** on real motion remain open; keyed stance/contact assumptions and source limitations need separate validation.
+    **Anatomical joints:** construction-calibrated knee hinges and passive stops now have geometry and loaded-stop checks ([evidence and limitations](research/anatomical-knees.md)). Their inferred axial roll and fixed axes are not a full human knee model. Hip constraints, separate elbow/forearm coordinates, individual profiles and real-motion validation remain; elbows are still unrestricted spherical joints.
 19. **Throw physics** checked against real throw kinematics (flight about 0.75 s, rotation and carry speeds).
 20. **Imitation-learned controllers** (`tools/imitation`, on GPU) for throws the bodies cannot follow by tracking.
 21. **Open defects:** visible tracking, grip and stepping errors still need comparison with real footage. The lab baseline before individual limb proportions and continuous ground construction was 3.5% lost-motion frames (6.7% in women's bouts), with −1.3 cm worst active-physics foot penetration. These model measurements diagnose defects; they are not realism targets. The earlier −7 cm reading was an unstepped collider at a restart.

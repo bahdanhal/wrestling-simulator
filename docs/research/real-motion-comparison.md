@@ -19,13 +19,13 @@ remove unreachable targets or preserve paired palm grips.
 
 | Phase | Real (checked segment) | Core of the motion | Our phase | Our phase is |
 |---|---|---|---|---|
-| Double-leg penetration (hips 0.46 m down to a knee) | 1.0 s | 0.7 s | 16–22 ticks, 0.27–0.37 s | 2.7–3.8× faster |
+| Double-leg penetration (hips 0.46 m down to a knee) | 1.0 s | 0.7 s | 42–60 ticks, 0.70–1.00 s | spans this core and full segment |
 | Snap-down (opponent's head pulled 0.64 m down) | 1.4 s | 0.8 s | 42–60 ticks, 0.70–1.00 s | approximately the core duration |
-| Body lock (0.69 m apart to chest to chest) | 1.0 s | 0.8 s | 12–20 ticks, 0.20–0.33 s | 3.0–5.0× faster |
+| Body lock (0.69 m apart to chest to chest) | 1.0 s | 0.8 s | 48–60 ticks, 0.80–1.00 s | spans this core and full segment |
 
 Over all 83 real shots and level changes the core of the drop (10–90%) takes 0.40 s at the median, 0.20 s at the quickest tenth; hips drop 0.34 m at the median (0.21–0.55 m), peaking at 1.1 m/s (3.0 m/s at most). The 2018 World Championships throw (Semenov–Coon, single camera) agrees: its flight takes about 0.75 s, against 0.27–0.43 s for our throw flights.
 
-A recorded take is stretched over its phase. Most phases still need measured durations; the snap-down was retimed against the core of the one checked example, but its full 1.4-second segment would still be compressed. The takes remain **unassigned** (`data/motion/index.json` is empty) pending validation of timing, contact and playback.
+A phase-assigned recording is stretched over its phase; the separate paired player can play native source time. Most phases still need measured durations. Three phases now have provisional ranges informed by these individual checked examples, not elite timing distributions. The snap's full 1.4-second segment would still be compressed. For the retimed double-leg and body-lock phases, existing counter-window ticks were scaled with the minimum phase length (penetration ends at tick 32; lock at tick 48), preserving their opening relative to the fastest phase, subject to integer rounding. This is a deliberate simulation-content change, requiring later competition-statistics calibration. The takes remain **unassigned** (`data/motion/index.json` is empty) pending validation of contact and playback.
 
 ### 2. Stance: taller and more upright
 

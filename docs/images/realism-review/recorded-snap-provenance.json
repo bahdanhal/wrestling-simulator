@@ -241,9 +241,10 @@
     ],
     "globalScale": 1.01152742,
     "ankleTrajectoryRetargeting": true,
+    "wristTrajectoryRetargeting": true,
     "unreachableAnkleFrameCount": 48,
     "maximumUnreachableResidualMetres": 0.06725867,
-    "maximumActualToReachedErrorMetres": 1.38510757e-06,
+    "maximumActualToReachedErrorMetres": 1.320078e-06,
     "ankleFrames": [
       {
         "frame": 176,
@@ -271,19 +272,19 @@
         "leftActual": [
           0.03334272,
           0.0830259547,
-          0.3376268
+          0.337626636
         ],
         "rightActual": [
-          -0.04885161,
-          0.036776334,
-          -0.184557557
+          -0.04885173,
+          0.0367761664,
+          -0.184557617
         ],
         "leftUnreachableResidualMetres": 0.063476555,
         "rightUnreachableResidualMetres": 0.03843151,
-        "leftActualToSourceErrorMetres": 0.06347634,
-        "rightActualToSourceErrorMetres": 0.03843126,
-        "leftActualToReachedErrorMetres": 2.60770321e-07,
-        "rightActualToReachedErrorMetres": 3.16803039e-07
+        "leftActualToSourceErrorMetres": 0.06347639,
+        "rightActualToSourceErrorMetres": 0.0384310856,
+        "leftActualToReachedErrorMetres": 1.59275217e-07,
+        "rightActualToReachedErrorMetres": 4.39915624e-07
       },
       {
         "frame": 176,
@@ -310,20 +311,20 @@
         ],
         "leftActual": [
           0.8238207,
-          0.0457207337,
+          0.0457204543,
           -0.188843533
         ],
         "rightActual": [
           1.01176059,
-          0.008496327,
+          0.008496384,
           0.217299983
         ],
         "leftUnreachableResidualMetres": 1.49011612e-08,
         "rightUnreachableResidualMetres": 9.313226e-09,
-        "leftActualToSourceErrorMetres": 7.948411e-07,
-        "rightActualToSourceErrorMetres": 7.28187047e-07,
-        "leftActualToReachedErrorMetres": 8.006861e-07,
-        "rightActualToReachedErrorMetres": 7.217864e-07
+        "leftActualToSourceErrorMetres": 9.38366554e-07,
+        "rightActualToSourceErrorMetres": 6.901754e-07,
+        "leftActualToReachedErrorMetres": 9.477259e-07,
+        "rightActualToReachedErrorMetres": 6.84192571e-07
       },
       {
         "frame": 177,
@@ -350,20 +351,20 @@
         ],
         "leftActual": [
           0.0475108624,
-          0.0879426152,
+          0.0879425555,
           0.3053376
         ],
         "rightActual": [
           -0.0484979153,
-          0.0384561531,
+          0.03845638,
           -0.186862648
         ],
         "leftUnreachableResidualMetres": 0.0605232529,
         "rightUnreachableResidualMetres": 0.03889063,
-        "leftActualToSourceErrorMetres": 0.0605231375,
-        "rightActualToSourceErrorMetres": 0.0388902873,
-        "leftActualToReachedErrorMetres": 1.20137e-07,
-        "rightActualToReachedErrorMetres": 3.47731458e-07
+        "leftActualToSourceErrorMetres": 0.0605230778,
+        "rightActualToSourceErrorMetres": 0.0388905145,
+        "leftActualToReachedErrorMetres": 1.74413614e-07,
+        "rightActualToReachedErrorMetres": 1.2287812e-07
       },
       {
         "frame": 177,
@@ -390,20 +391,20 @@
         ],
         "leftActual": [
           0.8205887,
-          0.0634219646,
-          -0.224298552
+          0.0634220839,
+          -0.224298388
         ],
         "rightActual": [
           1.01132214,
-          0.009609129,
-          0.218887329
+          0.00960907247,
+          0.2188875
         ],
         "leftUnreachableResidualMetres": 2.98023224e-08,
         "rightUnreachableResidualMetres": 1.02445483e-08,
-        "leftActualToSourceErrorMetres": 1.07670553e-06,
-        "rightActualToSourceErrorMetres": 5.56242867e-07,
-        "leftActualToReachedErrorMetres": 1.09915641e-06,
-        "rightActualToReachedErrorMetres": 5.63307765e-07
+        "leftActualToSourceErrorMetres": 1.00668342e-06,
+        "rightActualToSourceErrorMetres": 5.247009e-07,
+        "leftActualToReachedErrorMetres": 1.02720787e-06,
+        "rightActualToReachedErrorMetres": 5.332771e-07
       },
       {
         "frame": 178,
@@ -430,20 +431,20 @@
         ],
         "leftActual": [
           0.0594643354,
-          0.0868380442,
-          0.2563852
+          0.08683821,
+          0.2563851
         ],
         "rightActual": [
           -0.04989016,
-          0.0444177836,
+          0.04441795,
           -0.18870993
         ],
         "leftUnreachableResidualMetres": 0.05758103,
         "rightUnreachableResidualMetres": 0.04042623,
-        "leftActualToSourceErrorMetres": 0.0575805679,
-        "rightActualToSourceErrorMetres": 0.0404258035,
-        "leftActualToReachedErrorMetres": 4.64153828e-07,
-        "rightActualToReachedErrorMetres": 4.48274875e-07
+        "leftActualToSourceErrorMetres": 0.0575807579,
+        "rightActualToSourceErrorMetres": 0.04042597,
+        "leftActualToReachedErrorMetres": 2.77277735e-07,
+        "rightActualToReachedErrorMetres": 2.90118578e-07
       },
       {
         "frame": 178,
@@ -469,21 +470,21 @@
           0.2197676
         ],
         "leftActual": [
-          0.822527766,
-          0.0749537,
-          -0.288655072
+          0.822528,
+          0.0749536455,
+          -0.288654953
         ],
         "rightActual": [
           1.01068008,
-          0.0118342247,
-          0.219767228
+          0.0118343374,
+          0.219767287
         ],
         "leftUnreachableResidualMetres": 2.98023224e-08,
         "rightUnreachableResidualMetres": 1.02445483e-08,
-        "leftActualToSourceErrorMetres": 1.07992309e-06,
-        "rightActualToSourceErrorMetres": 8.84704e-07,
-        "leftActualToReachedErrorMetres": 1.09361224e-06,
-        "rightActualToReachedErrorMetres": 8.772584e-07
+        "leftActualToSourceErrorMetres": 1.30757155e-06,
+        "rightActualToSourceErrorMetres": 7.804372e-07,
+        "leftActualToReachedErrorMetres": 1.320078e-06,
+        "rightActualToReachedErrorMetres": 7.734806e-07
       },
       {
         "frame": 179,
@@ -509,21 +510,21 @@
           -0.189458847
         ],
         "leftActual": [
-          0.0607990026,
-          0.07736913,
-          0.200934052
+          0.0607988834,
+          0.07736902,
+          0.200934112
         ],
         "rightActual": [
           -0.05160582,
           0.0467616729,
-          -0.189458847
+          -0.189458787
         ],
         "leftUnreachableResidualMetres": 0.05020184,
         "rightUnreachableResidualMetres": 0.03950551,
-        "leftActualToSourceErrorMetres": 0.0502019264,
+        "leftActualToSourceErrorMetres": 0.0502018146,
         "rightActualToSourceErrorMetres": 0.0395054929,
-        "leftActualToReachedErrorMetres": 1.53597654e-07,
-        "rightActualToReachedErrorMetres": 1.86264515e-08
+        "leftActualToReachedErrorMetres": 6.143906e-08,
+        "rightActualToReachedErrorMetres": 6.244724e-08
       },
       {
         "frame": 179,
@@ -555,15 +556,15 @@
         ],
         "rightActual": [
           1.01114333,
-          0.0139584336,
+          0.013958659,
           0.222222149
         ],
         "leftUnreachableResidualMetres": 2.98023224e-08,
         "rightUnreachableResidualMetres": 2.79396772e-08,
         "leftActualToSourceErrorMetres": 9.03580656e-07,
-        "rightActualToSourceErrorMetres": 7.678889e-07,
+        "rightActualToSourceErrorMetres": 5.915621e-07,
         "leftActualToReachedErrorMetres": 9.05053867e-07,
-        "rightActualToReachedErrorMetres": 7.44594558e-07
+        "rightActualToReachedErrorMetres": 5.72108036e-07
       },
       {
         "frame": 180,
@@ -590,20 +591,20 @@
         ],
         "leftActual": [
           0.04998684,
-          0.06860377,
-          0.146460891
+          0.06860372,
+          0.14646101
         ],
         "rightActual": [
-          -0.0537467,
-          0.04914492,
-          -0.190719008
+          -0.05374682,
+          0.04914503,
+          -0.1907189
         ],
         "leftUnreachableResidualMetres": 0.04361191,
         "rightUnreachableResidualMetres": 0.04237751,
-        "leftActualToSourceErrorMetres": 0.04361155,
-        "rightActualToSourceErrorMetres": 0.042377267,
-        "leftActualToReachedErrorMetres": 3.77561435e-07,
-        "rightActualToReachedErrorMetres": 2.70308249e-07
+        "leftActualToSourceErrorMetres": 0.0436114781,
+        "rightActualToSourceErrorMetres": 0.0423773825,
+        "leftActualToReachedErrorMetres": 4.6915e-07,
+        "rightActualToReachedErrorMetres": 1.76666759e-07
       },
       {
         "frame": 180,
@@ -630,20 +631,20 @@
         ],
         "leftActual": [
           0.8290285,
-          0.07444774,
-          -0.482154
+          0.0744478,
+          -0.482154071
         ],
         "rightActual": [
           1.01116812,
-          0.012542407,
-          0.225310162
+          0.0125422943,
+          0.2253101
         ],
         "leftUnreachableResidualMetres": 1.49011612e-08,
         "rightUnreachableResidualMetres": 2.23517418e-08,
-        "leftActualToSourceErrorMetres": 8.28891757e-07,
-        "rightActualToSourceErrorMetres": 6.43090857e-07,
-        "leftActualToReachedErrorMetres": 8.167481e-07,
-        "rightActualToReachedErrorMetres": 6.617563e-07
+        "leftActualToSourceErrorMetres": 7.83162e-07,
+        "rightActualToSourceErrorMetres": 7.62932245e-07,
+        "leftActualToReachedErrorMetres": 7.71449947e-07,
+        "rightActualToReachedErrorMetres": 7.819583e-07
       },
       {
         "frame": 181,
@@ -670,20 +671,20 @@
         ],
         "leftActual": [
           0.0313154459,
-          0.0597660169,
-          0.1013851
+          0.0597663522,
+          0.101385042
         ],
         "rightActual": [
-          -0.05509448,
-          0.0509056561,
+          -0.05509436,
+          0.0509058237,
           -0.192248
         ],
         "leftUnreachableResidualMetres": 0.03972981,
         "rightUnreachableResidualMetres": 0.0458498858,
-        "leftActualToSourceErrorMetres": 0.03972923,
-        "rightActualToSourceErrorMetres": 0.0458496,
-        "leftActualToReachedErrorMetres": 5.87510272e-07,
-        "rightActualToReachedErrorMetres": 3.00458e-07
+        "leftActualToSourceErrorMetres": 0.03972957,
+        "rightActualToSourceErrorMetres": 0.0458497666,
+        "leftActualToReachedErrorMetres": 2.47668765e-07,
+        "rightActualToReachedErrorMetres": 1.90827976e-07
       },
       {
         "frame": 181,
@@ -709,21 +710,21 @@
           0.226457849
         ],
         "leftActual": [
-          0.839966655,
+          0.8399664,
           0.06402898,
-          -0.573872149
+          -0.573872268
         ],
         "rightActual": [
           1.01105154,
           0.007181019,
-          0.226457521
+          0.226457566
         ],
         "leftUnreachableResidualMetres": 7.450581e-09,
         "rightUnreachableResidualMetres": 2.6093657e-08,
-        "leftActualToSourceErrorMetres": 8.55520057e-07,
-        "rightActualToSourceErrorMetres": 1.01315322e-06,
-        "leftActualToReachedErrorMetres": 8.61694332e-07,
-        "rightActualToReachedErrorMetres": 9.907452e-07
+        "leftActualToSourceErrorMetres": 7.679883e-07,
+        "rightActualToSourceErrorMetres": 9.989172e-07,
+        "leftActualToReachedErrorMetres": 7.748604e-07,
+        "rightActualToReachedErrorMetres": 9.768647e-07
       },
       {
         "frame": 182,
@@ -751,19 +752,19 @@
         "leftActual": [
           0.0163084269,
           0.0587924942,
-          0.07499525
+          0.0749953
         ],
         "rightActual": [
           -0.0557266474,
           0.05970635,
-          -0.1928159
+          -0.192815959
         ],
         "leftUnreachableResidualMetres": 0.0473771766,
         "rightUnreachableResidualMetres": 0.0546538234,
-        "leftActualToSourceErrorMetres": 0.0473770276,
+        "leftActualToSourceErrorMetres": 0.0473770238,
         "rightActualToSourceErrorMetres": 0.0546537824,
-        "leftActualToReachedErrorMetres": 1.73296087e-07,
-        "rightActualToReachedErrorMetres": 4.36034036e-08
+        "leftActualToReachedErrorMetres": 1.58050682e-07,
+        "rightActualToReachedErrorMetres": 6.064333e-08
       },
       {
         "frame": 182,
@@ -791,19 +792,19 @@
         "leftActual": [
           0.8567556,
           0.04400081,
-          -0.638340652
+          -0.6383404
         ],
         "rightActual": [
           1.00904286,
-          0.00303399586,
+          0.00303410878,
           0.223060638
         ],
         "leftUnreachableResidualMetres": 1.86264515e-08,
         "rightUnreachableResidualMetres": 1.75721588e-08,
         "leftActualToSourceErrorMetres": 9.627407e-07,
-        "rightActualToSourceErrorMetres": 7.0622076e-07,
+        "rightActualToSourceErrorMetres": 6.156629e-07,
         "leftActualToReachedErrorMetres": 9.750943e-07,
-        "rightActualToReachedErrorMetres": 7.075699e-07
+        "rightActualToReachedErrorMetres": 6.15503666e-07
       },
       {
         "frame": 183,
@@ -830,20 +831,20 @@
         ],
         "leftActual": [
           0.008877516,
-          0.0568832271,
-          0.07082401
+          0.0568831153,
+          0.07082395
         ],
         "rightActual": [
           -0.0554511547,
-          0.06263423,
-          -0.190921441
+          0.06263395,
+          -0.190921381
         ],
         "leftUnreachableResidualMetres": 0.0517560281,
         "rightUnreachableResidualMetres": 0.0544561557,
-        "leftActualToSourceErrorMetres": 0.05175579,
-        "rightActualToSourceErrorMetres": 0.0544560365,
-        "leftActualToReachedErrorMetres": 2.71741982e-07,
-        "rightActualToReachedErrorMetres": 1.90827976e-07
+        "leftActualToSourceErrorMetres": 0.05175568,
+        "rightActualToSourceErrorMetres": 0.0544557534,
+        "leftActualToReachedErrorMetres": 3.60584238e-07,
+        "rightActualToReachedErrorMetres": 4.53201125e-07
       },
       {
         "frame": 183,
@@ -870,20 +871,20 @@
         ],
         "leftActual": [
           0.865389466,
-          0.02559111,
+          0.0255908854,
           -0.6666668
         ],
         "rightActual": [
           1.00370157,
-          0.0120363934,
-          0.2213936
+          0.0120366756,
+          0.221393436
         ],
         "leftUnreachableResidualMetres": 2.79396772e-08,
         "rightUnreachableResidualMetres": 1.86264515e-08,
-        "leftActualToSourceErrorMetres": 7.174352e-07,
-        "rightActualToSourceErrorMetres": 9.474627e-07,
-        "leftActualToReachedErrorMetres": 7.384184e-07,
-        "rightActualToReachedErrorMetres": 9.321236e-07
+        "leftActualToSourceErrorMetres": 8.975727e-07,
+        "rightActualToSourceErrorMetres": 8.001855e-07,
+        "leftActualToReachedErrorMetres": 9.212922e-07,
+        "rightActualToReachedErrorMetres": 7.88655939e-07
       },
       {
         "frame": 184,
@@ -910,20 +911,20 @@
         ],
         "leftActual": [
           0.00677549839,
-          0.0526335463,
-          0.0775845647
+          0.0526336022,
+          0.07758445
         ],
         "rightActual": [
           -0.0534262657,
-          0.05864041,
-          -0.191575631
+          0.05864052,
+          -0.191575691
         ],
         "leftUnreachableResidualMetres": 0.04826609,
         "rightUnreachableResidualMetres": 0.0456292368,
-        "leftActualToSourceErrorMetres": 0.0482656844,
-        "rightActualToSourceErrorMetres": 0.0456289351,
-        "leftActualToReachedErrorMetres": 4.31490918e-07,
-        "rightActualToReachedErrorMetres": 4.08238122e-07
+        "leftActualToSourceErrorMetres": 0.0482657477,
+        "rightActualToSourceErrorMetres": 0.0456290469,
+        "leftActualToReachedErrorMetres": 3.59659367e-07,
+        "rightActualToReachedErrorMetres": 3.1524408e-07
       },
       {
         "frame": 184,
@@ -950,20 +951,20 @@
         ],
         "leftActual": [
           0.862823844,
-          0.0144638838,
-          -0.6701917
+          0.0144640524,
+          -0.6701916
         ],
         "rightActual": [
           1.00363147,
-          0.0314578936,
-          0.2060394
+          0.0314580053,
+          0.206039518
         ],
         "leftUnreachableResidualMetres": 1.3038516e-08,
         "rightUnreachableResidualMetres": 3.7252903e-09,
-        "leftActualToSourceErrorMetres": 1.35330913e-06,
-        "rightActualToSourceErrorMetres": 6.523514e-07,
-        "leftActualToReachedErrorMetres": 1.36257336e-06,
-        "rightActualToReachedErrorMetres": 6.48885248e-07
+        "leftActualToSourceErrorMetres": 1.23966561e-06,
+        "rightActualToSourceErrorMetres": 5.09602842e-07,
+        "leftActualToReachedErrorMetres": 1.24801261e-06,
+        "rightActualToReachedErrorMetres": 5.05981632e-07
       },
       {
         "frame": 185,
@@ -991,19 +992,19 @@
         "leftActual": [
           0.005201459,
           0.0499165542,
-          0.08390534
+          0.08390539
         ],
         "rightActual": [
-          -0.0483503342,
-          0.0596355274,
-          -0.192630917
+          -0.048350215,
+          0.05963564,
+          -0.192631081
         ],
         "leftUnreachableResidualMetres": 0.0466122851,
         "rightUnreachableResidualMetres": 0.03159971,
-        "leftActualToSourceErrorMetres": 0.046612028,
-        "rightActualToSourceErrorMetres": 0.0315994881,
-        "leftActualToReachedErrorMetres": 3.33470723e-07,
-        "rightActualToReachedErrorMetres": 2.38534966e-07
+        "leftActualToSourceErrorMetres": 0.0466120243,
+        "rightActualToSourceErrorMetres": 0.031599585,
+        "leftActualToReachedErrorMetres": 3.65173463e-07,
+        "rightActualToReachedErrorMetres": 1.98247051e-07
       },
       {
         "frame": 185,
@@ -1030,8 +1031,8 @@
         ],
         "leftActual": [
           0.861204267,
-          0.009406453,
-          -0.6704904
+          0.009406678,
+          -0.670490146
         ],
         "rightActual": [
           1.03652823,
@@ -1040,9 +1041,9 @@
         ],
         "leftUnreachableResidualMetres": 1.76951289e-08,
         "rightUnreachableResidualMetres": 1.86264515e-08,
-        "leftActualToSourceErrorMetres": 1.04435151e-06,
+        "leftActualToSourceErrorMetres": 8.95927e-07,
         "rightActualToSourceErrorMetres": 7.118327e-07,
-        "leftActualToReachedErrorMetres": 1.05715742e-06,
+        "leftActualToReachedErrorMetres": 9.064329e-07,
         "rightActualToReachedErrorMetres": 7.2940577e-07
       },
       {
@@ -1069,21 +1070,21 @@
           -0.208498478
         ],
         "leftActual": [
-          0.007724285,
-          0.0466833562,
-          0.0876847357
+          0.007724166,
+          0.0466834679,
+          0.08768485
         ],
         "rightActual": [
-          -0.02400279,
-          0.05742487,
-          -0.208498374
+          -0.02400291,
+          0.0574247576,
+          -0.208498314
         ],
         "leftUnreachableResidualMetres": 0.0416345671,
         "rightUnreachableResidualMetres": 0.0133049609,
-        "leftActualToSourceErrorMetres": 0.0416343138,
-        "rightActualToSourceErrorMetres": 0.0133047011,
-        "leftActualToReachedErrorMetres": 2.799674e-07,
-        "rightActualToReachedErrorMetres": 2.91264342e-07
+        "leftActualToSourceErrorMetres": 0.04163442,
+        "rightActualToSourceErrorMetres": 0.0133046014,
+        "leftActualToReachedErrorMetres": 2.95967226e-07,
+        "rightActualToReachedErrorMetres": 4.33944365e-07
       },
       {
         "frame": 186,
@@ -1111,19 +1112,19 @@
         "leftActual": [
           0.8604833,
           0.008799383,
-          -0.6727841
+          -0.672783732
         ],
         "rightActual": [
           1.11103189,
-          0.0342903063,
+          0.03429008,
           0.0253671743
         ],
         "leftUnreachableResidualMetres": 2.04890966e-08,
         "rightUnreachableResidualMetres": 2.33388775e-08,
-        "leftActualToSourceErrorMetres": 1.15525449e-06,
-        "rightActualToSourceErrorMetres": 6.892819e-07,
-        "leftActualToReachedErrorMetres": 1.13927058e-06,
-        "rightActualToReachedErrorMetres": 7.01829265e-07
+        "leftActualToSourceErrorMetres": 1.19158642e-06,
+        "rightActualToSourceErrorMetres": 8.612614e-07,
+        "leftActualToReachedErrorMetres": 1.17609636e-06,
+        "rightActualToReachedErrorMetres": 8.74245529e-07
       },
       {
         "frame": 187,
@@ -1151,19 +1152,19 @@
         "leftActual": [
           0.0150276423,
           0.0498761162,
-          0.09217839
+          0.0921785
         ],
         "rightActual": [
           0.0444411039,
-          0.0733844,
-          -0.257731766
+          0.07338451,
+          -0.257731885
         ],
         "leftUnreachableResidualMetres": 0.03875078,
         "rightUnreachableResidualMetres": 0.0244258,
         "leftActualToSourceErrorMetres": 0.0387506224,
-        "rightActualToSourceErrorMetres": 0.0244258083,
-        "leftActualToReachedErrorMetres": 2.19254773e-07,
-        "rightActualToReachedErrorMetres": 1.19441893e-07
+        "rightActualToSourceErrorMetres": 0.024425894,
+        "leftActualToReachedErrorMetres": 2.867264e-07,
+        "rightActualToReachedErrorMetres": 1.98247051e-07
       },
       {
         "frame": 187,
@@ -1190,20 +1191,20 @@
         ],
         "leftActual": [
           0.8598796,
-          0.0105191981,
-          -0.6762254
+          0.0105193676,
+          -0.676225066
         ],
         "rightActual": [
           1.20363152,
-          0.0311543718,
-          -0.1372016
+          0.0311544277,
+          -0.137201786
         ],
         "leftUnreachableResidualMetres": 2.32830644e-08,
         "rightUnreachableResidualMetres": 1.59144466e-08,
-        "leftActualToSourceErrorMetres": 1.18906371e-06,
-        "rightActualToSourceErrorMetres": 7.173119e-07,
-        "leftActualToReachedErrorMetres": 1.17575883e-06,
-        "rightActualToReachedErrorMetres": 7.24240863e-07
+        "leftActualToSourceErrorMetres": 1.099819e-06,
+        "rightActualToSourceErrorMetres": 7.07905656e-07,
+        "leftActualToReachedErrorMetres": 1.08905067e-06,
+        "rightActualToReachedErrorMetres": 7.182085e-07
       },
       {
         "frame": 188,
@@ -1230,20 +1231,20 @@
         ],
         "leftActual": [
           0.0349077,
-          0.0486093834,
-          0.09486544
+          0.04860916,
+          0.09486538
         ],
         "rightActual": [
-          0.129545569,
+          0.12954545,
           0.0876418948,
-          -0.321469247
+          -0.3214692
         ],
         "leftUnreachableResidualMetres": 0.0186783038,
         "rightUnreachableResidualMetres": 0.0501048379,
-        "leftActualToSourceErrorMetres": 0.0186783746,
-        "rightActualToSourceErrorMetres": 0.05010459,
-        "leftActualToReachedErrorMetres": 1.4919776e-07,
-        "rightActualToReachedErrorMetres": 2.66560079e-07
+        "leftActualToSourceErrorMetres": 0.0186781511,
+        "rightActualToSourceErrorMetres": 0.05010463,
+        "leftActualToReachedErrorMetres": 1.96700967e-07,
+        "rightActualToReachedErrorMetres": 2.4575624e-07
       },
       {
         "frame": 188,
@@ -1270,20 +1271,20 @@
         ],
         "leftActual": [
           0.860304236,
-          0.009912184,
-          -0.680310845
+          0.009912072,
+          -0.680310547
         ],
         "rightActual": [
           1.299707,
-          0.05007004,
+          0.05006993,
           -0.319374651
         ],
         "leftUnreachableResidualMetres": 9.313226e-10,
         "rightUnreachableResidualMetres": 2.23517418e-08,
-        "leftActualToSourceErrorMetres": 1.06804953e-06,
-        "rightActualToSourceErrorMetres": 8.156259e-07,
-        "leftActualToReachedErrorMetres": 1.06736593e-06,
-        "rightActualToReachedErrorMetres": 8.002701e-07
+        "leftActualToSourceErrorMetres": 1.16100375e-06,
+        "rightActualToSourceErrorMetres": 8.9682834e-07,
+        "leftActualToReachedErrorMetres": 1.16028446e-06,
+        "rightActualToReachedErrorMetres": 8.80052e-07
       },
       {
         "frame": 189,
@@ -1309,21 +1310,21 @@
           -0.357223034
         ],
         "leftActual": [
-          0.0841020346,
-          0.07282951,
-          0.09633779
+          0.08410227,
+          0.07282957,
+          0.0963377357
         ],
         "rightActual": [
-          0.19161272,
-          0.08118899,
-          -0.3572229
+          0.19161284,
+          0.08118887,
+          -0.3572231
         ],
         "leftUnreachableResidualMetres": 7.450581e-09,
         "rightUnreachableResidualMetres": 0.06725867,
-        "leftActualToSourceErrorMetres": 6.937047e-07,
-        "rightActualToSourceErrorMetres": 0.06725864,
-        "leftActualToReachedErrorMetres": 6.887658e-07,
-        "rightActualToReachedErrorMetres": 1.98247051e-07
+        "leftActualToSourceErrorMetres": 4.908344e-07,
+        "rightActualToSourceErrorMetres": 0.06725845,
+        "leftActualToReachedErrorMetres": 4.84746e-07,
+        "rightActualToReachedErrorMetres": 2.31328229e-07
       },
       {
         "frame": 189,
@@ -1351,19 +1352,19 @@
         "leftActual": [
           0.8619484,
           0.00667534349,
-          -0.6868316
+          -0.686831236
         ],
         "rightActual": [
           1.38892019,
-          0.08395576,
-          -0.5119298
+          0.08395588,
+          -0.5119297
         ],
         "leftUnreachableResidualMetres": 3.259629e-09,
         "rightUnreachableResidualMetres": 7.450581e-09,
-        "leftActualToSourceErrorMetres": 8.783157e-07,
-        "rightActualToSourceErrorMetres": 1.10067037e-06,
-        "leftActualToReachedErrorMetres": 8.75580042e-07,
-        "rightActualToReachedErrorMetres": 1.10753331e-06
+        "leftActualToSourceErrorMetres": 9.48333366e-07,
+        "rightActualToSourceErrorMetres": 9.555351e-07,
+        "leftActualToReachedErrorMetres": 9.45800252e-07,
+        "rightActualToReachedErrorMetres": 9.625101e-07
       },
       {
         "frame": 190,
@@ -1389,21 +1390,21 @@
           -0.371259272
         ],
         "leftActual": [
-          0.178362966,
-          0.122191705,
-          0.0987599
+          0.178363085,
+          0.122191645,
+          0.09875973
         ],
         "rightActual": [
           0.2203021,
-          0.0438797958,
-          -0.371259451
+          0.0438799076,
+          -0.371259272
         ],
         "leftUnreachableResidualMetres": 1.49011612e-08,
         "rightUnreachableResidualMetres": 0.0485142581,
-        "leftActualToSourceErrorMetres": 1.02062074e-06,
-        "rightActualToSourceErrorMetres": 0.04851383,
-        "leftActualToReachedErrorMetres": 1.00880425e-06,
-        "rightActualToReachedErrorMetres": 4.792901e-07
+        "leftActualToSourceErrorMetres": 9.936125e-07,
+        "rightActualToSourceErrorMetres": 0.04851399,
+        "leftActualToReachedErrorMetres": 9.805655e-07,
+        "rightActualToReachedErrorMetres": 3.38345785e-07
       },
       {
         "frame": 190,
@@ -1429,21 +1430,21 @@
           -0.7138909
         ],
         "leftActual": [
-          0.8647939,
-          0.0028314325,
-          -0.693150163
+          0.864793658,
+          0.00283126323,
+          -0.693149745
         ],
         "rightActual": [
           1.46018517,
-          0.11774116,
-          -0.7138915
+          0.117741048,
+          -0.7138916
         ],
         "leftUnreachableResidualMetres": 1.67638063e-08,
         "rightUnreachableResidualMetres": 2.98023224e-08,
-        "leftActualToSourceErrorMetres": 9.473589e-07,
-        "rightActualToSourceErrorMetres": 8.69677763e-07,
-        "leftActualToReachedErrorMetres": 9.623282e-07,
-        "rightActualToReachedErrorMetres": 8.916138e-07
+        "leftActualToSourceErrorMetres": 1.01526291e-06,
+        "rightActualToSourceErrorMetres": 1.03281275e-06,
+        "leftActualToReachedErrorMetres": 1.03199829e-06,
+        "rightActualToReachedErrorMetres": 1.05451386e-06
       },
       {
         "frame": 191,
@@ -1470,20 +1471,20 @@
         ],
         "leftActual": [
           0.304886818,
-          0.129070118,
-          0.100666419
+          0.129070237,
+          0.100666024
         ],
         "rightActual": [
-          0.232417822,
-          0.01987521,
-          -0.375110149
+          0.2324177,
+          0.01987538,
+          -0.37511012
         ],
         "leftUnreachableResidualMetres": 1.49011612e-08,
         "rightUnreachableResidualMetres": 0.0270046666,
-        "leftActualToSourceErrorMetres": 8.84111159e-07,
-        "rightActualToSourceErrorMetres": 0.0270044543,
-        "leftActualToReachedErrorMetres": 8.710809e-07,
-        "rightActualToReachedErrorMetres": 2.32554811e-07
+        "leftActualToSourceErrorMetres": 7.646198e-07,
+        "rightActualToSourceErrorMetres": 0.02700464,
+        "leftActualToReachedErrorMetres": 7.518814e-07,
+        "rightActualToReachedErrorMetres": 2.79396772e-08
       },
       {
         "frame": 191,
@@ -1510,20 +1511,20 @@
         ],
         "leftActual": [
           0.8656601,
-          0.00718090637,
-          -0.705867469
+          0.0071810754,
+          -0.705867
         ],
         "rightActual": [
           1.497285,
-          0.1384778,
-          -0.9096097
+          0.138477743,
+          -0.9096098
         ],
         "leftUnreachableResidualMetres": 2.142042e-08,
         "rightUnreachableResidualMetres": 0.0,
-        "leftActualToSourceErrorMetres": 1.079184e-06,
-        "rightActualToSourceErrorMetres": 8.10710844e-07,
-        "leftActualToReachedErrorMetres": 1.06061259e-06,
-        "rightActualToReachedErrorMetres": 8.10710844e-07
+        "leftActualToSourceErrorMetres": 9.35947241e-07,
+        "rightActualToSourceErrorMetres": 9.38654864e-07,
+        "leftActualToReachedErrorMetres": 9.184224e-07,
+        "rightActualToReachedErrorMetres": 9.38654864e-07
       },
       {
         "frame": 192,
@@ -1550,8 +1551,8 @@
         ],
         "leftActual": [
           0.464659333,
-          0.09356585,
-          0.0920092762
+          0.09356574,
+          0.09200939
         ],
         "rightActual": [
           0.234945536,
@@ -1560,9 +1561,9 @@
         ],
         "leftUnreachableResidualMetres": 7.450581e-09,
         "rightUnreachableResidualMetres": 0.0268594157,
-        "leftActualToSourceErrorMetres": 8.513898e-07,
+        "leftActualToSourceErrorMetres": 9.37944947e-07,
         "rightActualToSourceErrorMetres": 0.0268593226,
-        "leftActualToReachedErrorMetres": 8.55260453e-07,
+        "leftActualToReachedErrorMetres": 9.42343831e-07,
         "rightActualToReachedErrorMetres": 9.835048e-08
       },
       {
@@ -1590,20 +1591,20 @@
         ],
         "leftActual": [
           0.8654171,
-          0.0103166346,
-          -0.7230229
+          0.0103167482,
+          -0.7230225
         ],
         "rightActual": [
           1.50110662,
-          0.136454865,
+          0.136454761,
           -1.08185482
         ],
         "leftUnreachableResidualMetres": 1.58324838e-08,
         "rightUnreachableResidualMetres": 0.0,
-        "leftActualToSourceErrorMetres": 1.09989514e-06,
-        "rightActualToSourceErrorMetres": 7.410238e-07,
-        "leftActualToReachedErrorMetres": 1.08631821e-06,
-        "rightActualToReachedErrorMetres": 7.410238e-07
+        "leftActualToSourceErrorMetres": 9.605224e-07,
+        "rightActualToSourceErrorMetres": 7.748604e-07,
+        "leftActualToReachedErrorMetres": 9.46846853e-07,
+        "rightActualToReachedErrorMetres": 7.748604e-07
       },
       {
         "frame": 193,
@@ -1630,20 +1631,20 @@
         ],
         "leftActual": [
           0.649399161,
-          0.0582636744,
+          0.0582638979,
           0.066996336
         ],
         "rightActual": [
-          0.237864614,
-          0.03711846,
-          -0.3668135
+          0.237864733,
+          0.03711863,
+          -0.366813451
         ],
         "leftUnreachableResidualMetres": 2.23517418e-08,
         "rightUnreachableResidualMetres": 0.04071587,
-        "leftActualToSourceErrorMetres": 3.97682385e-07,
-        "rightActualToSourceErrorMetres": 0.0407154523,
-        "leftActualToReachedErrorMetres": 3.80782268e-07,
-        "rightActualToReachedErrorMetres": 4.50760126e-07
+        "leftActualToSourceErrorMetres": 2.67495551e-07,
+        "rightActualToSourceErrorMetres": 0.04071562,
+        "leftActualToReachedErrorMetres": 2.61514316e-07,
+        "rightActualToReachedErrorMetres": 3.12924385e-07
       },
       {
         "frame": 193,
@@ -1669,21 +1670,21 @@
           -1.22514713
         ],
         "leftActual": [
-          0.8631948,
-          0.0103173116,
-          -0.735715568
+          0.8631953,
+          0.0103168609,
+          -0.7357152
         ],
         "rightActual": [
           1.47185814,
-          0.09295911,
+          0.09295889,
           -1.22514772
         ],
         "leftUnreachableResidualMetres": 1.58324838e-08,
         "rightUnreachableResidualMetres": 2.23517418e-08,
-        "leftActualToSourceErrorMetres": 4.66480145e-07,
-        "rightActualToSourceErrorMetres": 6.901345e-07,
-        "leftActualToReachedErrorMetres": 4.5756002e-07,
-        "rightActualToReachedErrorMetres": 6.82247048e-07
+        "leftActualToSourceErrorMetres": 1.015912e-06,
+        "rightActualToSourceErrorMetres": 7.996802e-07,
+        "leftActualToReachedErrorMetres": 1.00476927e-06,
+        "rightActualToReachedErrorMetres": 7.86556939e-07
       },
       {
         "frame": 194,
@@ -1710,20 +1711,20 @@
         ],
         "leftActual": [
           0.765544534,
-          0.09115491,
-          0.04126669
+          0.0911548,
+          0.0412667468
         ],
         "rightActual": [
-          0.2418834,
-          0.0522302836,
-          -0.356679916
+          0.241883516,
+          0.0522303954,
+          -0.356680036
         ],
         "leftUnreachableResidualMetres": 0.054861512,
         "rightUnreachableResidualMetres": 0.06001001,
-        "leftActualToSourceErrorMetres": 0.0548613332,
-        "rightActualToSourceErrorMetres": 0.0600097179,
-        "leftActualToReachedErrorMetres": 2.02026172e-07,
-        "rightActualToReachedErrorMetres": 3.12924385e-07
+        "leftActualToSourceErrorMetres": 0.0548612364,
+        "rightActualToSourceErrorMetres": 0.0600097738,
+        "leftActualToReachedErrorMetres": 3.21671848e-07,
+        "rightActualToReachedErrorMetres": 2.62467779e-07
       },
       {
         "frame": 194,
@@ -1749,21 +1750,21 @@
           -1.31546688
         ],
         "leftActual": [
-          0.86388886,
-          0.00424751546,
-          -0.73841846
+          0.8638891,
+          0.004247346,
+          -0.7384181
         ],
         "rightActual": [
           1.43712151,
-          0.0358077027,
+          0.03580782,
           -1.31546748
         ],
         "leftUnreachableResidualMetres": 2.514571e-08,
         "rightUnreachableResidualMetres": 1.49011612e-08,
-        "leftActualToSourceErrorMetres": 9.916989e-07,
-        "rightActualToSourceErrorMetres": 7.403587e-07,
-        "leftActualToReachedErrorMetres": 1.014566e-06,
-        "rightActualToReachedErrorMetres": 7.478932e-07
+        "leftActualToSourceErrorMetres": 1.09703944e-06,
+        "rightActualToSourceErrorMetres": 6.901345e-07,
+        "leftActualToReachedErrorMetres": 1.12156022e-06,
+        "rightActualToReachedErrorMetres": 6.95742244e-07
       },
       {
         "frame": 195,
@@ -1790,20 +1791,20 @@
         ],
         "leftActual": [
           0.824308753,
-          0.07702845,
-          0.0260308851
+          0.07702817,
+          0.0260309409
         ],
         "rightActual": [
-          0.248809934,
+          0.248810053,
           0.0537007563,
-          -0.3507211
+          -0.350721031
         ],
         "leftUnreachableResidualMetres": 0.0568113662,
         "rightUnreachableResidualMetres": 0.0597285479,
-        "leftActualToSourceErrorMetres": 0.0568111576,
-        "rightActualToSourceErrorMetres": 0.059728343,
-        "leftActualToReachedErrorMetres": 2.46214626e-07,
-        "rightActualToReachedErrorMetres": 2.58337536e-07
+        "leftActualToSourceErrorMetres": 0.056810908,
+        "rightActualToSourceErrorMetres": 0.0597283728,
+        "leftActualToReachedErrorMetres": 5.34579158e-07,
+        "rightActualToReachedErrorMetres": 2.441984e-07
       },
       {
         "frame": 195,
@@ -1831,19 +1832,19 @@
         "leftActual": [
           0.8688885,
           0.00475330325,
-          -0.7355819
+          -0.7355817
         ],
         "rightActual": [
-          1.420951,
-          -0.000101394486,
+          1.42095077,
+          -0.00010150727,
           -1.34794962
         ],
         "leftUnreachableResidualMetres": 6.98491931e-09,
         "rightUnreachableResidualMetres": 3.65980668e-09,
-        "leftActualToSourceErrorMetres": 8.835223e-07,
-        "rightActualToSourceErrorMetres": 4.93134e-07,
-        "leftActualToReachedErrorMetres": 8.90443857e-07,
-        "rightActualToReachedErrorMetres": 4.949384e-07
+        "leftActualToSourceErrorMetres": 8.7747e-07,
+        "rightActualToSourceErrorMetres": 6.93514039e-07,
+        "leftActualToReachedErrorMetres": 8.84438862e-07,
+        "rightActualToReachedErrorMetres": 6.95392032e-07
       },
       {
         "frame": 196,
@@ -1870,20 +1871,20 @@
         ],
         "leftActual": [
           0.8370923,
-          0.0496483631,
-          0.02225406
+          0.0496482477,
+          0.022254115
         ],
         "rightActual": [
           0.259693384,
-          0.0579792,
+          0.0579792559,
           -0.338345259
         ],
         "leftUnreachableResidualMetres": 0.0441139564,
         "rightUnreachableResidualMetres": 0.0593985356,
-        "leftActualToSourceErrorMetres": 0.04411381,
-        "rightActualToSourceErrorMetres": 0.05939836,
-        "leftActualToReachedErrorMetres": 1.63287169e-07,
-        "rightActualToReachedErrorMetres": 2.37046748e-07
+        "leftActualToSourceErrorMetres": 0.04411371,
+        "rightActualToSourceErrorMetres": 0.0593984127,
+        "leftActualToReachedErrorMetres": 2.89238272e-07,
+        "rightActualToReachedErrorMetres": 1.90827976e-07
       },
       {
         "frame": 196,
@@ -1909,9 +1910,9 @@
           -1.344606
         ],
         "leftActual": [
-          0.8760735,
-          0.0109233661,
-          -0.7345921
+          0.8760737,
+          0.0109235924,
+          -0.734591842
         ],
         "rightActual": [
           1.42304552,
@@ -1920,9 +1921,9 @@
         ],
         "leftUnreachableResidualMetres": 2.142042e-08,
         "rightUnreachableResidualMetres": 2.23517418e-08,
-        "leftActualToSourceErrorMetres": 1.16924423e-06,
+        "leftActualToSourceErrorMetres": 1.02406568e-06,
         "rightActualToSourceErrorMetres": 6.475969e-07,
-        "leftActualToReachedErrorMetres": 1.18996968e-06,
+        "leftActualToReachedErrorMetres": 1.04302978e-06,
         "rightActualToReachedErrorMetres": 6.62925231e-07
       },
       {
@@ -1949,21 +1950,21 @@
           -0.3111078
         ],
         "leftActual": [
-          0.848937154,
-          0.0252556987,
-          0.0222801883
+          0.8489374,
+          0.0252557546,
+          0.0222801324
         ],
         "rightActual": [
-          0.2750486,
-          0.06368626,
-          -0.311107755
+          0.275048852,
+          0.06368643,
+          -0.311107665
         ],
         "leftUnreachableResidualMetres": 0.0256861281,
         "rightUnreachableResidualMetres": 0.05564576,
-        "leftActualToSourceErrorMetres": 0.0256858636,
-        "rightActualToSourceErrorMetres": 0.0556453653,
-        "leftActualToReachedErrorMetres": 2.79402968e-07,
-        "rightActualToReachedErrorMetres": 4.73155865e-07
+        "leftActualToSourceErrorMetres": 0.0256858375,
+        "rightActualToSourceErrorMetres": 0.0556455925,
+        "leftActualToReachedErrorMetres": 3.31242e-07,
+        "rightActualToReachedErrorMetres": 4.097142e-07
       },
       {
         "frame": 197,
@@ -1990,20 +1991,20 @@
         ],
         "leftActual": [
           0.881469369,
-          0.0119352248,
-          -0.731885254
+          0.0119351679,
+          -0.7318849
         ],
         "rightActual": [
-          1.42443216,
+          1.42443192,
           -0.005563726,
-          -1.34105885
+          -1.341059
         ],
         "leftUnreachableResidualMetres": 1.49011612e-08,
         "rightUnreachableResidualMetres": 2.23517418e-08,
-        "leftActualToSourceErrorMetres": 8.67298866e-07,
-        "rightActualToSourceErrorMetres": 6.246323e-07,
-        "leftActualToReachedErrorMetres": 8.5358954e-07,
-        "rightActualToReachedErrorMetres": 6.365658e-07
+        "leftActualToSourceErrorMetres": 8.9643413e-07,
+        "rightActualToSourceErrorMetres": 8.29815349e-07,
+        "leftActualToReachedErrorMetres": 8.8221816e-07,
+        "rightActualToReachedErrorMetres": 8.38834865e-07
       },
       {
         "frame": 198,
@@ -2030,20 +2031,20 @@
         ],
         "leftActual": [
           0.8566481,
-          0.016582964,
+          0.01658302,
           0.0247833766
         ],
         "rightActual": [
-          0.30119133,
+          0.301191449,
           0.0658898,
-          -0.2560302
+          -0.256030023
         ],
         "leftUnreachableResidualMetres": 0.016286701,
         "rightUnreachableResidualMetres": 0.0470095836,
-        "leftActualToSourceErrorMetres": 0.0162863433,
-        "rightActualToSourceErrorMetres": 0.0470093861,
-        "leftActualToReachedErrorMetres": 3.88311264e-07,
-        "rightActualToReachedErrorMetres": 2.53866972e-07
+        "leftActualToSourceErrorMetres": 0.0162863974,
+        "rightActualToSourceErrorMetres": 0.04700948,
+        "leftActualToReachedErrorMetres": 3.46977345e-07,
+        "rightActualToReachedErrorMetres": 3.431314e-07
       },
       {
         "frame": 198,
@@ -2069,21 +2070,21 @@
           -1.33697081
         ],
         "leftActual": [
-          0.883756757,
-          0.008900439,
-          -0.7284241
+          0.883757,
+          0.008900665,
+          -0.728423953
         ],
         "rightActual": [
           1.422099,
           -0.008092611,
-          -1.3369714
+          -1.33697116
         ],
         "leftUnreachableResidualMetres": 2.42143869e-08,
         "rightUnreachableResidualMetres": 4.656613e-09,
-        "leftActualToSourceErrorMetres": 1.03179786e-06,
-        "rightActualToSourceErrorMetres": 7.12933343e-07,
-        "leftActualToReachedErrorMetres": 1.00829675e-06,
-        "rightActualToReachedErrorMetres": 7.10389145e-07
+        "leftActualToSourceErrorMetres": 9.133592e-07,
+        "rightActualToSourceErrorMetres": 5.300003e-07,
+        "leftActualToReachedErrorMetres": 8.928581e-07,
+        "rightActualToReachedErrorMetres": 5.26572933e-07
       },
       {
         "frame": 199,
@@ -2109,21 +2110,21 @@
           -0.164115757
         ],
         "leftActual": [
-          0.858458638,
-          0.0218442474,
-          0.0287178177
+          0.8584589,
+          0.0218441915,
+          0.02871793
         ],
         "rightActual": [
-          0.34405756,
-          0.0570737273,
-          -0.164115742
+          0.3440578,
+          0.0570740663,
+          -0.164115474
         ],
         "leftUnreachableResidualMetres": 0.01998384,
         "rightUnreachableResidualMetres": 0.0221802127,
-        "leftActualToSourceErrorMetres": 0.0199835934,
-        "rightActualToSourceErrorMetres": 0.0221798122,
-        "leftActualToReachedErrorMetres": 2.5944982e-07,
-        "rightActualToReachedErrorMetres": 4.773026e-07
+        "leftActualToSourceErrorMetres": 0.0199835114,
+        "rightActualToSourceErrorMetres": 0.02218026,
+        "leftActualToReachedErrorMetres": 4.152738e-07,
+        "rightActualToReachedErrorMetres": 4.72407351e-07
       },
       {
         "frame": 199,
@@ -2150,20 +2151,20 @@
         ],
         "leftActual": [
           0.883299232,
-          0.00353910727,
-          -0.7251534
+          0.00353938923,
+          -0.725153148
         ],
         "rightActual": [
           1.419819,
-          -0.005361501,
-          -1.33279812
+          -0.00536127575,
+          -1.332798
         ],
         "leftUnreachableResidualMetres": 9.080395e-09,
         "rightUnreachableResidualMetres": 1.49011612e-08,
-        "leftActualToSourceErrorMetres": 1.267244e-06,
-        "rightActualToSourceErrorMetres": 8.645965e-07,
-        "leftActualToReachedErrorMetres": 1.25836823e-06,
-        "rightActualToReachedErrorMetres": 8.71694056e-07
+        "leftActualToSourceErrorMetres": 9.933664e-07,
+        "rightActualToSourceErrorMetres": 6.981342e-07,
+        "leftActualToReachedErrorMetres": 9.84622e-07,
+        "rightActualToReachedErrorMetres": 7.02138152e-07
       },
       {
         "frame": 200,
@@ -2190,20 +2191,20 @@
         ],
         "leftActual": [
           0.8590461,
-          0.0397839732,
-          0.0347015969
+          0.0397839174,
+          0.0347014256
         ],
         "rightActual": [
-          0.410350919,
-          0.06301774,
-          -0.0236481261
+          0.4103508,
+          0.06301768,
+          -0.0236481819
         ],
         "leftUnreachableResidualMetres": 0.0307612345,
         "rightUnreachableResidualMetres": 1.50171253e-08,
-        "leftActualToSourceErrorMetres": 0.0307608675,
-        "rightActualToSourceErrorMetres": 6.103226e-07,
-        "leftActualToReachedErrorMetres": 4.145965e-07,
-        "rightActualToReachedErrorMetres": 5.99068471e-07
+        "leftActualToSourceErrorMetres": 0.0307607763,
+        "rightActualToSourceErrorMetres": 5.867066e-07,
+        "leftActualToReachedErrorMetres": 4.882973e-07,
+        "rightActualToReachedErrorMetres": 5.7362513e-07
       },
       {
         "frame": 200,
@@ -2229,21 +2230,21 @@
           -1.32216215
         ],
         "leftActual": [
-          0.8830856,
-          0.000201209972,
-          -0.724541843
+          0.883085847,
+          0.00020149193,
+          -0.7245417
         ],
         "rightActual": [
-          1.42075241,
-          0.016993558,
-          -1.32216263
+          1.42075217,
+          0.01699367,
+          -1.32216251
         ],
         "leftUnreachableResidualMetres": 7.31961336e-09,
         "rightUnreachableResidualMetres": 1.86264515e-08,
-        "leftActualToSourceErrorMetres": 1.19478864e-06,
-        "rightActualToSourceErrorMetres": 5.42874e-07,
-        "leftActualToReachedErrorMetres": 1.18808077e-06,
-        "rightActualToReachedErrorMetres": 5.396691e-07
+        "leftActualToSourceErrorMetres": 1.0898035e-06,
+        "rightActualToSourceErrorMetres": 5.961192e-07,
+        "leftActualToReachedErrorMetres": 1.08435017e-06,
+        "rightActualToReachedErrorMetres": 5.96700943e-07
       },
       {
         "frame": 201,
@@ -2270,20 +2271,20 @@
         ],
         "leftActual": [
           0.862598538,
-          0.0451297,
+          0.0451298133,
           0.0435838737
         ],
         "rightActual": [
           0.479689956,
-          0.104894914,
-          0.151823834
+          0.104894966,
+          0.151823729
         ],
         "leftUnreachableResidualMetres": 0.0317456424,
         "rightUnreachableResidualMetres": 2.23517418e-08,
-        "leftActualToSourceErrorMetres": 0.031745445,
-        "rightActualToSourceErrorMetres": 7.987078e-07,
-        "leftActualToReachedErrorMetres": 1.980019e-07,
-        "rightActualToReachedErrorMetres": 8.1225e-07
+        "leftActualToSourceErrorMetres": 0.031745553,
+        "rightActualToSourceErrorMetres": 6.84197e-07,
+        "leftActualToReachedErrorMetres": 9.163003e-08,
+        "rightActualToReachedErrorMetres": 6.98290762e-07
       },
       {
         "frame": 201,
@@ -2309,21 +2310,21 @@
           -1.27138376
         ],
         "leftActual": [
-          0.8834349,
-          -0.00404732,
-          -0.72893846
+          0.88343513,
+          -0.004047095,
+          -0.728938341
         ],
         "rightActual": [
-          1.43286765,
-          0.0610959865,
+          1.43286741,
+          0.0610961,
           -1.27138448
         ],
         "leftUnreachableResidualMetres": 2.7474016e-08,
         "rightUnreachableResidualMetres": 7.450581e-09,
-        "leftActualToSourceErrorMetres": 1.32247158e-06,
-        "rightActualToSourceErrorMetres": 7.6520945e-07,
-        "leftActualToReachedErrorMetres": 1.3476598e-06,
-        "rightActualToReachedErrorMetres": 7.625934e-07
+        "leftActualToSourceErrorMetres": 1.22301992e-06,
+        "rightActualToSourceErrorMetres": 7.707751e-07,
+        "leftActualToReachedErrorMetres": 1.2452507e-06,
+        "rightActualToReachedErrorMetres": 7.692612e-07
       },
       {
         "frame": 202,
@@ -2350,20 +2351,20 @@
         ],
         "leftActual": [
           0.8635162,
-          0.0536219925,
+          0.05362177,
           0.0601695068
         ],
         "rightActual": [
           0.5152246,
-          0.120169044,
-          0.318870932
+          0.120168932,
+          0.318870842
         ],
         "leftUnreachableResidualMetres": 0.0423307531,
         "rightUnreachableResidualMetres": 7.450581e-09,
-        "leftActualToSourceErrorMetres": 0.0423308052,
-        "rightActualToSourceErrorMetres": 8.503133e-07,
-        "leftActualToReachedErrorMetres": 5.58793545e-08,
-        "rightActualToReachedErrorMetres": 8.53928839e-07
+        "leftActualToSourceErrorMetres": 0.0423305929,
+        "rightActualToSourceErrorMetres": 8.37784569e-07,
+        "leftActualToReachedErrorMetres": 1.81929991e-07,
+        "rightActualToReachedErrorMetres": 8.42442944e-07
       },
       {
         "frame": 202,
@@ -2389,21 +2390,21 @@
           -1.17674458
         ],
         "leftActual": [
-          0.8822938,
-          -0.00768838637,
-          -0.7332373
+          0.882294059,
+          -0.00768844271,
+          -0.7332372
         ],
         "rightActual": [
           1.42793691,
           0.106614776,
-          -1.17674565
+          -1.17674553
         ],
         "leftUnreachableResidualMetres": 1.95577741e-08,
         "rightUnreachableResidualMetres": 1.49011612e-08,
-        "leftActualToSourceErrorMetres": 9.141513e-07,
-        "rightActualToSourceErrorMetres": 1.09442408e-06,
-        "leftActualToReachedErrorMetres": 8.975727e-07,
-        "rightActualToReachedErrorMetres": 1.09746316e-06
+        "leftActualToSourceErrorMetres": 1.00585612e-06,
+        "rightActualToSourceErrorMetres": 9.778444e-07,
+        "leftActualToReachedErrorMetres": 9.897003e-07,
+        "rightActualToReachedErrorMetres": 9.812446e-07
       },
       {
         "frame": 203,
@@ -2430,20 +2431,20 @@
         ],
         "leftActual": [
           0.860288,
-          0.06917084,
-          0.0788992941
+          0.06917112,
+          0.0788994059
         ],
         "rightActual": [
           0.5261637,
           0.08011273,
-          0.4457027
+          0.445702553
         ],
         "leftUnreachableResidualMetres": 0.0604246221,
         "rightUnreachableResidualMetres": 2.23517418e-08,
-        "leftActualToSourceErrorMetres": 0.0604244,
-        "rightActualToSourceErrorMetres": 5.599348e-07,
-        "leftActualToReachedErrorMetres": 2.99602277e-07,
-        "rightActualToReachedErrorMetres": 5.698111e-07
+        "leftActualToSourceErrorMetres": 0.0604246967,
+        "rightActualToSourceErrorMetres": 4.298152e-07,
+        "leftActualToReachedErrorMetres": 2.68427783e-07,
+        "rightActualToReachedErrorMetres": 4.4260463e-07
       },
       {
         "frame": 203,
@@ -2470,20 +2471,20 @@
         ],
         "leftActual": [
           0.8786682,
-          -0.00586813549,
-          -0.735024
+          -0.005867797,
+          -0.735023856
         ],
         "rightActual": [
           1.38716328,
-          0.136859208,
-          -1.03948069
+          0.136859432,
+          -1.03948081
         ],
         "leftUnreachableResidualMetres": 2.60770321e-08,
         "rightUnreachableResidualMetres": 0.0,
-        "leftActualToSourceErrorMetres": 1.40869133e-06,
-        "rightActualToSourceErrorMetres": 7.822755e-07,
-        "leftActualToReachedErrorMetres": 1.38510757e-06,
-        "rightActualToReachedErrorMetres": 7.822755e-07
+        "leftActualToSourceErrorMetres": 1.07877918e-06,
+        "rightActualToSourceErrorMetres": 7.8638044e-07,
+        "leftActualToReachedErrorMetres": 1.05618756e-06,
+        "rightActualToReachedErrorMetres": 7.8638044e-07
       },
       {
         "frame": 204,
@@ -2510,20 +2511,20 @@
         ],
         "leftActual": [
           0.8486079,
-          0.07031847,
+          0.0703183562,
           0.114466205
         ],
         "rightActual": [
           0.5294591,
-          0.0247823112,
-          0.5115545
+          0.0247822,
+          0.5115546
         ],
         "leftUnreachableResidualMetres": 0.0542559028,
         "rightUnreachableResidualMetres": 1.86264515e-09,
-        "leftActualToSourceErrorMetres": 0.0542556643,
-        "rightActualToSourceErrorMetres": 1.25019426e-07,
-        "leftActualToReachedErrorMetres": 2.42687719e-07,
-        "rightActualToReachedErrorMetres": 1.233853e-07
+        "leftActualToSourceErrorMetres": 0.05425556,
+        "rightActualToSourceErrorMetres": 2.84789849e-07,
+        "leftActualToReachedErrorMetres": 3.50731682e-07,
+        "rightActualToReachedErrorMetres": 2.83342558e-07
       },
       {
         "frame": 204,
@@ -2549,24 +2550,2230 @@
           -0.8839995
         ],
         "leftActual": [
-          0.874147058,
+          0.8741473,
           -0.0009111405,
-          -0.7309985
+          -0.7309983
         ],
         "rightActual": [
-          1.30587828,
-          0.144344181,
-          -0.8840004
+          1.305878,
+          0.144343957,
+          -0.8840003
         ],
         "leftUnreachableResidualMetres": 2.66591087e-08,
         "rightUnreachableResidualMetres": 1.49011612e-08,
-        "leftActualToSourceErrorMetres": 9.04120839e-07,
-        "rightActualToSourceErrorMetres": 1.21652261e-06,
-        "leftActualToReachedErrorMetres": 8.816531e-07,
-        "rightActualToReachedErrorMetres": 1.22624874e-06
+        "leftActualToSourceErrorMetres": 9.197044e-07,
+        "rightActualToSourceErrorMetres": 1.27559508e-06,
+        "leftActualToReachedErrorMetres": 8.97626762e-07,
+        "rightActualToReachedErrorMetres": 1.28746376e-06
       }
     ],
-    "notes": "Frames are consecutive original samples. Left uses unmodified MotionPlayback joint positions. Right optionally retargets legs with the actual rig's per-side lengths while retaining the common pair scale and pelvis trajectory. Unreachable ankles are explicitly reported, not preserved. Toe vectors and foot roll are inferred; there are no verified foot-contact labels. The source floor is fitted to ankle samples, not measured shoe soles. Panel offsets are display-only. No physics or production clip assignment."
+    "wristFrames": [
+      {
+        "frame": 176,
+        "role": "executor",
+        "leftTarget": [
+          0.6354481,
+          1.29414821,
+          0.221356347
+        ],
+        "rightTarget": [
+          0.39646256,
+          1.32388711,
+          -0.202823028
+        ],
+        "leftReached": [
+          0.6354481,
+          1.29414821,
+          0.221356347
+        ],
+        "rightReached": [
+          0.39646256,
+          1.32388711,
+          -0.202823028
+        ],
+        "leftActual": [
+          0.635448337,
+          1.29414773,
+          0.221356228
+        ],
+        "rightActual": [
+          0.39646244,
+          1.323887,
+          -0.202822909
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 5.462856e-07,
+        "rightActualToSourceErrorMetres": 2.06476543e-07
+      },
+      {
+        "frame": 176,
+        "role": "opponent",
+        "leftTarget": [
+          0.183878064,
+          1.4115864,
+          -0.146998078
+        ],
+        "rightTarget": [
+          0.7942258,
+          0.783428,
+          0.308095336
+        ],
+        "leftReached": [
+          0.193229437,
+          1.40860069,
+          -0.144967228
+        ],
+        "rightReached": [
+          0.7942258,
+          0.783428,
+          0.308095336
+        ],
+        "leftActual": [
+          0.193229079,
+          1.40860069,
+          -0.144967154
+        ],
+        "rightActual": [
+          0.7942256,
+          0.783427835,
+          0.308095425
+        ],
+        "leftUnreachableResidualMetres": 0.0100243213,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.0100240028,
+        "rightActualToSourceErrorMetres": 3.11145385e-07
+      },
+      {
+        "frame": 177,
+        "role": "executor",
+        "leftTarget": [
+          0.641950965,
+          1.27310836,
+          0.247361526
+        ],
+        "rightTarget": [
+          0.413503528,
+          1.300622,
+          -0.209917262
+        ],
+        "leftReached": [
+          0.641950965,
+          1.27310836,
+          0.247361526
+        ],
+        "rightReached": [
+          0.413503528,
+          1.300622,
+          -0.209917262
+        ],
+        "leftActual": [
+          0.641950965,
+          1.27310824,
+          0.247361422
+        ],
+        "rightActual": [
+          0.413503647,
+          1.30062211,
+          -0.2099171
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 1.58401519e-07,
+        "rightActualToSourceErrorMetres": 2.35136355e-07
+      },
+      {
+        "frame": 177,
+        "role": "opponent",
+        "leftTarget": [
+          0.199563622,
+          1.40976572,
+          -0.168641016
+        ],
+        "rightTarget": [
+          0.790291667,
+          0.7790784,
+          0.319153935
+        ],
+        "leftReached": [
+          0.2066027,
+          1.40740514,
+          -0.167007685
+        ],
+        "rightReached": [
+          0.790291667,
+          0.7790784,
+          0.319153935
+        ],
+        "leftActual": [
+          0.206602335,
+          1.407405,
+          -0.167007536
+        ],
+        "rightActual": [
+          0.7902914,
+          0.7790783,
+          0.319153965
+        ],
+        "leftUnreachableResidualMetres": 0.00760188326,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.007601621,
+        "rightActualToSourceErrorMetres": 2.682209e-07
+      },
+      {
+        "frame": 178,
+        "role": "executor",
+        "leftTarget": [
+          0.667483449,
+          1.26562309,
+          0.218953684
+        ],
+        "rightTarget": [
+          0.427002549,
+          1.288686,
+          -0.230668038
+        ],
+        "leftReached": [
+          0.667483449,
+          1.26562309,
+          0.218953684
+        ],
+        "rightReached": [
+          0.427002549,
+          1.288686,
+          -0.230668038
+        ],
+        "leftActual": [
+          0.6674839,
+          1.26562321,
+          0.218953624
+        ],
+        "rightActual": [
+          0.427002668,
+          1.288686,
+          -0.230667844
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 4.95113341e-07,
+        "rightActualToSourceErrorMetres": 2.27456354e-07
+      },
+      {
+        "frame": 178,
+        "role": "opponent",
+        "leftTarget": [
+          0.215638518,
+          1.40308964,
+          -0.187185436
+        ],
+        "rightTarget": [
+          0.7910389,
+          0.7742231,
+          0.326444328
+        ],
+        "leftReached": [
+          0.215945244,
+          1.402983,
+          -0.187114075
+        ],
+        "rightReached": [
+          0.7910389,
+          0.7742231,
+          0.326444328
+        ],
+        "leftActual": [
+          0.215945125,
+          1.402983,
+          -0.1871141
+        ],
+        "rightActual": [
+          0.791038632,
+          0.774223149,
+          0.326444328
+        ],
+        "leftUnreachableResidualMetres": 0.000332500029,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.000332383672,
+        "rightActualToSourceErrorMetres": 2.4575624e-07
+      },
+      {
+        "frame": 179,
+        "role": "executor",
+        "leftTarget": [
+          0.709451556,
+          1.25490093,
+          0.179056033
+        ],
+        "rightTarget": [
+          0.432186842,
+          1.28190875,
+          -0.246209785
+        ],
+        "leftReached": [
+          0.709451556,
+          1.25490093,
+          0.179056033
+        ],
+        "rightReached": [
+          0.432186842,
+          1.28190875,
+          -0.246209785
+        ],
+        "leftActual": [
+          0.709451556,
+          1.25490081,
+          0.179056019
+        ],
+        "rightActual": [
+          0.4321872,
+          1.28190863,
+          -0.2462097
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 1.20137e-07,
+        "rightActualToSourceErrorMetres": 3.874302e-07
+      },
+      {
+        "frame": 179,
+        "role": "opponent",
+        "leftTarget": [
+          0.231557131,
+          1.39115369,
+          -0.201215848
+        ],
+        "rightTarget": [
+          0.8021537,
+          0.7694689,
+          0.322465658
+        ],
+        "leftReached": [
+          0.231557131,
+          1.39115369,
+          -0.201215848
+        ],
+        "rightReached": [
+          0.8021537,
+          0.7694689,
+          0.322465658
+        ],
+        "leftActual": [
+          0.231556892,
+          1.39115369,
+          -0.201215833
+        ],
+        "rightActual": [
+          0.802153468,
+          0.769468665,
+          0.3224657
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 2.38883786e-07,
+        "rightActualToSourceErrorMetres": 3.38489315e-07
+      },
+      {
+        "frame": 180,
+        "role": "executor",
+        "leftTarget": [
+          0.7339307,
+          1.2378062,
+          0.148204446
+        ],
+        "rightTarget": [
+          0.437015772,
+          1.26865768,
+          -0.263080746
+        ],
+        "leftReached": [
+          0.7339307,
+          1.2378062,
+          0.148204446
+        ],
+        "rightReached": [
+          0.437015772,
+          1.26865768,
+          -0.263080746
+        ],
+        "leftActual": [
+          0.7339307,
+          1.23780584,
+          0.148204356
+        ],
+        "rightActual": [
+          0.4370159,
+          1.26865768,
+          -0.263080567
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 3.68634375e-07,
+        "rightActualToSourceErrorMetres": 2.149076e-07
+      },
+      {
+        "frame": 180,
+        "role": "opponent",
+        "leftTarget": [
+          0.245637178,
+          1.38063371,
+          -0.209797382
+        ],
+        "rightTarget": [
+          0.826422334,
+          0.7620848,
+          0.305949777
+        ],
+        "leftReached": [
+          0.245637178,
+          1.38063371,
+          -0.209797382
+        ],
+        "rightReached": [
+          0.826422334,
+          0.7620848,
+          0.305949777
+        ],
+        "leftActual": [
+          0.245637059,
+          1.38063383,
+          -0.209797248
+        ],
+        "rightActual": [
+          0.826422334,
+          0.762084544,
+          0.305949777
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 2.15423583e-07,
+        "rightActualToSourceErrorMetres": 2.38418579e-07
+      },
+      {
+        "frame": 181,
+        "role": "executor",
+        "leftTarget": [
+          0.7581397,
+          1.222431,
+          0.105108358
+        ],
+        "rightTarget": [
+          0.4372424,
+          1.25216985,
+          -0.272055477
+        ],
+        "leftReached": [
+          0.7581397,
+          1.222431,
+          0.105108358
+        ],
+        "rightReached": [
+          0.4372424,
+          1.25216985,
+          -0.272055477
+        ],
+        "leftActual": [
+          0.7581395,
+          1.222431,
+          0.105108373
+        ],
+        "rightActual": [
+          0.437242627,
+          1.25216973,
+          -0.2720553
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 2.38883786e-07,
+        "rightActualToSourceErrorMetres": 3.20980831e-07
+      },
+      {
+        "frame": 181,
+        "role": "opponent",
+        "leftTarget": [
+          0.2523147,
+          1.37203586,
+          -0.2018055
+        ],
+        "rightTarget": [
+          0.86182487,
+          0.7527787,
+          0.2729104
+        ],
+        "leftReached": [
+          0.2523147,
+          1.37203586,
+          -0.2018055
+        ],
+        "rightReached": [
+          0.86182487,
+          0.7527787,
+          0.2729104
+        ],
+        "leftActual": [
+          0.252314568,
+          1.37203574,
+          -0.201805368
+        ],
+        "rightActual": [
+          0.86182487,
+          0.7527786,
+          0.272910416
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 2.15423583e-07,
+        "rightActualToSourceErrorMetres": 1.2287812e-07
+      },
+      {
+        "frame": 182,
+        "role": "executor",
+        "leftTarget": [
+          0.7836331,
+          1.20230138,
+          0.04939111
+        ],
+        "rightTarget": [
+          0.435964465,
+          1.23982918,
+          -0.2843846
+        ],
+        "leftReached": [
+          0.782992244,
+          1.20240963,
+          0.0494503155
+        ],
+        "rightReached": [
+          0.435964465,
+          1.23982918,
+          -0.2843846
+        ],
+        "leftActual": [
+          0.782992244,
+          1.20240963,
+          0.0494502373
+        ],
+        "rightActual": [
+          0.4359647,
+          1.23982906,
+          -0.284384429
+        ],
+        "leftUnreachableResidualMetres": 0.0006526369,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.0006526298,
+        "rightActualToSourceErrorMetres": 3.20980831e-07
+      },
+      {
+        "frame": 182,
+        "role": "opponent",
+        "leftTarget": [
+          0.259278417,
+          1.36495519,
+          -0.196977079
+        ],
+        "rightTarget": [
+          0.9063624,
+          0.741753042,
+          0.21863158
+        ],
+        "leftReached": [
+          0.259278417,
+          1.36495519,
+          -0.196977079
+        ],
+        "rightReached": [
+          0.9063624,
+          0.741753042,
+          0.21863158
+        ],
+        "leftActual": [
+          0.259278655,
+          1.36495507,
+          -0.196976885
+        ],
+        "rightActual": [
+          0.9063622,
+          0.7417531,
+          0.218631774
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 3.295145e-07,
+        "rightActualToSourceErrorMetres": 3.12924385e-07
+      },
+      {
+        "frame": 183,
+        "role": "executor",
+        "leftTarget": [
+          0.8111018,
+          1.18368936,
+          -0.0245131962
+        ],
+        "rightTarget": [
+          0.427144885,
+          1.2331531,
+          -0.2900798
+        ],
+        "leftReached": [
+          0.8012303,
+          1.18540752,
+          -0.0222342461
+        ],
+        "rightReached": [
+          0.427144885,
+          1.2331531,
+          -0.2900798
+        ],
+        "leftActual": [
+          0.8012301,
+          1.18540728,
+          -0.02223432
+        ],
+        "rightActual": [
+          0.427145123,
+          1.23315287,
+          -0.2900797
+        ],
+        "leftUnreachableResidualMetres": 0.0102757905,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.0102759637,
+        "rightActualToSourceErrorMetres": 3.48827228e-07
+      },
+      {
+        "frame": 183,
+        "role": "opponent",
+        "leftTarget": [
+          0.269039273,
+          1.35038912,
+          -0.203688458
+        ],
+        "rightTarget": [
+          0.957700849,
+          0.741146147,
+          0.136339411
+        ],
+        "leftReached": [
+          0.269039273,
+          1.35038912,
+          -0.203688458
+        ],
+        "rightReached": [
+          0.957700849,
+          0.741146147,
+          0.136339411
+        ],
+        "leftActual": [
+          0.269039273,
+          1.350389,
+          -0.203688323
+        ],
+        "rightActual": [
+          0.9577006,
+          0.7411463,
+          0.136339486
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 1.79433741e-07,
+        "rightActualToSourceErrorMetres": 3.071953e-07
+      },
+      {
+        "frame": 184,
+        "role": "executor",
+        "leftTarget": [
+          0.833959,
+          1.1745857,
+          -0.109971
+        ],
+        "rightTarget": [
+          0.4195832,
+          1.2306242,
+          -0.3133927
+        ],
+        "leftReached": [
+          0.8159622,
+          1.17720008,
+          -0.103057936
+        ],
+        "rightReached": [
+          0.4195832,
+          1.2306242,
+          -0.3133927
+        ],
+        "leftActual": [
+          0.8159622,
+          1.17719984,
+          -0.103058025
+        ],
+        "rightActual": [
+          0.4195832,
+          1.23062432,
+          -0.31339252
+        ],
+        "leftUnreachableResidualMetres": 0.0194553286,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.0194552653,
+        "rightActualToSourceErrorMetres": 2.149076e-07
+      },
+      {
+        "frame": 184,
+        "role": "opponent",
+        "leftTarget": [
+          0.28471756,
+          1.33390117,
+          -0.222103968
+        ],
+        "rightTarget": [
+          1.00700462,
+          0.7455969,
+          0.035746634
+        ],
+        "leftReached": [
+          0.287109852,
+          1.33272147,
+          -0.223115966
+        ],
+        "rightReached": [
+          1.00700462,
+          0.7455969,
+          0.035746634
+        ],
+        "leftActual": [
+          0.287109733,
+          1.33272147,
+          -0.2231158
+        ],
+        "rightActual": [
+          1.00700438,
+          0.745596766,
+          0.035746742
+        ],
+        "leftUnreachableResidualMetres": 0.00285287225,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.00285271415,
+        "rightActualToSourceErrorMetres": 2.876204e-07
+      },
+      {
+        "frame": 185,
+        "role": "executor",
+        "leftTarget": [
+          0.8577384,
+          1.18530786,
+          -0.216059387
+        ],
+        "rightTarget": [
+          0.419499755,
+          1.22526324,
+          -0.34210664
+        ],
+        "leftReached": [
+          0.8262371,
+          1.18687272,
+          -0.197991788
+        ],
+        "rightReached": [
+          0.419499755,
+          1.22526324,
+          -0.34210664
+        ],
+        "leftActual": [
+          0.8262371,
+          1.18687248,
+          -0.197991922
+        ],
+        "rightActual": [
+          0.4195,
+          1.22526336,
+          -0.342106581
+        ],
+        "leftUnreachableResidualMetres": 0.0363485664,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.0363484919,
+        "rightActualToSourceErrorMetres": 2.731428e-07
+      },
+      {
+        "frame": 185,
+        "role": "opponent",
+        "leftTarget": [
+          0.306185484,
+          1.31356943,
+          -0.240804181
+        ],
+        "rightTarget": [
+          1.047784,
+          0.7575329,
+          -0.06511615
+        ],
+        "leftReached": [
+          0.3083439,
+          1.31248128,
+          -0.2420317
+        ],
+        "rightReached": [
+          1.047784,
+          0.7575329,
+          -0.06511615
+        ],
+        "leftActual": [
+          0.308344,
+          1.31248152,
+          -0.242031559
+        ],
+        "rightActual": [
+          1.047784,
+          0.757533,
+          -0.06511601
+        ],
+        "leftUnreachableResidualMetres": 0.00271100481,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.00271094334,
+        "rightActualToSourceErrorMetres": 1.85068586e-07
+      },
+      {
+        "frame": 186,
+        "role": "executor",
+        "leftTarget": [
+          0.881182551,
+          1.20037961,
+          -0.293530017
+        ],
+        "rightTarget": [
+          0.425339222,
+          1.2029084,
+          -0.387660474
+        ],
+        "leftReached": [
+          0.841097,
+          1.19819081,
+          -0.2658784
+        ],
+        "rightReached": [
+          0.425339222,
+          1.2029084,
+          -0.387660474
+        ],
+        "leftActual": [
+          0.841097,
+          1.19819069,
+          -0.265878469
+        ],
+        "rightActual": [
+          0.425339341,
+          1.2029084,
+          -0.387660444
+        ],
+        "leftUnreachableResidualMetres": 0.0487468354,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.0487468056,
+        "rightActualToSourceErrorMetres": 1.2287812e-07
+      },
+      {
+        "frame": 186,
+        "role": "opponent",
+        "leftTarget": [
+          0.331213117,
+          1.2973851,
+          -0.259347379
+        ],
+        "rightTarget": [
+          1.07665479,
+          0.766535461,
+          -0.151834711
+        ],
+        "leftReached": [
+          0.331213117,
+          1.2973851,
+          -0.259347379
+        ],
+        "rightReached": [
+          1.07665479,
+          0.766535461,
+          -0.151834711
+        ],
+        "leftActual": [
+          0.331212878,
+          1.2973851,
+          -0.25934723
+        ],
+        "rightActual": [
+          1.07665455,
+          0.7665353,
+          -0.151834577
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 2.81154541e-07,
+        "rightActualToSourceErrorMetres": 3.26808e-07
+      },
+      {
+        "frame": 187,
+        "role": "executor",
+        "leftTarget": [
+          0.903394341,
+          1.20604408,
+          -0.360201955
+        ],
+        "rightTarget": [
+          0.437659025,
+          1.1698314,
+          -0.4291571
+        ],
+        "leftReached": [
+          0.8533398,
+          1.19935787,
+          -0.321518958
+        ],
+        "rightReached": [
+          0.437659025,
+          1.1698314,
+          -0.4291571
+        ],
+        "leftActual": [
+          0.85334,
+          1.19935763,
+          -0.321519166
+        ],
+        "rightActual": [
+          0.437659383,
+          1.1698314,
+          -0.429157019
+        ],
+        "leftUnreachableResidualMetres": 0.0636124,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.06361211,
+        "rightActualToSourceErrorMetres": 3.68634375e-07
+      },
+      {
+        "frame": 187,
+        "role": "opponent",
+        "leftTarget": [
+          0.359521151,
+          1.27887416,
+          -0.2787516
+        ],
+        "rightTarget": [
+          1.10267818,
+          0.7666366,
+          -0.224236324
+        ],
+        "leftReached": [
+          0.359521151,
+          1.27887416,
+          -0.2787516
+        ],
+        "rightReached": [
+          1.10267818,
+          0.7666366,
+          -0.224236324
+        ],
+        "leftActual": [
+          0.3595208,
+          1.27887392,
+          -0.278751582
+        ],
+        "rightActual": [
+          1.10267842,
+          0.766636431,
+          -0.224236041
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 4.30847166e-07,
+        "rightActualToSourceErrorMetres": 4.1106685e-07
+      },
+      {
+        "frame": 188,
+        "role": "executor",
+        "leftTarget": [
+          0.9249066,
+          1.20007622,
+          -0.398266315
+        ],
+        "rightTarget": [
+          0.450524569,
+          1.1383729,
+          -0.481977254
+        ],
+        "leftReached": [
+          0.879092336,
+          1.19331074,
+          -0.361961216
+        ],
+        "rightReached": [
+          0.450524569,
+          1.1383729,
+          -0.481977254
+        ],
+        "leftActual": [
+          0.879092336,
+          1.19331038,
+          -0.361961454
+        ],
+        "rightActual": [
+          0.450524926,
+          1.13837278,
+          -0.481977284
+        ],
+        "leftUnreachableResidualMetres": 0.05884539,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.0588452853,
+        "rightActualToSourceErrorMetres": 3.78149082e-07
+      },
+      {
+        "frame": 188,
+        "role": "opponent",
+        "leftTarget": [
+          0.3813808,
+          1.25753081,
+          -0.30235213
+        ],
+        "rightTarget": [
+          1.12298357,
+          0.7562179,
+          -0.2781363
+        ],
+        "leftReached": [
+          0.3813808,
+          1.25753081,
+          -0.30235213
+        ],
+        "rightReached": [
+          1.12298357,
+          0.7562179,
+          -0.2781363
+        ],
+        "leftActual": [
+          0.381380916,
+          1.25753081,
+          -0.30235216
+        ],
+        "rightActual": [
+          1.12298334,
+          0.7562176,
+          -0.278136134
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 1.2287812e-07,
+        "rightActualToSourceErrorMetres": 4.21468485e-07
+      },
+      {
+        "frame": 189,
+        "role": "executor",
+        "leftTarget": [
+          0.950578332,
+          1.18763435,
+          -0.426642478
+        ],
+        "rightTarget": [
+          0.461038232,
+          1.11166859,
+          -0.528072059
+        ],
+        "leftReached": [
+          0.910738349,
+          1.18166959,
+          -0.39532125
+        ],
+        "rightReached": [
+          0.461038232,
+          1.11166859,
+          -0.528072059
+        ],
+        "leftActual": [
+          0.9107386,
+          1.18166935,
+          -0.395321518
+        ],
+        "rightActual": [
+          0.46103847,
+          1.11166847,
+          -0.528072059
+        ],
+        "leftUnreachableResidualMetres": 0.05102766,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.0510273352,
+        "rightActualToSourceErrorMetres": 2.66560079e-07
+      },
+      {
+        "frame": 189,
+        "role": "opponent",
+        "leftTarget": [
+          0.391636729,
+          1.22637582,
+          -0.338378578
+        ],
+        "rightTarget": [
+          1.137472,
+          0.7451922,
+          -0.316933274
+        ],
+        "leftReached": [
+          0.391636729,
+          1.22637582,
+          -0.338378578
+        ],
+        "rightReached": [
+          1.137472,
+          0.7451922,
+          -0.316933274
+        ],
+        "leftActual": [
+          0.391636848,
+          1.2263757,
+          -0.338378429
+        ],
+        "rightActual": [
+          1.137472,
+          0.745192051,
+          -0.316933185
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 2.250026e-07,
+        "rightActualToSourceErrorMetres": 1.99920052e-07
+      },
+      {
+        "frame": 190,
+        "role": "executor",
+        "leftTarget": [
+          0.9869174,
+          1.1752938,
+          -0.435322046
+        ],
+        "rightTarget": [
+          0.4666177,
+          1.09184265,
+          -0.576327562
+        ],
+        "leftReached": [
+          0.9564756,
+          1.17081547,
+          -0.413432151
+        ],
+        "rightReached": [
+          0.4666177,
+          1.09184265,
+          -0.576327562
+        ],
+        "leftActual": [
+          0.9564756,
+          1.17081523,
+          -0.41343227
+        ],
+        "rightActual": [
+          0.4666177,
+          1.09184289,
+          -0.5763276
+        ],
+        "leftUnreachableResidualMetres": 0.0377614051,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.0377613641,
+        "rightActualToSourceErrorMetres": 2.4575624e-07
+      },
+      {
+        "frame": 190,
+        "role": "opponent",
+        "leftTarget": [
+          0.3952253,
+          1.2020992,
+          -0.372854054
+        ],
+        "rightTarget": [
+          1.14189041,
+          0.733559668,
+          -0.3470351
+        ],
+        "leftReached": [
+          0.3952253,
+          1.2020992,
+          -0.372854054
+        ],
+        "rightReached": [
+          1.14189041,
+          0.733559668,
+          -0.3470351
+        ],
+        "leftActual": [
+          0.395225167,
+          1.2020992,
+          -0.3728539
+        ],
+        "rightActual": [
+          1.14189041,
+          0.733559549,
+          -0.347035021
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 1.90827976e-07,
+        "rightActualToSourceErrorMetres": 1.49011612e-07
+      },
+      {
+        "frame": 191,
+        "role": "executor",
+        "leftTarget": [
+          1.01710045,
+          1.16244721,
+          -0.4456358
+        ],
+        "rightTarget": [
+          0.4796728,
+          1.07626522,
+          -0.6012165
+        ],
+        "leftReached": [
+          0.9970428,
+          1.15942645,
+          -0.43178
+        ],
+        "rightReached": [
+          0.4796728,
+          1.07626522,
+          -0.6012165
+        ],
+        "leftActual": [
+          0.997042537,
+          1.15942609,
+          -0.431779981
+        ],
+        "rightActual": [
+          0.479673028,
+          1.07626545,
+          -0.6012165
+        ],
+        "leftUnreachableResidualMetres": 0.0245645735,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.0245648287,
+        "rightActualToSourceErrorMetres": 3.37174782e-07
+      },
+      {
+        "frame": 191,
+        "role": "opponent",
+        "leftTarget": [
+          0.4106847,
+          1.18449867,
+          -0.395429581
+        ],
+        "rightTarget": [
+          1.14786541,
+          0.7149476,
+          -0.375605047
+        ],
+        "leftReached": [
+          0.4106847,
+          1.18449867,
+          -0.395429581
+        ],
+        "rightReached": [
+          1.14786541,
+          0.7149476,
+          -0.375605047
+        ],
+        "leftActual": [
+          0.4106847,
+          1.18449867,
+          -0.395429462
+        ],
+        "rightActual": [
+          1.14786518,
+          0.714947641,
+          -0.375604838
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 1.1920929e-07,
+        "rightActualToSourceErrorMetres": 3.22361416e-07
+      },
+      {
+        "frame": 192,
+        "role": "executor",
+        "leftTarget": [
+          1.04963911,
+          1.14211559,
+          -0.458857656
+        ],
+        "rightTarget": [
+          0.498313546,
+          1.068881,
+          -0.6063289
+        ],
+        "leftReached": [
+          1.03591907,
+          1.14063966,
+          -0.4494741
+        ],
+        "rightReached": [
+          0.498313546,
+          1.068881,
+          -0.6063289
+        ],
+        "leftActual": [
+          1.03591931,
+          1.14063954,
+          -0.449474335
+        ],
+        "rightActual": [
+          0.498313785,
+          1.06888115,
+          -0.606328964
+        ],
+        "leftUnreachableResidualMetres": 0.0166873876,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.01668707,
+        "rightActualToSourceErrorMetres": 2.731428e-07
+      },
+      {
+        "frame": 192,
+        "role": "opponent",
+        "leftTarget": [
+          0.4353392,
+          1.17842937,
+          -0.40180257
+        ],
+        "rightTarget": [
+          1.15115488,
+          0.6875352,
+          -0.398553848
+        ],
+        "leftReached": [
+          0.4353392,
+          1.17842937,
+          -0.4018026
+        ],
+        "rightReached": [
+          1.15115488,
+          0.6875352,
+          -0.398553848
+        ],
+        "leftActual": [
+          0.435339332,
+          1.17842937,
+          -0.40180254
+        ],
+        "rightActual": [
+          1.15115464,
+          0.6875351,
+          -0.398553759
+        ],
+        "leftUnreachableResidualMetres": 2.98023224e-08,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 1.2287812e-07,
+        "rightActualToSourceErrorMetres": 2.81154541e-07
+      },
+      {
+        "frame": 193,
+        "role": "executor",
+        "leftTarget": [
+          1.07882011,
+          1.12016535,
+          -0.46353057
+        ],
+        "rightTarget": [
+          0.5240606,
+          1.06392455,
+          -0.5928562
+        ],
+        "leftReached": [
+          1.07865441,
+          1.12016094,
+          -0.463415623
+        ],
+        "rightReached": [
+          0.5240606,
+          1.06392455,
+          -0.5928562
+        ],
+        "leftActual": [
+          1.07865465,
+          1.12016094,
+          -0.463415772
+        ],
+        "rightActual": [
+          0.524060845,
+          1.06392479,
+          -0.5928562
+        ],
+        "leftUnreachableResidualMetres": 0.000201715608,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.000201434843,
+        "rightActualToSourceErrorMetres": 3.37174782e-07
+      },
+      {
+        "frame": 193,
+        "role": "opponent",
+        "leftTarget": [
+          0.4604503,
+          1.17923868,
+          -0.3916318
+        ],
+        "rightTarget": [
+          1.14963639,
+          0.6497041,
+          -0.415268183
+        ],
+        "leftReached": [
+          0.4604503,
+          1.17923868,
+          -0.3916318
+        ],
+        "rightReached": [
+          1.14963639,
+          0.6497041,
+          -0.415268183
+        ],
+        "leftActual": [
+          0.4604503,
+          1.1792388,
+          -0.391631842
+        ],
+        "rightActual": [
+          1.14963591,
+          0.6497043,
+          -0.415268064
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 1.2287812e-07,
+        "rightActualToSourceErrorMetres": 5.23028632e-07
+      },
+      {
+        "frame": 194,
+        "role": "executor",
+        "leftTarget": [
+          1.11704147,
+          1.09487724,
+          -0.456439853
+        ],
+        "rightTarget": [
+          0.55651176,
+          1.05724847,
+          -0.5663953
+        ],
+        "leftReached": [
+          1.11704147,
+          1.09487724,
+          -0.456439853
+        ],
+        "rightReached": [
+          0.55651176,
+          1.05724847,
+          -0.5663953
+        ],
+        "leftActual": [
+          1.11704147,
+          1.09487712,
+          -0.456439942
+        ],
+        "rightActual": [
+          0.55651176,
+          1.05724859,
+          -0.5663952
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 1.49011612e-07,
+        "rightActualToSourceErrorMetres": 1.33280039e-07
+      },
+      {
+        "frame": 194,
+        "role": "opponent",
+        "leftTarget": [
+          0.481833577,
+          1.18824124,
+          -0.3677862
+        ],
+        "rightTarget": [
+          1.15082085,
+          0.603072643,
+          -0.4312884
+        ],
+        "leftReached": [
+          0.482350469,
+          1.18802142,
+          -0.368194
+        ],
+        "rightReached": [
+          1.15082085,
+          0.603072643,
+          -0.4312884
+        ],
+        "leftActual": [
+          0.482350469,
+          1.18802142,
+          -0.368194044
+        ],
+        "rightActual": [
+          1.15082061,
+          0.603072643,
+          -0.4312883
+        ],
+        "leftUnreachableResidualMetres": 0.0006941265,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.000694144,
+        "rightActualToSourceErrorMetres": 2.54631146e-07
+      },
+      {
+        "frame": 195,
+        "role": "executor",
+        "leftTarget": [
+          1.13908613,
+          1.06089,
+          -0.446019322
+        ],
+        "rightTarget": [
+          0.5856379,
+          1.05563,
+          -0.530570447
+        ],
+        "leftReached": [
+          1.13908613,
+          1.06089,
+          -0.446019322
+        ],
+        "rightReached": [
+          0.5856379,
+          1.05563,
+          -0.530570447
+        ],
+        "leftActual": [
+          1.13908589,
+          1.06089,
+          -0.4460195
+        ],
+        "rightActual": [
+          0.585638165,
+          1.05563009,
+          -0.530570447
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 2.98023224e-07,
+        "rightActualToSourceErrorMetres": 2.66560079e-07
+      },
+      {
+        "frame": 195,
+        "role": "opponent",
+        "leftTarget": [
+          0.5130671,
+          1.18864584,
+          -0.326120079
+        ],
+        "rightTarget": [
+          1.151816,
+          0.550372064,
+          -0.443609118
+        ],
+        "leftReached": [
+          0.5395757,
+          1.17482257,
+          -0.3513988
+        ],
+        "rightReached": [
+          1.151816,
+          0.550372064,
+          -0.443609118
+        ],
+        "leftActual": [
+          0.539575934,
+          1.17482257,
+          -0.351398766
+        ],
+        "rightActual": [
+          1.151816,
+          0.550372064,
+          -0.4436089
+        ],
+        "leftUnreachableResidualMetres": 0.039150998,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.03915114,
+        "rightActualToSourceErrorMetres": 2.08616257e-07
+      },
+      {
+        "frame": 196,
+        "role": "executor",
+        "leftTarget": [
+          1.15361822,
+          1.03104985,
+          -0.442828238
+        ],
+        "rightTarget": [
+          0.6115986,
+          1.05492187,
+          -0.487033039
+        ],
+        "leftReached": [
+          1.15361822,
+          1.03104985,
+          -0.442828238
+        ],
+        "rightReached": [
+          0.6115986,
+          1.05492187,
+          -0.487033039
+        ],
+        "leftActual": [
+          1.15361822,
+          1.03104985,
+          -0.4428284
+        ],
+        "rightActual": [
+          0.6115986,
+          1.054922,
+          -0.48703295
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 1.49011612e-07,
+        "rightActualToSourceErrorMetres": 1.49011612e-07
+      },
+      {
+        "frame": 196,
+        "role": "opponent",
+        "leftTarget": [
+          0.543608546,
+          1.19198394,
+          -0.290704131
+        ],
+        "rightTarget": [
+          1.14344442,
+          0.4946369,
+          -0.441348881
+        ],
+        "leftReached": [
+          0.5848414,
+          1.16543853,
+          -0.3361711
+        ],
+        "rightReached": [
+          1.14344442,
+          0.4946369,
+          -0.441348881
+        ],
+        "leftActual": [
+          0.584841132,
+          1.16543829,
+          -0.3361711
+        ],
+        "rightActual": [
+          1.14344442,
+          0.494636923,
+          -0.441348851
+        ],
+        "leftUnreachableResidualMetres": 0.06687338,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.06687333,
+        "rightActualToSourceErrorMetres": 4.21468478e-08
+      },
+      {
+        "frame": 197,
+        "role": "executor",
+        "leftTarget": [
+          1.15037811,
+          1.00940323,
+          -0.4344726
+        ],
+        "rightTarget": [
+          0.6308626,
+          1.05684388,
+          -0.459711373
+        ],
+        "leftReached": [
+          1.15037811,
+          1.00940323,
+          -0.4344726
+        ],
+        "rightReached": [
+          0.6308626,
+          1.05684388,
+          -0.459711373
+        ],
+        "leftActual": [
+          1.15037811,
+          1.009403,
+          -0.4344727
+        ],
+        "rightActual": [
+          0.630862355,
+          1.05684376,
+          -0.459711373
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 2.66560079e-07,
+        "rightActualToSourceErrorMetres": 2.66560079e-07
+      },
+      {
+        "frame": 197,
+        "role": "opponent",
+        "leftTarget": [
+          0.575915933,
+          1.21009028,
+          -0.258185059
+        ],
+        "rightTarget": [
+          1.11557853,
+          0.445982426,
+          -0.408853322
+        ],
+        "leftReached": [
+          0.624968648,
+          1.16724169,
+          -0.323689371
+        ],
+        "rightReached": [
+          1.11557853,
+          0.445982426,
+          -0.408853322
+        ],
+        "leftActual": [
+          0.6249689,
+          1.16724169,
+          -0.3236893
+        ],
+        "rightActual": [
+          1.11557829,
+          0.4459824,
+          -0.408853382
+        ],
+        "leftUnreachableResidualMetres": 0.09237416,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.09237424,
+        "rightActualToSourceErrorMetres": 2.4755667e-07
+      },
+      {
+        "frame": 198,
+        "role": "executor",
+        "leftTarget": [
+          1.13809025,
+          0.9876554,
+          -0.413883924
+        ],
+        "rightTarget": [
+          0.6381153,
+          1.06200266,
+          -0.434414655
+        ],
+        "leftReached": [
+          1.13809025,
+          0.9876554,
+          -0.413883924
+        ],
+        "rightReached": [
+          0.6381153,
+          1.06200266,
+          -0.434414655
+        ],
+        "leftActual": [
+          1.13809049,
+          0.987655163,
+          -0.4138841
+        ],
+        "rightActual": [
+          0.6381153,
+          1.06200242,
+          -0.4344145
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 3.81655951e-07,
+        "rightActualToSourceErrorMetres": 2.81154541e-07
+      },
+      {
+        "frame": 198,
+        "role": "opponent",
+        "leftTarget": [
+          0.6026839,
+          1.23891878,
+          -0.232222155
+        ],
+        "rightTarget": [
+          1.075538,
+          0.4193793,
+          -0.3300576
+        ],
+        "leftReached": [
+          0.6493486,
+          1.184319,
+          -0.307223737
+        ],
+        "rightReached": [
+          1.075538,
+          0.4193793,
+          -0.3300576
+        ],
+        "leftActual": [
+          0.6493486,
+          1.1843189,
+          -0.3072237
+        ],
+        "rightActual": [
+          1.075538,
+          0.419379145,
+          -0.330057621
+        ],
+        "leftUnreachableResidualMetres": 0.103845879,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 0.103845924,
+        "rightActualToSourceErrorMetres": 1.51962624e-07
+      },
+      {
+        "frame": 199,
+        "role": "executor",
+        "leftTarget": [
+          1.08997285,
+          0.954477251,
+          -0.378847748
+        ],
+        "rightTarget": [
+          0.6286272,
+          1.07525361,
+          -0.412595779
+        ],
+        "leftReached": [
+          1.08997285,
+          0.954477251,
+          -0.378847748
+        ],
+        "rightReached": [
+          0.6286272,
+          1.07525361,
+          -0.412595779
+        ],
+        "leftActual": [
+          1.08997285,
+          0.954476953,
+          -0.378847867
+        ],
+        "rightActual": [
+          0.628627658,
+          1.07525373,
+          -0.4125959
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 3.20980831e-07,
+        "rightActualToSourceErrorMetres": 5.05762159e-07
+      },
+      {
+        "frame": 199,
+        "role": "opponent",
+        "leftTarget": [
+          0.6331748,
+          1.25712633,
+          -0.203936443
+        ],
+        "rightTarget": [
+          1.04470146,
+          0.423223048,
+          -0.194840446
+        ],
+        "leftReached": [
+          0.669461846,
+          1.19856572,
+          -0.280436665
+        ],
+        "rightReached": [
+          1.04470146,
+          0.423223048,
+          -0.194840461
+        ],
+        "leftActual": [
+          0.669461846,
+          1.1985656,
+          -0.280436516
+        ],
+        "rightActual": [
+          1.04470122,
+          0.4232231,
+          -0.194840372
+        ],
+        "leftUnreachableResidualMetres": 0.102948435,
+        "rightUnreachableResidualMetres": 1.49011612e-08,
+        "leftActualToSourceErrorMetres": 0.10294839,
+        "rightActualToSourceErrorMetres": 2.56801968e-07
+      },
+      {
+        "frame": 200,
+        "role": "executor",
+        "leftTarget": [
+          1.00847065,
+          0.9101724,
+          -0.319555551
+        ],
+        "rightTarget": [
+          0.6094607,
+          1.08850467,
+          -0.377075046
+        ],
+        "leftReached": [
+          1.00847065,
+          0.9101724,
+          -0.319555551
+        ],
+        "rightReached": [
+          0.6094607,
+          1.08850467,
+          -0.377075046
+        ],
+        "leftActual": [
+          1.00847042,
+          0.9101724,
+          -0.31955567
+        ],
+        "rightActual": [
+          0.6094612,
+          1.08850467,
+          -0.377075076
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 2.66560079e-07,
+        "rightActualToSourceErrorMetres": 4.77767571e-07
+      },
+      {
+        "frame": 200,
+        "role": "opponent",
+        "leftTarget": [
+          0.65170753,
+          1.27138877,
+          -0.17854394
+        ],
+        "rightTarget": [
+          1.028768,
+          0.445274383,
+          -0.0289733727
+        ],
+        "leftReached": [
+          0.679072261,
+          1.210484,
+          -0.251004
+        ],
+        "rightReached": [
+          1.0308398,
+          0.45442,
+          -0.0420751274
+        ],
+        "leftActual": [
+          0.6790725,
+          1.210484,
+          -0.2510039
+        ],
+        "rightActual": [
+          1.03083956,
+          0.454419971,
+          -0.042075213
+        ],
+        "leftUnreachableResidualMetres": 0.0985326245,
+        "rightUnreachableResidualMetres": 0.0161118247,
+        "leftActualToSourceErrorMetres": 0.0985326,
+        "rightActualToSourceErrorMetres": 0.016111847
+      },
+      {
+        "frame": 201,
+        "role": "executor",
+        "leftTarget": [
+          0.931892753,
+          0.859596,
+          -0.257738173
+        ],
+        "rightTarget": [
+          0.5869957,
+          1.10428441,
+          -0.3479624
+        ],
+        "leftReached": [
+          0.931892753,
+          0.859596,
+          -0.2577382
+        ],
+        "rightReached": [
+          0.5869957,
+          1.10428441,
+          -0.3479624
+        ],
+        "leftActual": [
+          0.9318923,
+          0.8595958,
+          -0.257738322
+        ],
+        "rightActual": [
+          0.586995959,
+          1.10428429,
+          -0.347962558
+        ],
+        "leftUnreachableResidualMetres": 2.98023224e-08,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 5.53553548e-07,
+        "rightActualToSourceErrorMetres": 3.0538294e-07
+      },
+      {
+        "frame": 201,
+        "role": "opponent",
+        "leftTarget": [
+          0.650089145,
+          1.25358593,
+          -0.157119453
+        ],
+        "rightTarget": [
+          0.99763453,
+          0.475417882,
+          0.119678885
+        ],
+        "leftReached": [
+          0.6716374,
+          1.20219874,
+          -0.216079086
+        ],
+        "rightReached": [
+          1.00320518,
+          0.4997483,
+          0.05786231
+        ],
+        "leftActual": [
+          0.6716372,
+          1.20219874,
+          -0.216079086
+        ],
+        "rightActual": [
+          1.003205,
+          0.4997482,
+          0.0578624159
+        ],
+        "leftUnreachableResidualMetres": 0.0811246559,
+        "rightUnreachableResidualMetres": 0.06666551,
+        "leftActualToSourceErrorMetres": 0.08112459,
+        "rightActualToSourceErrorMetres": 0.06666536
+      },
+      {
+        "frame": 202,
+        "role": "executor",
+        "leftTarget": [
+          0.8737973,
+          0.824496031,
+          -0.208334625
+        ],
+        "rightTarget": [
+          0.5664574,
+          1.11450088,
+          -0.311582446
+        ],
+        "leftReached": [
+          0.8737973,
+          0.824496031,
+          -0.208334625
+        ],
+        "rightReached": [
+          0.5664574,
+          1.11450088,
+          -0.311582446
+        ],
+        "leftActual": [
+          0.873797536,
+          0.82449615,
+          -0.20833461
+        ],
+        "rightActual": [
+          0.5664576,
+          1.11450076,
+          -0.3115825
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 2.66976258e-07,
+        "rightActualToSourceErrorMetres": 2.731428e-07
+      },
+      {
+        "frame": 202,
+        "role": "opponent",
+        "leftTarget": [
+          0.648447633,
+          1.23628891,
+          -0.126966983
+        ],
+        "rightTarget": [
+          0.9371592,
+          0.49170348,
+          0.200532839
+        ],
+        "leftReached": [
+          0.6642631,
+          1.19518185,
+          -0.1730395
+        ],
+        "rightReached": [
+          0.9479598,
+          0.51535815,
+          0.10766229
+        ],
+        "leftActual": [
+          0.6642631,
+          1.19518173,
+          -0.173039675
+        ],
+        "rightActual": [
+          0.947959542,
+          0.5153582,
+          0.107662335
+        ],
+        "leftUnreachableResidualMetres": 0.0637385,
+        "rightUnreachableResidualMetres": 0.096442394,
+        "leftActualToSourceErrorMetres": 0.06373871,
+        "rightActualToSourceErrorMetres": 0.0964423344
+      },
+      {
+        "frame": 203,
+        "role": "executor",
+        "leftTarget": [
+          0.8273655,
+          0.8103346,
+          -0.171370238
+        ],
+        "rightTarget": [
+          0.556229949,
+          1.10499251,
+          -0.268650949
+        ],
+        "leftReached": [
+          0.8273655,
+          0.8103346,
+          -0.171370238
+        ],
+        "rightReached": [
+          0.556229949,
+          1.10499251,
+          -0.268650949
+        ],
+        "leftActual": [
+          0.8273655,
+          0.8103348,
+          -0.171370164
+        ],
+        "rightActual": [
+          0.5562302,
+          1.10499239,
+          -0.268651038
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 1.937151e-07,
+        "rightActualToSourceErrorMetres": 2.81154541e-07
+      },
+      {
+        "frame": 203,
+        "role": "opponent",
+        "leftTarget": [
+          0.644370437,
+          1.22789311,
+          -0.08812705
+        ],
+        "rightTarget": [
+          0.904284835,
+          0.4886689,
+          0.2315111
+        ],
+        "leftReached": [
+          0.6592368,
+          1.18398833,
+          -0.1372259
+        ],
+        "rightReached": [
+          0.9176899,
+          0.510676265,
+          0.132898
+        ],
+        "leftActual": [
+          0.65923655,
+          1.18398821,
+          -0.137225866
+        ],
+        "rightActual": [
+          0.9176899,
+          0.510676265,
+          0.132898048
+        ],
+        "leftUnreachableResidualMetres": 0.0675228462,
+        "rightUnreachableResidualMetres": 0.101924308,
+        "leftActualToSourceErrorMetres": 0.06752285,
+        "rightActualToSourceErrorMetres": 0.101924263
+      },
+      {
+        "frame": 204,
+        "role": "executor",
+        "leftTarget": [
+          0.841356635,
+          0.8027482,
+          -0.152084619
+        ],
+        "rightTarget": [
+          0.5466312,
+          1.07363522,
+          -0.21919024
+        ],
+        "leftReached": [
+          0.841356635,
+          0.8027482,
+          -0.152084619
+        ],
+        "rightReached": [
+          0.5466312,
+          1.07363522,
+          -0.21919024
+        ],
+        "leftActual": [
+          0.8413564,
+          0.802748144,
+          -0.152084634
+        ],
+        "rightActual": [
+          0.546631455,
+          1.07363522,
+          -0.219190314
+        ],
+        "leftUnreachableResidualMetres": 0.0,
+        "rightUnreachableResidualMetres": 0.0,
+        "leftActualToSourceErrorMetres": 2.46207577e-07,
+        "rightActualToSourceErrorMetres": 2.49788968e-07
+      },
+      {
+        "frame": 204,
+        "role": "opponent",
+        "leftTarget": [
+          0.6495949,
+          1.23365879,
+          -0.0546363033
+        ],
+        "rightTarget": [
+          0.9158555,
+          0.472585618,
+          0.243121967
+        ],
+        "leftReached": [
+          0.6645473,
+          1.178272,
+          -0.113843918
+        ],
+        "rightReached": [
+          0.9276148,
+          0.495598048,
+          0.151784062
+        ],
+        "leftActual": [
+          0.6645471,
+          1.17827189,
+          -0.113844015
+        ],
+        "rightActual": [
+          0.92761457,
+          0.495598018,
+          0.151783988
+        ],
+        "leftUnreachableResidualMetres": 0.08244278,
+        "rightUnreachableResidualMetres": 0.0949234739,
+        "leftActualToSourceErrorMetres": 0.08244289,
+        "rightActualToSourceErrorMetres": 0.0949235
+      }
+    ],
+    "notes": "Frames are consecutive original samples. Left uses unmodified MotionPlayback joint positions. Right optionally retargets legs and arms with the actual rig's per-side lengths while retaining the common pair scale and pelvis trajectory. Unreachable ankle and wrist targets are explicitly reported, not preserved. Wrists are not palm contacts. Toe vectors and foot roll are inferred; there are no verified foot-contact labels. The source floor is fitted to ankle samples, not measured shoe soles. Panel offsets are display-only. No physics or production clip assignment."
   },
   "fps": 20.0,
   "from_pose_index": 176,

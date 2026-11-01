@@ -144,6 +144,7 @@ namespace Wrestling.Presentation
             // the range the wrestler works in (bent elbows and knees), far from where a joint's angle
             // wraps round.
             _rig.Apply(StancePose(_rig), 0f, 0f);
+            _rig.CalibrateKneeAxes();
             UpdateDeformation();
             _physical = new PhysicalBody(_rig.Find, look.HeightMetres, look.MassKg, name);
         }
@@ -232,9 +233,9 @@ namespace Wrestling.Presentation
             };
         }
 
-        public void Apply(in Pose pose, float leftGrip, float rightGrip)
+        public void Apply(in Pose pose, float leftGrip, float rightGrip, bool preserveRecordedWrists = false)
         {
-            _rig.Apply(in pose, leftGrip, rightGrip);
+            _rig.Apply(in pose, leftGrip, rightGrip, preserveRecordedWrists);
             ApplyExpression(in pose);
             UpdateDeformation();
         }

@@ -34,6 +34,18 @@ python harmony_render.py OUT/events.json shot OUT/shots.png 9
 
 Stick figures side-on to the line between the bodies; actor 0 red, actor 1 blue. Detections are candidates only: a wrestler driven down by the other also drops and travels, so confirm each segment against the camera images (`exo/camNN/images/NNNNN.jpg` in the same archive, frame number from the `.npz`'s `frames`) before using it. Checked segments are listed in `segments.json`.
 
+To inventory local takes, provenance and coverage for all 74 phases, run:
+
+```bash
+python harmony_inventory.py /path/to/repo --out OUT/motion-coverage.md
+```
+
+Optionally pass one or more `--events OUT/events.json` files to count broad automated event-kind
+cues. Those counts are candidates, not validated phase matches. The three source windows in
+`segments.json` have camera-review notes and clip labels; they are not accepted phase assignments
+unless `data/motion/index.json` records an assignment. Take durations distinguish endpoint span
+`(frames - 1) / fps` from hold-last span `frames / fps`.
+
 ## 4. Make a take
 
 ```bash

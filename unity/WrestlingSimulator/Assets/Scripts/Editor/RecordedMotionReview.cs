@@ -48,7 +48,10 @@ namespace Wrestling.Editor
                     throw new ArgumentException(retargetOption + " must be true or false.");
                 }
 
-                Render(Arg("-reviewTake"), int.Parse(Arg("-reviewFrom"), CultureInfo.InvariantCulture), int.Parse(Arg("-reviewTo"), CultureInfo.InvariantCulture), int.Parse(Arg("-reviewExecutor"), CultureInfo.InvariantCulture), Arg("-reviewOutput"), retarget);
+                bool arms = retarget;
+                if (Array.IndexOf(args, "-reviewRetargetArms") >= 0 && !bool.TryParse(Arg("-reviewRetargetArms"), out arms))
+                    throw new ArgumentException("-reviewRetargetArms must be true or false.");
+                Render(Arg("-reviewTake"), int.Parse(Arg("-reviewFrom"), CultureInfo.InvariantCulture), int.Parse(Arg("-reviewTo"), CultureInfo.InvariantCulture), int.Parse(Arg("-reviewExecutor"), CultureInfo.InvariantCulture), Arg("-reviewOutput"), retarget, arms);
                 EditorApplication.Exit(0);
             }
             catch (Exception e)
@@ -58,7 +61,7 @@ namespace Wrestling.Editor
             }
         }
 
-        public static void Render(string id, int from, int to, int executor, string output, bool retargetLegs = true)
+        public static void Render(string id, int from, int to, int executor, string output, bool retargetLegs = true, bool retargetArms = true)
         {
             GameContent content = ContentLocator.LoadDirect();
             MotionTake take = content.Motion.Takes.FirstOrDefault(t => t.Id == id) ?? throw new ArgumentException("Unknown take: " + id);
@@ -171,11 +174,13 @@ namespace Wrestling.Editor
                 light.intensity = 1.5f;
                 lightObj.transform.rotation = Quaternion.Euler(30f, -30f, 0f);
                 Label(root.transform, "ALIGNED SOURCE JOINTS", new Vector3(centreX + left.x, centreY + camera.orthographicSize * 0.85f, 0));
-                Label(root.transform, retargetLegs ? "CHARACTER RIG / ANKLE TRAJECTORY IK" : "CHARACTER RIG / RAW ROTATIONS", new Vector3(centreX + right.x, centreY + camera.orthographicSize * 0.85f, 0));
+                string mapping = retargetLegs && retargetArms ? "ANKLE + WRIST IK" : retargetLegs ? "ANKLE IK" : retargetArms ? "WRIST IK" : "RAW ROTATIONS";
+                Label(root.transform, "CHARACTER RIG / " + mapping, new Vector3(centreX + right.x, centreY + camera.orthographicSize * 0.85f, 0));
                 TextMesh frameLabel = Label(root.transform, "", new Vector3(centreX, centreY - camera.orthographicSize * 0.88f, 0));
                 frameLabel.characterSize = 0.014f;
                 int[] selected = Enumerable.Range(0, count).Select(i => from + Mathf.RoundToInt((to - from) * (float)i / (count - 1))).ToArray();
                 var ankleFrames = new List<object>();
+                var wristFrames = new List<object>();
                 int unreachableAnkles = 0;
                 float maxUnreachableResidual = 0f;
                 float maxActualSolveError = 0f;
@@ -199,7 +204,7 @@ namespace Wrestling.Editor
                         Vector3 targetL = body.AnkleL;
                         Vector3 targetR = body.AnkleR;
                         CharacterRig.RecordedLegsResult? fit = retargetLegs ? figures[a].Rig.RetargetRecordedLegs(ref body) : (CharacterRig.RecordedLegsResult?)null;
-                        figures[a].Apply(in body, 0f, 0f);
+                        figures[a].Apply(in body, 0f, 0f, retargetArms);
                         Vector3 actualL = figures[a].Rig.Find("LeftFoot").position;
                         Vector3 actualR = figures[a].Rig.Find("RightFoot").position;
                         float residualL = fit?.LeftResidual ?? 0f;
@@ -211,6 +216,20 @@ namespace Wrestling.Editor
                         float errorR = Vector3.Distance(actualR, body.AnkleR);
                         maxActualSolveError = Mathf.Max(maxActualSolveError, errorL, errorR);
                         float[] V(Vector3 v) => new[] { v.x - right.x, v.y, v.z };
+                        CharacterRig.RecordedArmsResult? arms = figures[a].Rig.RecordedArms;
+                        Vector3 wristL = figures[a].Rig.Find("LeftHand").position;
+                        Vector3 wristR = figures[a].Rig.Find("RightHand").position;
+                        wristFrames.Add(new
+                        {
+                            frame = f, role = a == 0 ? "executor" : "opponent",
+                            leftTarget = V(body.HandL), rightTarget = V(body.HandR),
+                            leftReached = V(arms?.LeftReached ?? wristL), rightReached = V(arms?.RightReached ?? wristR),
+                            leftActual = V(wristL), rightActual = V(wristR),
+                            leftUnreachableResidualMetres = arms?.LeftResidual,
+                            rightUnreachableResidualMetres = arms?.RightResidual,
+                            leftActualToSourceErrorMetres = Vector3.Distance(wristL, body.HandL),
+                            rightActualToSourceErrorMetres = Vector3.Distance(wristR, body.HandR),
+                        });
                         ankleFrames.Add(new
                         {
                             frame = f, role = a == 0 ? "executor" : "opponent",
@@ -261,11 +280,13 @@ namespace Wrestling.Editor
                     generatedBodyProfiles = profiles,
                     globalScale = (looks[0].HeightMetres + looks[1].HeightMetres) / (take.Actors[0].HeightMetres + take.Actors[1].HeightMetres),
                     ankleTrajectoryRetargeting = retargetLegs,
+                    wristTrajectoryRetargeting = retargetArms,
                     unreachableAnkleFrameCount = unreachableAnkles,
                     maximumUnreachableResidualMetres = maxUnreachableResidual,
                     maximumActualToReachedErrorMetres = maxActualSolveError,
                     ankleFrames,
-                    notes = "Frames are consecutive original samples. Left uses unmodified MotionPlayback joint positions. Right optionally retargets legs with the actual rig's per-side lengths while retaining the common pair scale and pelvis trajectory. Unreachable ankles are explicitly reported, not preserved. Toe vectors and foot roll are inferred; there are no verified foot-contact labels. The source floor is fitted to ankle samples, not measured shoe soles. Panel offsets are display-only. No physics or production clip assignment.",
+                    wristFrames,
+                    notes = "Frames are consecutive original samples. Left uses unmodified MotionPlayback joint positions. Right optionally retargets legs and arms with the actual rig's per-side lengths while retaining the common pair scale and pelvis trajectory. Unreachable ankle and wrist targets are explicitly reported, not preserved. Wrists are not palm contacts. Toe vectors and foot roll are inferred; there are no verified foot-contact labels. The source floor is fitted to ankle samples, not measured shoe soles. Panel offsets are display-only. No physics or production clip assignment.",
                 };
                 File.WriteAllText(Path.Combine(output, "manifest.json"), JsonConvert.SerializeObject(manifest, Formatting.Indented));
             }

@@ -31,7 +31,14 @@ before solving the knees so the solve cannot move its own hip anchors. The manif
 source, reachable and actual rig ankle positions. Targets outside the athlete's reach remain
 explicit residuals; preserving the source pelvis can make them impossible for a shorter-legged
 body. This does not establish planted feet or contact preservation. Pass
-`-reviewRetargetLegs false` to inspect the earlier rotation-only mapping.
+`-reviewRawRig` to inspect the earlier rotation-only mapping. Leg and arm mapping can also be
+controlled independently with `-reviewRetargetLegs` and `-reviewRetargetArms`.
+
+Recorded arms solve from the actual rig's shoulder origins after trunk and clavicle posing.
+The upper arms and forearms keep their measured lengths. Reachable wrists stay on the source
+targets; unreachable targets remain residuals, without shifting either wrestler's root. The
+manifest retains source, reachable and actual wrist coordinates. Palm contact locations and
+finger shapes are still unknown; fitting a wrist cannot establish a grip.
 
 Fetch the matching camera images using the original frame numbers in the downloaded pose NPZ
 (see `tools/motion/harmony4d/README.md` for fetching those poses):
@@ -127,7 +134,7 @@ renders same-height male/female builds with different leg ratios and spans, with
 assertions. These establish specific geometry properties and support visual inspection; they do
 not validate a technique as realistic wrestling.
 
-`Wrestling.Editor.RecordedRetargetChecks.RunFromCommandLine` checks actual rig ankle positions
+`Wrestling.Editor.RecordedRetargetChecks.RunFromCommandLine` checks actual rig ankle and wrist positions
 after applying recorded poses, including both sides, male/female models, different limb ratios
 and deliberately unreachable targets. This checks the trajectory mapping contract; it does not
 test final physics-tracked bodies or infer foot contacts from ankle height.
@@ -137,9 +144,37 @@ counter handoffs, actual footstep trajectories and paired contact-preserving ret
 need sourced transition motion and contact annotations. A generic easing function cannot supply
 a real recovery from the mat.
 
+## Paired search and native playback
+
+`PairedMotionSearch` indexes explicitly supplied source ranges as pairs. Features include both
+wrestlers' root-relative poses, velocities per source second, pelvis heights, relative facing
+and pair spacing. Horizontal translation/yaw are registered; mirroring swaps anatomical sides.
+Pose, velocity and pair weights are configurable, not evidence of realism. Derivatives stay
+inside each labelled range. Source frames must not be mutated after indexing.
+
+Queries can require explicit state/contact labels. Null metadata means unknown, not an absent
+grip; it cannot satisfy a verified-contact request. A source-time continuity penalty and minimum
+remaining duration help reject inconvenient matches. This is source-to-source selection, not
+matching from an arbitrary rendered/physical avatar pose or automatic technique acceptance.
+
+`PairedMotionPlayer` plays an explicit range at native FPS, aligns matched switches at the
+matched frame, and carries positional velocity into the incoming pair. During a switch its
+search query describes the underlying source, not the temporarily blended visible pose.
+`RecordedPoseTransition` also replaces recursive recorded-phase entry blending in the viewer.
+It retains the outgoing pelvis frame before leg IK; joint-position and velocity offsets decay
+in simulation/source seconds. Angular-velocity continuity, recorded-to-procedural exits and
+contact constraints remain separate work.
+
+Run `Wrestling.Editor.PairedMotionChecks.RunFromCommandLine` for native time, frame partition,
+range bounds, handoff geometry and unknown-contact checks. `RecordedBoutChecks.RunFromCommandLine`
+uses explicit in-memory review assignments for the three source windows and compares the live
+viewer against an independent engine session. It leaves `data/motion/index.json` unchanged.
+Source coverage is recorded in [motion-coverage.md](motion-coverage.md); detections and reviewed
+windows remain distinct from production assignments.
+
 ## Validation of this change
 
-The Release build and 388 C# tests pass, as do 14 offline Python tests. Unity checks fixed limb
+The Release build and 407 C# tests pass, as do 18 offline Python tests. Unity checks fixed limb
 lengths over 35,668 procedural poses and recorded ankle mapping over 15,904 actor-frames across
 three source takes, both sexes, two leg proportions and both mirror states. Actual rig ankles
 agree with the solver's reachable endpoints within 0.000002 m. Short-legged profiles still have
@@ -147,3 +182,11 @@ agree with the solver's reachable endpoints within 0.000002 m. Short-legged prof
 than hidden by moving the pelvis. The procedural path diagnostic also retains 26 inherited
 free-fall findings. These checks establish software and geometric contracts, not realism or
 contact acceptance. Reviewed body sheets and the native-speed camera comparison are linked above.
+Recorded-arm checks also match actual rig wrists to reachable endpoints within 0.000001 m;
+their deliberately impossible-target cases are reported separately in the log interpretation.
+The in-memory live-bout check exercised body-lock entry (FS seed 101, tick 433), penetration
+(FS seed 10, tick 1156) and snap-down (GR seed 2, tick 131), with 10, 15 and 46 recorded frames
+respectively before counter/phase changes. Entry and exit code paths ran; this is not a check
+that their contacts or procedural exits look like the recording.
+See [anatomical-knees.md](anatomical-knees.md) for knee geometry, passive-stop evidence and the
+remaining ambiguity in inferred signed flexion.

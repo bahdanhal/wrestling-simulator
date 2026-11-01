@@ -31,3 +31,15 @@ Record completed work and evidence in [implementation-status.md](implementation-
 Reassess the estimate after this milestone; do not increment it for tool counts, test counts
 or optimising a model against itself. Club capture, athlete consent and coach review require
 real external participation and cannot be replaced by generated evidence.
+
+## Work since the baseline
+
+The next implementation batch adds calibrated knee stops and target coordinates, recorded wrist
+IK, paired source search, native-time paired playback, positional entry transitions, and a source
+coverage report. Penetration and body-lock phase durations now provisionally follow their checked
+recordings. See implementation status for verification and limitations.
+
+This is progress toward the next milestone, **not a claim of 40% completion**. Production recorded
+phase coverage is still zero of 74; recorded neutral wrestling, palm/sole contacts, complete
+transition handoffs, elite capture and expert acceptance remain. Re-rate total completion when
+those product outcomes are demonstrated, rather than counting these implementation components.

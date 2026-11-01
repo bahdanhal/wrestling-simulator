@@ -5,6 +5,7 @@ using Wrestling.Core.Match;
 using Wrestling.Core.Rules;
 using Wrestling.Data;
 using Wrestling.Data.Animation;
+using Wrestling.Data.Motion;
 
 namespace Wrestling.Presentation
 {
@@ -46,10 +47,19 @@ namespace Wrestling.Presentation
         private TechniqueExecution _throwTechnique;
         private int _throwPhase = -1;
         private readonly Pose[] _lastPoses = new Pose[2];
+        private readonly Pose[] _previousPoses = new Pose[2];
+        private readonly RecordedPoseTransition[] _recordedTransitions = { new RecordedPoseTransition(), new RecordedPoseTransition() };
+        private TechniqueExecution _recordedTechnique;
+        private int _recordedPhase = -1;
+        private float _recordedSwitchTime;
+        private float _lastPoseTime;
+        private float _previousPoseSeconds;
         private readonly CharacterRig.RecordedLegsResult?[] _recordedLegs = new CharacterRig.RecordedLegsResult?[2];
 
         /// <summary>Recorded ankle targets and any unreachable residuals before physical tracking, when a recorded phase is active.</summary>
         public CharacterRig.RecordedLegsResult? RecordedLegs(Corner corner) => _recordedLegs[(int)corner];
+        public CharacterRig.RecordedArmsResult? RecordedArms(Corner corner) =>
+            (corner == Corner.Red ? _redFigure : _blueFigure)?.Rig.RecordedArms;
         private List<(string Thrower, string Thrown)> _throwGrips = new List<(string, string)>();
         private Corner _thrown;
         private bool _turning;
@@ -191,10 +201,11 @@ namespace Wrestling.Presentation
         }
 
         /// <summary>Builds the mat, figures and scoreboard for loaded content.</summary>
-        public void Initialise(GameContent content)
+        public void Initialise(GameContent content, MotionLibrary motionOverride = null)
         {
             _content = content;
-            _choreographer = new Choreographer(content.Animations, content.Motion);
+            // Tools can preview an explicitly supplied library without editing production assignments.
+            _choreographer = new Choreographer(content.Animations, motionOverride ?? content.Motion);
             Physics.simulationMode = SimulationMode.Script;
             _mat.Build(content.Rules.Mat);
             _scoreboard.Build(_font);
@@ -211,6 +222,9 @@ namespace Wrestling.Presentation
             _throwGrips = new List<(string, string)>();
             _turning = false;
             _lastExecutor = null;
+            _recordedTechnique = null;
+            _recordedPhase = -1;
+            _previousPoseSeconds = 0f;
             _landingOffset[0] = Vector2.zero;
             _landingOffset[1] = Vector2.zero;
             _followLanding[0] = false;
@@ -337,13 +351,36 @@ namespace Wrestling.Presentation
 
             _choreographer.ApplyRecorded(engine, alpha, _lastPoses, new[] { _redFigure.Height, _blueFigure.Height });
             bool recorded = _choreographer.Recorded != null;
+            float poseTime = (engine.Tick + alpha) / BoutClock.TicksPerSecond;
             if (recorded)
             {
-                // Real recorded motion: both bodies follow it, eased in from the poses on screen.
                 var r = _choreographer.Recorded.Value;
-                float entry = snapped || _lastPoses[0].Spine == Vector3.zero ? 1f : r.Entry;
-                redPose = Blend(_lastPoses[0], r.Red, entry);
-                bluePose = Blend(_lastPoses[1], r.Blue, entry);
+                var next = _choreographer.RecordedNext.Value;
+                bool switched = !ReferenceEquals(_recordedTechnique, engine.ActiveTechnique)
+                    || _recordedPhase != engine.ActiveTechnique.PhaseIndex;
+                if (snapped || _lastPoses[0].Spine == Vector3.zero)
+                {
+                    _recordedTransitions[0].Reset();
+                    _recordedTransitions[1].Reset();
+                    _recordedSwitchTime = poseTime;
+                }
+                else if (switched)
+                {
+                    float advance = Mathf.Clamp(poseTime - _lastPoseTime, 0f, 0.25f);
+                    _recordedTransitions[0].Begin(in _lastPoses[0], in _previousPoses[0], _previousPoseSeconds, in r.Red, in next.Red, next.Seconds, advance);
+                    _recordedTransitions[1].Begin(in _lastPoses[1], in _previousPoses[1], _previousPoseSeconds, in r.Blue, in next.Blue, next.Seconds, advance);
+                    _recordedSwitchTime = poseTime - advance;
+                }
+                _recordedTechnique = engine.ActiveTechnique;
+                _recordedPhase = engine.ActiveTechnique.PhaseIndex;
+                float elapsed = Mathf.Max(0f, poseTime - _recordedSwitchTime);
+                redPose = _recordedTransitions[0].Apply(in r.Red, elapsed);
+                bluePose = _recordedTransitions[1].Apply(in r.Blue, elapsed);
+            }
+            else
+            {
+                _recordedTechnique = null;
+                _recordedPhase = -1;
             }
 
             if (!recorded && redAnchor.Weight <= 0f && blueAnchor.Weight <= 0f)
@@ -414,10 +451,19 @@ namespace Wrestling.Presentation
             _recordedLegs[1] = recorded ? _blueFigure.Rig.RetargetRecordedLegs(ref bluePose) : (CharacterRig.RecordedLegsResult?)null;
 
             SolveExpressions(engine, ref redPose, ref bluePose);
+            _previousPoses[0] = _lastPoses[0];
+            _previousPoses[1] = _lastPoses[1];
+            _previousPoseSeconds = snapped ? 0f : Mathf.Max(0f, poseTime - _lastPoseTime);
+            _lastPoseTime = poseTime;
             _lastPoses[0] = redPose;
             _lastPoses[1] = bluePose;
-            _redFigure.Apply(in redPose, GripOn(engine, Corner.Red, GripSide.Left), GripOn(engine, Corner.Red, GripSide.Right));
-            _blueFigure.Apply(in bluePose, GripOn(engine, Corner.Blue, GripSide.Left), GripOn(engine, Corner.Blue, GripSide.Right));
+            if (snapped)
+            {
+                _redFigure.Rig.ResetKneeRollHistory();
+                _blueFigure.Rig.ResetKneeRollHistory();
+            }
+            _redFigure.Apply(in redPose, GripOn(engine, Corner.Red, GripSide.Left), GripOn(engine, Corner.Red, GripSide.Right), recorded);
+            _blueFigure.Apply(in bluePose, GripOn(engine, Corner.Blue, GripSide.Left), GripOn(engine, Corner.Blue, GripSide.Right), recorded);
             SimulateFalls(deltaTime, snapped);
 
             // After physics, on the shown bones only: holding hands back on what they hold, posted hands flat on the mat.
@@ -1030,41 +1076,6 @@ namespace Wrestling.Presentation
             Vector3 target = point + (PoseSolver.AnchorNormal(in carrier, anchor.Point) * anchor.Contact);
             Vector3 free = PoseSolver.WholeBodyPivot(in held) + (Vector3.up * heldFrame.Lift);
             PoseSolver.Translate(ref held, (target - free) * Mathf.Clamp01(anchor.Weight));
-        }
-
-        private static Pose Blend(in Pose a, in Pose b, float t)
-        {
-            if (t >= 1f)
-            {
-                return b;
-            }
-
-            return new Pose
-            {
-                Pelvis = Vector3.Lerp(a.Pelvis, b.Pelvis, t),
-                Neck = Vector3.Lerp(a.Neck, b.Neck, t),
-                Head = Vector3.Lerp(a.Head, b.Head, t),
-                ShoulderL = Vector3.Lerp(a.ShoulderL, b.ShoulderL, t),
-                ShoulderR = Vector3.Lerp(a.ShoulderR, b.ShoulderR, t),
-                ElbowL = Vector3.Lerp(a.ElbowL, b.ElbowL, t),
-                ElbowR = Vector3.Lerp(a.ElbowR, b.ElbowR, t),
-                HandL = Vector3.Lerp(a.HandL, b.HandL, t),
-                HandR = Vector3.Lerp(a.HandR, b.HandR, t),
-                HipL = Vector3.Lerp(a.HipL, b.HipL, t),
-                HipR = Vector3.Lerp(a.HipR, b.HipR, t),
-                KneeL = Vector3.Lerp(a.KneeL, b.KneeL, t),
-                KneeR = Vector3.Lerp(a.KneeR, b.KneeR, t),
-                AnkleL = Vector3.Lerp(a.AnkleL, b.AnkleL, t),
-                AnkleR = Vector3.Lerp(a.AnkleR, b.AnkleR, t),
-                ToeL = Vector3.Lerp(a.ToeL, b.ToeL, t),
-                ToeR = Vector3.Lerp(a.ToeR, b.ToeR, t),
-                Spine = Vector3.Slerp(a.Spine, b.Spine, t).normalized,
-                Left = Vector3.Slerp(a.Left, b.Left, t).normalized,
-                ChestNormal = Vector3.Slerp(a.ChestNormal, b.ChestNormal, t).normalized,
-                PelvisUp = Vector3.Slerp(a.PelvisAxis, b.PelvisAxis, t).normalized,
-                PelvisNormal = Vector3.Slerp(a.PelvisFront, b.PelvisFront, t).normalized,
-                UnconstrainedFeet = a.UnconstrainedFeet || b.UnconstrainedFeet,
-            };
         }
 
         /// <summary>1 when the hand is holding a grip, so the fingers close around it.</summary>

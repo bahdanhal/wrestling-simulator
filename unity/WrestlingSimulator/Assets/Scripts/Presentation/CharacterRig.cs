@@ -55,6 +55,14 @@ namespace Wrestling.Presentation
         private readonly float _thighR;
         private readonly float _shinL;
         private readonly float _shinR;
+        private readonly float _upperArmL;
+        private readonly float _upperArmR;
+        private readonly float _forearmL;
+        private readonly float _forearmR;
+        private readonly Vector3[] _kneeAxes = new Vector3[Skeleton.BoneCount];
+        private bool _calibratedKnees;
+        private readonly Vector3[] _previousKneeAxis = new Vector3[2];
+        private readonly Vector3[] _previousThigh = new Vector3[2];
         private readonly List<FingerJoint> _leftFingers = new List<FingerJoint>();
         private readonly List<FingerJoint> _rightFingers = new List<FingerJoint>();
         private readonly SkeletonCalibration _calibration;
@@ -123,6 +131,10 @@ namespace Wrestling.Presentation
             _thighR = Vector3.Distance(bind.HipR, bind.KneeR);
             _shinL = Vector3.Distance(bind.KneeL, bind.AnkleL);
             _shinR = Vector3.Distance(bind.KneeR, bind.AnkleR);
+            _upperArmL = Vector3.Distance(bind.ShoulderL, bind.ElbowL);
+            _upperArmR = Vector3.Distance(bind.ShoulderR, bind.ElbowR);
+            _forearmL = Vector3.Distance(bind.ElbowL, bind.HandL);
+            _forearmR = Vector3.Distance(bind.ElbowR, bind.HandR);
             CollectFingers(byName, "Left", _leftFingers, _bones[(int)Bone.LeftHand]);
             CollectFingers(byName, "Right", _rightFingers, _bones[(int)Bone.RightHand]);
             if (byName.TryGetValue("Jaw", out _jaw))
@@ -226,14 +238,14 @@ namespace Wrestling.Presentation
             Quaternion pelvis = _rotations[(int)Bone.Hips];
             pose.HipL = pose.Pelvis + (pelvis * _hipOffsetL);
             pose.HipR = pose.Pelvis + (pelvis * _hipOffsetR);
-            pose.KneeL = RecordedKnee(pose.HipL, targetL, _thighL, _shinL, poleL, pelvisFront, out pose.AnkleL);
-            pose.KneeR = RecordedKnee(pose.HipR, targetR, _thighR, _shinR, poleR, pelvisFront, out pose.AnkleR);
+            pose.KneeL = ReachLimb(pose.HipL, targetL, _thighL, _shinL, poleL, pelvisFront, out pose.AnkleL);
+            pose.KneeR = ReachLimb(pose.HipR, targetR, _thighR, _shinR, poleR, pelvisFront, out pose.AnkleR);
             pose.ToeL = pose.AnkleL + toeL;
             pose.ToeR = pose.AnkleR + toeR;
             return new RecordedLegsResult(targetL, targetR, pose.AnkleL, pose.AnkleR);
         }
 
-        private static Vector3 RecordedKnee(Vector3 hip, Vector3 target, float thigh, float shin, Vector3 pole, Vector3 fallback, out Vector3 ankle)
+        private static Vector3 ReachLimb(Vector3 hip, Vector3 target, float thigh, float shin, Vector3 pole, Vector3 fallback, out Vector3 ankle)
         {
             Vector3 delta = target - hip;
             float distance = delta.magnitude;
@@ -265,7 +277,7 @@ namespace Wrestling.Presentation
         /// Poses the rig. <paramref name="leftGrip"/> and <paramref name="rightGrip"/> are how firmly
         /// each hand takes the shape of its grip (0 open, 1 fully in the pose's grip style).
         /// </summary>
-        public void Apply(in Pose pose, float leftGrip, float rightGrip)
+        public void Apply(in Pose pose, float leftGrip, float rightGrip, bool preserveRecordedWrists = false)
         {
             Skeleton.Compute(in pose, _positions, _rotations, null, in _calibration);
             Transform hips = _bones[(int)Bone.Hips];
@@ -281,9 +293,136 @@ namespace Wrestling.Presentation
                 _bones[i].rotation = _rotations[i] * _bindOffsets[i];
             }
 
+            if (_calibratedKnees)
+            {
+                AlignKnee(true);
+                AlignKnee(false);
+            }
+            RecordedArms = preserveRecordedWrists ? FitRecordedArms(in pose) : (RecordedArmsResult?)null;
             ApplyHandGrip(GripSide.Left, pose.LeftGripStyle, leftGrip, pose.LeftGripAperture);
             ApplyHandGrip(GripSide.Right, pose.RightGripStyle, rightGrip, pose.RightGripAperture);
             ApplyFace(in pose);
+        }
+
+        /// <summary>Call in the same bent construction stance used to build the articulation.</summary>
+        public void CalibrateKneeAxes()
+        {
+            foreach (bool left in new[] { true, false })
+            {
+                Bone upper = left ? Bone.LeftUpperLeg : Bone.RightUpperLeg;
+                Bone lower = left ? Bone.LeftLowerLeg : Bone.RightLowerLeg;
+                Bone foot = left ? Bone.LeftFoot : Bone.RightFoot;
+                Vector3 axis = Vector3.Cross(_bones[(int)lower].position - _bones[(int)upper].position,
+                    _bones[(int)foot].position - _bones[(int)lower].position);
+                if (axis.sqrMagnitude < 1e-10f) throw new InvalidOperationException("Calibrate knee axes in a bent stance.");
+                _kneeAxes[(int)upper] = Quaternion.Inverse(_bones[(int)upper].rotation) * axis.normalized;
+                _kneeAxes[(int)lower] = Quaternion.Inverse(_bones[(int)lower].rotation) * axis.normalized;
+            }
+            _calibratedKnees = true;
+        }
+
+        public Vector3 KneeAxis(bool left, bool upper)
+        {
+            Bone bone = left ? (upper ? Bone.LeftUpperLeg : Bone.LeftLowerLeg)
+                : (upper ? Bone.RightUpperLeg : Bone.RightLowerLeg);
+            return _bones[(int)bone].TransformDirection(_kneeAxes[(int)bone]);
+        }
+
+        /// <summary>A cut/restart has no preceding continuous limb orientation to transport.</summary>
+        public void ResetKneeRollHistory()
+        {
+            _previousKneeAxis[0] = _previousKneeAxis[1] = Vector3.zero;
+        }
+
+        private void AlignKnee(bool left)
+        {
+            Bone upperBone = left ? Bone.LeftUpperLeg : Bone.RightUpperLeg;
+            Bone lowerBone = left ? Bone.LeftLowerLeg : Bone.RightLowerLeg;
+            Transform upper = _bones[(int)upperBone];
+            Transform lower = _bones[(int)lowerBone];
+            Transform foot = _bones[(int)(left ? Bone.LeftFoot : Bone.RightFoot)];
+            Vector3 thigh = (lower.position - upper.position).normalized;
+            Vector3 shin = (foot.position - lower.position).normalized;
+            Vector3 reference = upper.rotation * _kneeAxes[(int)upperBone];
+            Vector3 axis = Vector3.Cross(thigh, shin);
+            int side = left ? 0 : 1;
+            // Near extension the plane is undefined. Use the transported anatomical reference;
+            // choose its hemisphere on either side of extension, rather than spinning a thigh
+            // 180 degrees to disguise a backward-bending target. Passive stops handle that target.
+            // Below about 0.03 degrees, reconstructing the plane from float endpoints is ill
+            // conditioned. Transport the last identifiable plane through extension instead.
+            if (axis.sqrMagnitude < 2.5e-7f)
+            {
+                axis = _previousKneeAxis[side] == Vector3.zero ? reference
+                    : Quaternion.FromToRotation(_previousThigh[side], thigh) * _previousKneeAxis[side];
+                axis = Vector3.ProjectOnPlane(axis, thigh);
+                if (axis.sqrMagnitude < 1e-10f) axis = reference;
+            }
+            else if (Vector3.Dot(axis, reference) < 0f) axis = -axis;
+            axis.Normalize();
+            Quaternion lowerRotation = lower.rotation;
+            Quaternion footRotation = foot.rotation;
+            upper.rotation = Quaternion.AngleAxis(Vector3.SignedAngle(reference, axis, thigh), thigh) * upper.rotation;
+            // Restore the shin's world direction after rotating its parent, then roll only around
+            // that direction. Both joint frames now share the same hinge axis without moving ends.
+            lower.rotation = lowerRotation;
+            Vector3 lowerAxis = lower.rotation * _kneeAxes[(int)lowerBone];
+            lower.rotation = Quaternion.AngleAxis(Vector3.SignedAngle(lowerAxis, axis, shin), shin) * lower.rotation;
+            foot.rotation = footRotation;
+            _previousKneeAxis[side] = axis;
+            _previousThigh[side] = thigh;
+        }
+
+        /// <summary>Source wrist targets versus fixed-length reachable endpoints, before physics. Not palm contacts.</summary>
+        public readonly struct RecordedArmsResult
+        {
+            public RecordedArmsResult(Vector3 leftTarget, Vector3 rightTarget, Vector3 leftReached, Vector3 rightReached)
+            {
+                LeftTarget = leftTarget; RightTarget = rightTarget;
+                LeftReached = leftReached; RightReached = rightReached;
+            }
+
+            public Vector3 LeftTarget { get; }
+            public Vector3 RightTarget { get; }
+            public Vector3 LeftReached { get; }
+            public Vector3 RightReached { get; }
+            public float LeftResidual => Vector3.Distance(LeftTarget, LeftReached);
+            public float RightResidual => Vector3.Distance(RightTarget, RightReached);
+            public float MaxResidual => Mathf.Max(LeftResidual, RightResidual);
+        }
+
+        public RecordedArmsResult? RecordedArms { get; private set; }
+
+        private RecordedArmsResult FitRecordedArms(in Pose pose)
+        {
+            // First pose the trunk/clavicles normally. Their actual joint origins are determined by
+            // this model's hierarchy, not the source subject's shoulder width or spine lengths.
+            Vector3 left = FitRecordedArm(true, pose.ShoulderL, pose.ElbowL, pose.HandL, pose.HandDirL, pose.PalmNormalL);
+            Vector3 right = FitRecordedArm(false, pose.ShoulderR, pose.ElbowR, pose.HandR, pose.HandDirR, pose.PalmNormalR);
+            return new RecordedArmsResult(pose.HandL, pose.HandR, left, right);
+        }
+
+        private Vector3 FitRecordedArm(bool left, Vector3 sourceShoulder, Vector3 sourceElbow, Vector3 target, Vector3 handDir, Vector3 palm)
+        {
+            Bone upper = left ? Bone.LeftUpperArm : Bone.RightUpperArm;
+            Bone lower = left ? Bone.LeftLowerArm : Bone.RightLowerArm;
+            Bone hand = left ? Bone.LeftHand : Bone.RightHand;
+            Vector3 shoulder = _bones[(int)upper].position;
+            Vector3 sourceUpper = sourceElbow - sourceShoulder;
+            Vector3 pole = sourceElbow - Vector3.Lerp(sourceShoulder, target, 0.5f);
+            Vector3 facing = _rotations[(int)upper] * Vector3.forward;
+            Vector3 elbow = ReachLimb(shoulder, target, left ? _upperArmL : _upperArmR,
+                left ? _forearmL : _forearmR, pole, facing, out Vector3 reached);
+            Vector3 upperDir = elbow - shoulder;
+            Vector3 lowerDir = reached - elbow;
+            Vector3 upperFacing = Quaternion.FromToRotation(sourceUpper, upperDir) * facing;
+            Vector3 lowerFacing = Quaternion.FromToRotation(target - sourceElbow, lowerDir) * (_rotations[(int)lower] * Vector3.forward);
+            SetSegmentRotation(upper, Skeleton.Orientation(upperDir, upperFacing));
+            SetSegmentRotation(lower, Skeleton.Orientation(lowerDir, lowerFacing));
+            Vector3 neutral = Skeleton.NeutralPalm(lowerDir.normalized, lowerFacing, left, in _calibration);
+            var wrist = Skeleton.Wrist(lowerDir.normalized, neutral, handDir, palm);
+            SetSegmentRotation(hand, Skeleton.Orientation(wrist.Direction, wrist.Palm));
+            return reached;
         }
 
         /// <summary>

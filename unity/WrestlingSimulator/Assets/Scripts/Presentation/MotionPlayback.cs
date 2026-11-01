@@ -23,12 +23,23 @@ namespace Wrestling.Presentation
 
         /// <summary>Aligns a take to the wrestlers' current poses (call once when the phase starts).</summary>
         public void Begin(MotionTake take, MotionPhase phase, in Pose executor, in Pose opponent, float executorHeight, float opponentHeight, bool leftSide)
+            => BeginAtFrame(take, phase, phase.FromFrame, in executor, in opponent, executorHeight, opponentHeight, leftSide);
+
+        /// <summary>Aligns from an interior matched frame while retaining the labelled range for sampling.</summary>
+        public void BeginAtFrame(MotionTake take, MotionPhase phase, float alignmentFrame, in Pose executor, in Pose opponent, float executorHeight, float opponentHeight, bool leftSide)
         {
+            if (float.IsNaN(alignmentFrame) || float.IsInfinity(alignmentFrame)
+                || alignmentFrame < phase.FromFrame || alignmentFrame > phase.ToFrame)
+                throw new System.ArgumentOutOfRangeException(nameof(alignmentFrame));
+            if (!Finite(executor.Pelvis) || !Finite(opponent.Pelvis) || float.IsNaN(executorHeight)
+                || float.IsInfinity(executorHeight) || float.IsNaN(opponentHeight) || float.IsInfinity(opponentHeight)
+                || executorHeight <= 0f || opponentHeight <= 0f)
+                throw new System.ArgumentException("Playback placement and body heights must be finite and heights positive.");
             _take = take;
             _phase = phase;
             int recordedExecutor = phase.Executor;
-            Vector3 takeExecutor = Read(phase.FromFrame, recordedExecutor, MotionJoint.Pelvis);
-            Vector3 takeOpponent = Read(phase.FromFrame, 1 - recordedExecutor, MotionJoint.Pelvis);
+            Vector3 takeExecutor = Read(alignmentFrame, recordedExecutor, MotionJoint.Pelvis);
+            Vector3 takeOpponent = Read(alignmentFrame, 1 - recordedExecutor, MotionJoint.Pelvis);
             _takeOrigin = new Vector3(takeExecutor.x, 0f, takeExecutor.z);
             Vector3 takeForward = Flat(takeOpponent - takeExecutor);
             Vector3 forward = Flat(opponent.Pelvis - executor.Pelvis);
@@ -109,6 +120,9 @@ namespace Wrestling.Presentation
             (float x, float y, float z) = _take.Joint(frame, actor, joint);
             return new Vector3(x, y, -z);
         }
+
+        private static bool Finite(Vector3 value) => !float.IsNaN(value.x) && !float.IsNaN(value.y) && !float.IsNaN(value.z)
+            && !float.IsInfinity(value.x) && !float.IsInfinity(value.y) && !float.IsInfinity(value.z);
 
         private static Vector3 Flat(Vector3 v)
         {

@@ -73,6 +73,12 @@ namespace Wrestling.Presentation
             /// <summary>Direction along the limb in the segment's own frame (its twist axis).</summary>
             public Vector3 Axis = Vector3.up;
 
+            // Knee flexion axis in the lower-leg frame at construction; zero is the bent stance.
+            public bool Knee;
+            public Vector3 KneeAxis;
+            public float KneeLower;
+            public float KneeUpper;
+
             public Vector3 CapsuleA;
             public Vector3 CapsuleB;
             public float Radius;
@@ -266,6 +272,36 @@ namespace Wrestling.Presentation
                     body.swingZLock = ArticulationDofLock.FreeMotion;
                     body.twistLock = ArticulationDofLock.FreeMotion;
                     segment.BindLocal = Quaternion.Inverse(segment.Parent.Bone.rotation) * t.rotation;
+
+                    if (segmentName == "LeftLeg" || segmentName == "RightLeg")
+                    {
+                        // The stance is already bent. The cross product points along the flexion
+                        // axis in the direction that increases the measured thigh/shin angle.
+                        Vector3 thigh = (t.position - segment.Parent.Bone.position).normalized;
+                        Vector3 shin = (bone(end).position - t.position).normalized;
+                        Vector3 hinge = Vector3.Cross(thigh, shin);
+                        if (hinge.sqrMagnitude < 1e-6f)
+                        {
+                            throw new InvalidOperationException("Cannot calibrate a knee from a straight or degenerate construction pose.");
+                        }
+
+                        float stanceFlexion = Vector3.Angle(thigh, shin);
+                        segment.Knee = true;
+                        segment.KneeAxis = Quaternion.Inverse(t.rotation) * hinge.normalized;
+                        // Approximate passive envelope, not an individual diagnosis: in-vivo full
+                        // range measurements averaged about -4 to 150 degrees (Kono et al., 2024,
+                        // https://pmc.ncbi.nlm.nih.gov/articles/PMC10850127/). A hinge omits tibial
+                        // rotation and the changing anatomical flexion axis.
+                        segment.KneeLower = -5f - stanceFlexion;
+                        segment.KneeUpper = 150f - stanceFlexion;
+                        body.jointType = ArticulationJointType.RevoluteJoint;
+                        body.anchorRotation = Quaternion.FromToRotation(Vector3.right, segment.KneeAxis);
+                        body.twistLock = ArticulationDofLock.LimitedMotion;
+                        ArticulationDrive drive = body.xDrive;
+                        drive.lowerLimit = segment.KneeLower;
+                        drive.upperLimit = segment.KneeUpper;
+                        body.xDrive = drive;
+                    }
                 }
 
                 segment.Body = body;
@@ -326,13 +362,15 @@ namespace Wrestling.Presentation
                 if (segment.Parent != null && segment.HasTarget)
                 {
                     Vector3 actual = JointAngles(segment, segment.Parent.Body.transform.rotation, segment.Body.transform.rotation);
-                    Quaternion gap = Quaternion.Inverse(FromAngles(actual)) * FromAngles(segment.JointTarget);
-                    yield return (segment.Name, Quaternion.Angle(FromAngles(actual), FromAngles(segment.JointTarget)), Mathf.Abs(TwistAngle(gap, segment.Axis)), segment.JointTarget.magnitude);
+                    Quaternion actualRotation = segment.Knee ? Quaternion.Inverse(segment.Parent.Body.transform.rotation) * segment.Body.transform.rotation : FromAngles(segment, actual);
+                    Quaternion wantedRotation = segment.Knee ? segment.TargetLocal : FromAngles(segment, segment.JointTarget);
+                    Quaternion gap = Quaternion.Inverse(actualRotation) * wantedRotation;
+                    yield return (segment.Name, Quaternion.Angle(actualRotation, wantedRotation), Mathf.Abs(TwistAngle(gap, segment.Axis)), segment.JointTarget.magnitude);
                 }
             }
         }
 
-        private static Quaternion FromAngles(Vector3 degrees) => degrees.sqrMagnitude < 1e-12f ? Quaternion.identity : Quaternion.AngleAxis(degrees.magnitude, degrees / degrees.magnitude);
+        private static Quaternion FromAngles(Segment segment, Vector3 degrees) => segment.Knee ? Quaternion.AngleAxis(degrees.x, segment.KneeAxis) : degrees.sqrMagnitude < 1e-12f ? Quaternion.identity : Quaternion.AngleAxis(degrees.magnitude, degrees / degrees.magnitude);
 
         /// <summary>Signed angle (degrees) of the part of <paramref name="rotation"/> about <paramref name="axis"/>.</summary>
         private static float TwistAngle(Quaternion rotation, Vector3 axis)
@@ -517,15 +555,22 @@ namespace Wrestling.Presentation
                 }
 
                 Vector3 angles = JointAngles(segment, segment.Parent.Bone.rotation, segment.Bone.rotation);
+                if (segment.Knee)
+                {
+                    angles.x = Mathf.Clamp(angles.x, segment.KneeLower, segment.KneeUpper);
+                }
                 Vector3 radians = angles * Mathf.Deg2Rad;
-                segment.Body.jointPosition = new ArticulationReducedSpace(radians.x, radians.y, radians.z);
-                segment.Body.jointVelocity = new ArticulationReducedSpace(0f, 0f, 0f);
+                segment.Body.jointPosition = segment.Knee ? new ArticulationReducedSpace(radians.x) : new ArticulationReducedSpace(radians.x, radians.y, radians.z);
+                segment.Body.jointVelocity = segment.Knee ? new ArticulationReducedSpace(0f) : new ArticulationReducedSpace(0f, 0f, 0f);
                 segment.Body.SetDriveTarget(ArticulationDriveAxis.X, angles.x);
-                segment.Body.SetDriveTarget(ArticulationDriveAxis.Y, angles.y);
-                segment.Body.SetDriveTarget(ArticulationDriveAxis.Z, angles.z);
                 segment.Body.SetDriveTargetVelocity(ArticulationDriveAxis.X, 0f);
-                segment.Body.SetDriveTargetVelocity(ArticulationDriveAxis.Y, 0f);
-                segment.Body.SetDriveTargetVelocity(ArticulationDriveAxis.Z, 0f);
+                if (!segment.Knee)
+                {
+                    segment.Body.SetDriveTarget(ArticulationDriveAxis.Y, angles.y);
+                    segment.Body.SetDriveTarget(ArticulationDriveAxis.Z, angles.z);
+                    segment.Body.SetDriveTargetVelocity(ArticulationDriveAxis.Y, 0f);
+                    segment.Body.SetDriveTargetVelocity(ArticulationDriveAxis.Z, 0f);
+                }
             }
 
             _hasRootTarget = false;
@@ -590,16 +635,23 @@ namespace Wrestling.Presentation
                 Quaternion wanted = Quaternion.Inverse(segment.Parent.Bone.rotation) * segment.Bone.rotation;
                 segment.TargetLocal = segment.HasTarget ? Quaternion.Slerp(segment.TargetLocal, wanted, follow) : wanted;
                 Vector3 target = AnglesOf(segment, segment.TargetLocal);
+                if (segment.Knee)
+                {
+                    target.x = Mathf.Clamp(target.x, segment.KneeLower, segment.KneeUpper);
+                }
                 segment.JointTargetVelocity = segment.HasTarget ? Vector3.ClampMagnitude((target - segment.JointTarget) / dt, MaxJointSpeed) : Vector3.zero;
                 segment.JointTarget = target;
                 segment.HasTarget = true;
                 ArticulationBody body = segment.Body;
                 body.SetDriveTarget(ArticulationDriveAxis.X, target.x);
-                body.SetDriveTarget(ArticulationDriveAxis.Y, target.y);
-                body.SetDriveTarget(ArticulationDriveAxis.Z, target.z);
                 body.SetDriveTargetVelocity(ArticulationDriveAxis.X, segment.JointTargetVelocity.x);
-                body.SetDriveTargetVelocity(ArticulationDriveAxis.Y, segment.JointTargetVelocity.y);
-                body.SetDriveTargetVelocity(ArticulationDriveAxis.Z, segment.JointTargetVelocity.z);
+                if (!segment.Knee)
+                {
+                    body.SetDriveTarget(ArticulationDriveAxis.Y, target.y);
+                    body.SetDriveTarget(ArticulationDriveAxis.Z, target.z);
+                    body.SetDriveTargetVelocity(ArticulationDriveAxis.Y, segment.JointTargetVelocity.y);
+                    body.SetDriveTargetVelocity(ArticulationDriveAxis.Z, segment.JointTargetVelocity.z);
+                }
             }
 
             // Dropping (a sprawl, a level change, going to the knees): the hips are above where they
@@ -748,7 +800,9 @@ namespace Wrestling.Presentation
                 }
 
                 Vector3 actual = JointAngles(segment, segment.Parent.Body.transform.rotation, segment.Body.transform.rotation);
-                float error = Quaternion.Angle(FromAngles(actual), FromAngles(segment.JointTarget));
+                Quaternion actualRotation = segment.Knee ? Quaternion.Inverse(segment.Parent.Body.transform.rotation) * segment.Body.transform.rotation : FromAngles(segment, actual);
+                Quaternion wantedRotation = segment.Knee ? segment.TargetLocal : FromAngles(segment, segment.JointTarget);
+                float error = Quaternion.Angle(actualRotation, wantedRotation);
                 if (error > worst)
                 {
                     worst = error;
@@ -790,14 +844,18 @@ namespace Wrestling.Presentation
 
         /// <summary>
         /// The joint's angles for a child rotation relative to its parent: the rotation away from the
-        /// bind pose as a rotation vector in the child's frame (degrees), which is how a spherical
-        /// articulation joint measures its position.
+        /// bind pose as a rotation vector in the child's frame (degrees) for spherical joints;
+        /// knee hinges use their signed flexion angle in X.
         /// </summary>
         private static Vector3 JointAngles(Segment segment, Quaternion parent, Quaternion child) => AnglesOf(segment, Quaternion.Inverse(parent) * child);
 
         private static Vector3 AnglesOf(Segment segment, Quaternion local)
         {
             Quaternion delta = Quaternion.Inverse(segment.BindLocal) * local;
+            if (segment.Knee)
+            {
+                return new Vector3(TwistAngle(delta, segment.KneeAxis), 0f, 0f);
+            }
             if (delta.w < 0f)
             {
                 delta = new Quaternion(-delta.x, -delta.y, -delta.z, -delta.w);
@@ -1123,6 +1181,10 @@ namespace Wrestling.Presentation
                 // Unity's rotational drives take their targets in degrees and their gains per radian.
                 foreach (ArticulationDriveAxis axis in new[] { ArticulationDriveAxis.X, ArticulationDriveAxis.Y, ArticulationDriveAxis.Z })
                 {
+                    if (segment.Knee && axis != ArticulationDriveAxis.X)
+                    {
+                        continue;
+                    }
                     segment.Body.SetDriveStiffness(axis, stiffness);
                     segment.Body.SetDriveDamping(axis, damping);
                     segment.Body.SetDriveForceLimit(axis, torque);

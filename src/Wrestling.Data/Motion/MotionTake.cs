@@ -75,19 +75,51 @@ namespace Wrestling.Data.Motion
         /// <summary>frames[frame][actor] = x, y, z for each joint in <see cref="MotionJoint"/> order.</summary>
         public IReadOnlyList<IReadOnlyList<IReadOnlyList<float>>> Frames { get; init; } = Array.Empty<IReadOnlyList<IReadOnlyList<float>>>();
 
-        public int FrameCount => Frames.Count;
+        public int FrameCount => Frames?.Count ?? 0;
 
         /// <summary>Position of a joint (x, y, z), linearly interpolated at a fractional frame (clamped to the take).</summary>
         public (float X, float Y, float Z) Joint(float frame, int actor, MotionJoint joint)
         {
+            if (float.IsNaN(frame) || float.IsInfinity(frame))
+            {
+                throw new ArgumentOutOfRangeException(nameof(frame), "Frame must be finite.");
+            }
+
+            if (Actors == null || actor < 0 || actor >= Actors.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(actor), "Actor index is outside the take.");
+            }
+
+            int jointIndex = (int)joint;
+            if (jointIndex < 0 || jointIndex >= JointCount)
+            {
+                throw new ArgumentOutOfRangeException(nameof(joint), "Joint is not a defined motion joint.");
+            }
+
+            if (Frames == null || Frames.Count == 0)
+            {
+                throw new InvalidOperationException("Take has no frames to sample.");
+            }
+
             float clamped = Math.Max(0f, Math.Min(FrameCount - 1, frame));
             int a = (int)Math.Floor(clamped);
             int b = Math.Min(a + 1, FrameCount - 1);
             float t = clamped - a;
-            IReadOnlyList<float> fa = Frames[a][actor];
-            IReadOnlyList<float> fb = Frames[b][actor];
-            int i = (int)joint * 3;
+            IReadOnlyList<float> fa = GetJointValues(a, actor);
+            IReadOnlyList<float> fb = GetJointValues(b, actor);
+            int i = jointIndex * 3;
             return (Lerp(fa[i], fb[i], t), Lerp(fa[i + 1], fb[i + 1], t), Lerp(fa[i + 2], fb[i + 2], t));
+        }
+
+        private IReadOnlyList<float> GetJointValues(int frame, int actor)
+        {
+            IReadOnlyList<IReadOnlyList<float>> actors = Frames[frame];
+            if (actors == null || actor >= actors.Count || actors[actor] == null || actors[actor].Count != JointCount * 3)
+            {
+                throw new InvalidOperationException($"Frame {frame} does not contain valid joint values for actor {actor}.");
+            }
+
+            return actors[actor];
         }
 
         public IReadOnlyList<string> Validate()
@@ -104,22 +136,42 @@ namespace Wrestling.Data.Motion
                 errors.Add($"{path}: source needs a licence and a URL or notes (where it came from).");
             }
 
-            if (FramesPerSecond <= 0f || FramesPerSecond > 1000f)
+            if (float.IsNaN(FramesPerSecond) || float.IsInfinity(FramesPerSecond) || FramesPerSecond <= 0f || FramesPerSecond > 1000f)
             {
                 errors.Add($"{path}: framesPerSecond must be in (0, 1000].");
             }
 
-            if (Actors.Count != 2)
+            if (Actors == null)
+            {
+                errors.Add($"{path}: actors must not be null.");
+            }
+            else if (Actors.Count != 2)
             {
                 errors.Add($"{path}: a take records exactly two actors.");
             }
 
-            foreach (MotionActor actor in Actors)
+            if (Actors != null)
             {
-                if (actor.HeightMetres < 1.2f || actor.HeightMetres > 2.3f)
+                for (int i = 0; i < Actors.Count; i++)
                 {
-                    errors.Add($"{path}: actor '{actor.Name}' height {actor.HeightMetres} m is not a plausible adult height.");
+                    MotionActor actor = Actors[i];
+                    if (actor == null)
+                    {
+                        errors.Add($"{path}: actor {i} must not be null.");
+                        continue;
+                    }
+
+                    if (float.IsNaN(actor.HeightMetres) || float.IsInfinity(actor.HeightMetres) || actor.HeightMetres < 1.2f || actor.HeightMetres > 2.3f)
+                    {
+                        errors.Add($"{path}: actor '{actor.Name}' height {actor.HeightMetres} m is not a plausible adult height.");
+                    }
                 }
+            }
+
+            if (Frames == null)
+            {
+                errors.Add($"{path}: frames must not be null.");
+                return errors;
             }
 
             if (Frames.Count < 2)
@@ -130,24 +182,36 @@ namespace Wrestling.Data.Motion
             for (int f = 0; f < Frames.Count; f++)
             {
                 IReadOnlyList<IReadOnlyList<float>> frame = Frames[f];
-                if (frame.Count != Actors.Count)
+                if (frame == null)
+                {
+                    errors.Add($"{path}: frame {f} must not be null.");
+                    continue;
+                }
+
+                if (Actors != null && frame.Count != Actors.Count)
                 {
                     errors.Add($"{path}: frame {f} has {frame.Count} actors.");
-                    break;
+                    continue;
                 }
 
                 foreach (IReadOnlyList<float> joints in frame)
                 {
+                    if (joints == null)
+                    {
+                        errors.Add($"{path}: frame {f} has a null actor joint list.");
+                        continue;
+                    }
+
                     if (joints.Count != JointCount * 3)
                     {
                         errors.Add($"{path}: frame {f} has {joints.Count} values per actor; expected {JointCount * 3}.");
-                        return errors;
+                        continue;
                     }
 
                     if (joints.Any(v => float.IsNaN(v) || float.IsInfinity(v) || Math.Abs(v) > 100f))
                     {
                         errors.Add($"{path}: frame {f} has an invalid coordinate.");
-                        return errors;
+                        continue;
                     }
                 }
             }
