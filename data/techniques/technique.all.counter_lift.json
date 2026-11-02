@@ -24,8 +24,8 @@
   "phases": [
     {
       "id": "lift",
-      "minimumTicks": 28,
-      "maximumTicks": 42,
+      "minimumTicks": 14,
+      "maximumTicks": 22,
       "attributes": [
         {
           "attribute": "counterWrestling",
@@ -41,12 +41,41 @@
         }
       ],
       "steepness": 1.2,
-      "staminaCost": 2.0,
-      "burstCost": 22,
+      "staminaCost": 1.0,
+      "burstCost": 12,
       "outcomes": [
         "clean",
         "partial",
         "blocked"
+      ],
+      "counterWindows": [],
+      "endStates": [],
+      "animation": "anim.counter_lift.lift"
+    },
+    {
+      "id": "arch",
+      "minimumTicks": 16,
+      "maximumTicks": 24,
+      "attributes": [
+        {
+          "attribute": "upperBodyStrength",
+          "percent": 40
+        },
+        {
+          "attribute": "lowerBodyStrength",
+          "percent": 30
+        },
+        {
+          "attribute": "counterWrestling",
+          "percent": 30
+        }
+      ],
+      "steepness": 0.2,
+      "staminaCost": 1.0,
+      "burstCost": 10,
+      "outcomes": [
+        "clean",
+        "partial"
       ],
       "counterWindows": [],
       "endStates": [
@@ -54,7 +83,7 @@
         "flank",
         "scramble"
       ],
-      "animation": "anim.counter_lift.lift"
+      "animation": "anim.counter_lift.arch"
     }
   ],
   "gesture": {

@@ -266,3 +266,49 @@ arch phase. With the arch only playing after a won lift, the clip can lift hard 
 blocked attempts. That changes the contest (one more roll and window), so it needs a balance run.
 The overlap of keyed chest-to-chest poses should be fixed in the same pass, for the front suplex
 too, and could become a content check once both clips pass it.
+
+## Follow-up: counter-lift split into lift and arch phases
+
+**Engine change.** `technique.all.counter_lift` now has two phases, as the front suplex has:
+- `lift`, 14–22 ticks: the old phase's attributes and steepness; clean, partial or blocked.
+- `arch`, 16–24 ticks: strength and counter wrestling, steepness 0.2; clean, or partial into a
+  scramble.
+
+A blocked counter-lift now fails before any arch plays.
+
+**Balance** ([report](../research/balance/2026-11-02-counter-lift-split.md)):
+- Across 2,000 bouts per style, every headline figure is within 0.3 points of the baseline.
+- Greco-Roman viewer bouts: scoring counter-lifts 50 → 45, blocked 83 → 72, within noise.
+- The first try (arch steepness 1.0) cut scoring counter-lifts to 31, because the arch's own roll
+  failed about 70% of the time. Once the lift is won, the arch should usually finish, so its
+  steepness was lowered.
+
+**Clips.**
+- `anim.counter_lift.lift` (a load, holds and squeeze from 0.3): the counter-lifter changes level
+  under the attacker with the heads to opposite sides, then drives the hips in and up, leaning
+  back. The attacker is held upright on the chest.
+- At the lift's end the keyed trunks just touch (−0.01 m instead of crossing), the pelvises are
+  0.29 m apart, and the attacker's hips are 0.21 m above the counter-lifter's.
+- `anim.counter_lift.arch` is the front suplex's arch from that position.
+- The lift's first key still overlaps, because it is inherited from where the front suplex left
+  the pair.
+
+**Rendered** (the same viewer cases as before, still produced by these seeds):
+- Seed 87 tick 8011 (lift won, scores danger)
+  ([render](../images/realism-review/counter-lift/gr-seed87-counter-lift-split.png)): the
+  attacker's hips rise to 1.35 m (0.78 m before), and the turn reaches −69° (about 15° before).
+  The attacker goes over the counter-lifter's chest and lands behind.
+- Still wrong at seed 87: the attacker stays inverted above the counter-lifter for about 0.5 s
+  before coming down. The counter-lifter does not arch back to the mat under the weight; their
+  hips stay at 0.5–0.6 m.
+- Seed 26 tick 3385 (blocked)
+  ([render](../images/realism-review/counter-lift/gr-seed26-counter-lift-split-blocked.png)): no
+  lift; the attacker dips to 0.33 m and is back up within a second, as with the old clip.
+- Physics lab: identical to the baseline (its bouts contain no counter-lift).
+
+**Next.**
+- Make the counter-lifter (and the front-suplex thrower) arch back onto the mat under the thrown
+  body, so the attacker comes down within the arch.
+- Fix the front suplex's overlapping keyed poses the same way.
+- Turn the trunk-clearance measurement (scratch tool: spine-line distance on the reference body
+  via `ClipFeasibility.Place`) into a content check once the chest-to-chest clips pass it.
