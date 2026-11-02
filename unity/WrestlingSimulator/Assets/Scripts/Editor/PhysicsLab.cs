@@ -197,6 +197,7 @@ namespace Wrestling.Editor
                         if (PhysicalBody.Trace != null)
                         {
                             PhysicalBody.Trace(FormattableString.Invariant($"red-blue touching: {red.TouchingPairs(blue, 0.02f)}"));
+                            PhysicalBody.Trace(FormattableString.Invariant($"red {red.TiltReport} | blue {blue.TiltReport}"));
                         }
 
                         markers[0].transform.position = red.PelvisTarget;

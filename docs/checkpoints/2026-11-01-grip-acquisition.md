@@ -312,3 +312,41 @@ A blocked counter-lift now fails before any arch plays.
 - Fix the front suplex's overlapping keyed poses the same way.
 - Turn the trunk-clearance measurement (scratch tool: spine-line distance on the reference body
   via `ClipFeasibility.Place`) into a content check once the chest-to-chest clips pass it.
+
+## Follow-up: the arch lands within the throw
+
+**Cause** (seed 87, `-clipTrace` with the new per-frame pelvis tilt):
+- The arch phase could be as short as 16 ticks, and its turn was planned to finish by 0.8 of it.
+  That asks about 950°/s of a body that turns at most 620°/s.
+- The arch ended and the holds released with the attacker turned about 55°, 1.35 m up and lying
+  on the counter-lifter's shoulders. They slid off over the next 0.6 s.
+- The counter-lifter stood upright throughout: pelvis tilt 53° against 121° wanted. Their keyed
+  fall back came after the release.
+
+**Fix (data only).**
+- The counter-lift and front-suplex arch phases are now 26–36 ticks (0.43–0.6 s).
+- In both arch clips the thrower falls back during the turn: level 0.55 → 0.38 → 0.3 with pitch
+  −70° → −105° → −112/−115°, stepping back (x down 0.27–0.32 m). The carry target follows the
+  thrower's chest, so their fall carries the opponent over.
+- At seed 87 the attacker now goes over head first and is down by tick 8085, about 0.5 s sooner
+  ([render](../images/realism-review/counter-lift/gr-seed87-counter-lift-arch-landing.png)).
+- The blocked case (seed 26) is unchanged: no lift, and the attacker is back up within a second.
+- The Women's seed 78 front suplex looks as before
+  ([new above, old below](../images/realism-review/counter-lift/ww-seed78-front-suplex-arch-new-vs-old.png)).
+- Balance: every headline figure is within 0.3 points
+  ([report](../research/balance/2026-11-02-counter-lift-split.md)). The physics lab is identical.
+
+**Tried and reverted:**
+- The throw's reaction twist (the equal and opposite couple on the thrower) is what keeps the
+  thrower upright. Switched off as an experiment, the counter-lifter follows the bridge, but then
+  does a full back somersault.
+- Bracing that twist through the thrower's spare footing: in a 6-bout lab, pelvis error rose
+  6.3 → 9.0 cm, lost frames 6.5 → 9.8% and held grips fell 84 → 78%, with no gain in throw turn
+  (53° against 52°).
+- Counting the lifted weight in the thrower's support: no effect, because the throw lifts almost
+  nothing during most of the turn.
+
+**Still open:**
+- The physical turn still trails its plan: −92° of −200° by the release at seed 87.
+- The thrower's tilt reaches about 60° of the keyed 120°.
+- Both bodies end tangled for a moment before the danger position takes over.

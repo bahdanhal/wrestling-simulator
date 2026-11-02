@@ -73,8 +73,8 @@
     },
     {
       "id": "arch",
-      "minimumTicks": 18,
-      "maximumTicks": 30,
+      "minimumTicks": 26,
+      "maximumTicks": 36,
       "attributes": [
         {
           "attribute": "bodyLockAndLifts",

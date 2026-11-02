@@ -54,8 +54,8 @@
     },
     {
       "id": "arch",
-      "minimumTicks": 16,
-      "maximumTicks": 24,
+      "minimumTicks": 26,
+      "maximumTicks": 36,
       "attributes": [
         {
           "attribute": "upperBodyStrength",

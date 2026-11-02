@@ -342,6 +342,19 @@ namespace Wrestling.Presentation
         /// <summary>Distance (m) from the pelvis to where the animation wants it (diagnostics).</summary>
         public float TrackingError => _hasRootTarget ? (Root.Body.transform.position - _rootTarget).magnitude : 0f;
 
+        /// <summary>Pelvis tilt from vertical, physical and animated (degrees; positive leans the trunk back), and the angle between the two orientations (diagnostics).</summary>
+        public string TiltReport
+        {
+            get
+            {
+                Transform root = Root.Body.transform;
+                float Tilt(Quaternion rotation) => Vector3.SignedAngle(Vector3.up, rotation * Vector3.up, rotation * Vector3.right);
+                return _hasRootTarget
+                    ? FormattableString.Invariant($"tilt {Tilt(root.rotation):F0}° want {Tilt(_rootTargetRotation):F0}° off {Quaternion.Angle(root.rotation, _rootTargetRotation):F0}°")
+                    : "-";
+            }
+        }
+
         /// <summary>Where the animation wants the pelvis (diagnostics).</summary>
         public Vector3 PelvisTarget => _rootTarget;
 

@@ -87,3 +87,74 @@ Final:
       points by reason       Takedown 28%, StandingHoldToDanger 26%, Throw 20%, Exposure 8%, GrandAmplitude 5%, Reversal 4%, GrandAmplitudeToDirectDanger 2%, LiftToDanger 2%, LiftToChestOrArms 2%, StepOut 2%, ActivityClock 1%
 
 Every headline figure is within 0.3 points of the baseline (Greco-Roman: points 73.8 → 74.2%, technical superiority 21.6 → 21.6%, fall 4.6 → 4.2%, points per bout 8.8 → 8.8). Counter-lift outcomes in Greco-Roman viewer bouts: scoring (danger or flank) 50 → 45, blocked 83 → 72, scramble 106 → 109, within seed-to-seed noise.
+
+## Follow-up: longer arches (counter-lift and front suplex arch 26–36 ticks)
+
+Phase length only (presentation timing; the contest is unchanged).
+
+wrestling-sim balance, 2000 bouts per style (gr, fs, ww):
+
+      Points                  74,0%
+      TechnicalSuperiority    21,8%
+      Fall                     4,2%
+      points per bout          8,8
+      attempts per bout       20,0
+      attack success           7,7%
+
+      Points                  69,5%
+      TechnicalSuperiority    23,6%
+      Fall                     6,9%
+      points per bout         11,6
+      attempts per bout       26,3
+      attack success           9,4%
+
+      Points                  72,0%
+      TechnicalSuperiority    21,4%
+      Fall                     6,6%
+      points per bout         11,6
+      attempts per bout       26,8
+      attack success           8,7%
+
+Viewer-style bouts, 1000 per style:
+
+    GrecoRoman: 1000 bouts, mean length 350,7 s, points/bout 9,07, victories Fall 5,0%, Points 70,8%, TechnicalSuperiority 24,2%
+      counter_lift: 236 starts, points 0
+      front_suplex: 782 starts, points 0
+        counter_lift Completed:DangerDirect 19
+        counter_lift Completed:Flank 29
+        counter_lift Completed:Scramble 111
+        counter_lift Failed:Blocked 76
+        front_suplex Completed:DangerDirect 5
+        front_suplex Completed:Flank 2
+        front_suplex Completed:Scramble 3
+        front_suplex Failed:Blocked 114
+        front_suplex Failed:Countered 578
+        front_suplex Failed:FailedIntoScramble 5
+        front_suplex Failed:Stalled 74
+    Freestyle: 1000 bouts, mean length 348,8 s, points/bout 12,02, victories Fall 6,1%, Points 70,4%, TechnicalSuperiority 23,5%
+      counter_lift: 29 starts, points 0
+      front_suplex: 55 starts, points 0
+        counter_lift Completed:DangerDirect 2
+        counter_lift Completed:Flank 1
+        counter_lift Completed:Scramble 19
+        counter_lift Failed:Blocked 7
+        front_suplex Completed:DangerDirect 2
+        front_suplex Completed:Flank 1
+        front_suplex Completed:Scramble 1
+        front_suplex Failed:Blocked 5
+        front_suplex Failed:Countered 41
+        front_suplex Failed:FailedIntoScramble 3
+        front_suplex Failed:Stalled 2
+    Womens: 1000 bouts, mean length 347,3 s, points/bout 12,07, victories Fall 5,6%, Points 69,3%, TechnicalSuperiority 25,1%
+      counter_lift: 16 starts, points 0
+      front_suplex: 66 starts, points 0
+        counter_lift Completed:DangerDirect 1
+        counter_lift Completed:Flank 1
+        counter_lift Completed:Scramble 7
+        counter_lift Failed:Blocked 7
+        front_suplex Completed:DangerDirect 2
+        front_suplex Completed:Flank 1
+        front_suplex Completed:Scramble 1
+        front_suplex Failed:Blocked 8
+        front_suplex Failed:Countered 46
+        front_suplex Failed:Stalled 8
