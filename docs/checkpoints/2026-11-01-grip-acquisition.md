@@ -222,3 +222,47 @@ style) the mean throw turn dropped from 40° to 22° (Greco-Roman's one throw 11
 under the attacker, with the head to one side and hips in, before the turn starts. That should also
 apply to the other chest-to-chest throws (front suplex, salto, body lock). Separately, every
 physical throw turns far less than planned (lab mean 40° of about 200°), which needs its own look.
+
+## Follow-up: counter-lift clip with a level change (tried, not kept)
+
+Goal: get the counter-lifter under the attacker before the turn, as the contact trace suggested.
+
+**Keyed poses overlap.** Measured on the reference body with `ClipFeasibility.Place` (sampled every
+0.05 of the phase), the two keyed trunks cross in both chest-to-chest clips: the closest distance
+between the spine lines is 0, so the torsos overlap by their full depth (0.22 m). Standing lean is
+at least 24° even at full posture (`ClipKinematics.StandingLean`), so two wrestlers at posture
+0.85 lean about 34° into each other. Both `anim.front_suplex.lift` (all of it) and
+`anim.counter_lift.lift` do this. The physics resolves it by holding the pelvises about 0.7 m
+apart, which is why neither throw starts with the opponent on the fulcrum.
+
+**Trial clip** (seed 87 and seed 26 rendered):
+- Lift over 0–0.5 of the phase, the suplex's arch over 0.5–1 (throw 0.5–0.9).
+- Level-change key at 0.3: counter-lifter level 0.53, pitch −12 (free-fall limit), heads to
+  opposite sides (bank 10° each); attacker more upright (pitch −30).
+- Loaded key at 0.5: counter-lifter level 0.7, pitch −35; attacker pitch −18. The keyed trunks
+  just touch (−0.01 m), pelvises 0.29 m apart, the attacker's hips 0.21 m above the counter-lifter's.
+
+**Result.**
+- Seed 87 (scores): heads no longer touch, and the attacker rises to 0.91 m instead of 0.78 m.
+  But they stay on their feet 0.48 m off the chest; the turn reaches about 0° and both fall
+  ([render](../images/realism-review/counter-lift/gr-seed87-counter-lift-level-change-trial.png)).
+- The attacker's balance is friction-limited the whole time: their feet stay planted, so the
+  pelvis cannot follow its target in. The engine also releases all grips when the counter
+  starts (`grips 0/0` through the phase), so nothing holds the attacker until the turn begins.
+- Seed 26 (blocked): the stronger lift throws the attacker flat (hips 0.14 m) and they stay down
+  while the engine has them standing. With the committed clip they dip to 0.35 m and are back up
+  within a second
+  ([render](../images/realism-review/counter-lift/gr-seed26-counter-lift-level-change-trial-blocked.png)).
+  The outcome is decided at the end of the phase, after the turn has played, so a one-phase
+  counter-lift cannot avoid throwing blocked attempts. That is about a third of Greco-Roman
+  counter-lifts, so the trial clip was not kept.
+- Also tried and reverted: a presentation-only `turnFrom` on throw specs (holds and squeeze from
+  `from`, turn from `turnFrom`) with the trial clip. The attacker ended further off the chest
+  (0.57 m against 0.48 m), so it did not justify a schema field on every clip.
+
+**Conclusion.** The counter-lift needs two engine phases, as the front suplex has: a lift phase
+whose contest decides whether the attacker comes off the mat (blocked: no arch plays), then an
+arch phase. With the arch only playing after a won lift, the clip can lift hard without throwing
+blocked attempts. That changes the contest (one more roll and window), so it needs a balance run.
+The overlap of keyed chest-to-chest poses should be fixed in the same pass, for the front suplex
+too, and could become a content check once both clips pass it.
