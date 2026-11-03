@@ -96,28 +96,39 @@ namespace Wrestling.Data.Animation
         /// <summary>
         /// Where a held body's waist sits on the carrier at an anchor: a point on the carrier's
         /// curved spine (share from the pelvis to the neck), the surface normal there as a blend of
-        /// the chest's front (sign) and the spine, and the seat radius from the spine to the held
-        /// waist (the carrier's anatomical depth at that site plus the held body's own thickness,
-        /// <see cref="ActorKey.Contact"/>). Depths are shares of the carrier's height.
+        /// the chest's front (sign), the spine and the carrier's left (sign), and the seat radius
+        /// from the spine to the held waist (the carrier's anatomical depth at that site plus the
+        /// held body's own thickness, <see cref="ActorKey.Contact"/>). Depths are shares of the
+        /// carrier's height.
         /// </summary>
-        public static (float SpineShare, float FrontSign, float SpineBlend, float DepthShare) Seat(AnchorPoint point)
+        public static (float SpineShare, float FrontSign, float SpineBlend, float LeftSign, float DepthShare) Seat(AnchorPoint point)
         {
             switch (point)
             {
                 case AnchorPoint.Hips:
                     // Over the back of the iliac crest and sacrum: about 0.13 m behind the hip joints.
-                    return (0f, -1f, 0.25f, 0.074f);
+                    return (0f, -1f, 0.25f, 0f, 0.074f);
                 case AnchorPoint.LowerBack:
-                    return (0.3f, -1f, 0f, 0.074f);
+                    return (0.3f, -1f, 0f, 0f, 0.074f);
                 case AnchorPoint.Shoulders:
                     // Across the trapezius ridge behind the neck, up over the shoulder blades: about 0.19 m.
-                    return (0.88f, -1f, 0.5f, 0.109f);
+                    return (0.88f, -1f, 0.5f, 0f, 0.109f);
                 case AnchorPoint.Chest:
-                    return (0.65f, 1f, 0f, 0.086f);
+                    return (0.65f, 1f, 0f, 0f, 0.086f);
+                case AnchorPoint.LeftShoulder:
+                case AnchorPoint.RightShoulder:
+                    // Up and out over the acromion, half way between the spine's line and the side:
+                    // about 0.24 m from the upper spine, which puts the seated waist (with the held
+                    // body's thickness) about 0.25 m out, beyond the shoulder's half width.
+                    return (0.9f, 0f, 1f, point == AnchorPoint.LeftShoulder ? 1f : -1f, 0.137f);
                 default:
-                    return (WholeBodyPivotShare, 1f, 0f, 0f);
+                    return (WholeBodyPivotShare, 1f, 0f, 0f, 0f);
             }
         }
+
+        /// <summary>Whether <paramref name="point"/> carries the held body on the shoulders (across them or up on one).</summary>
+        public static bool OnShoulders(AnchorPoint point) =>
+            point == AnchorPoint.Shoulders || point == AnchorPoint.LeftShoulder || point == AnchorPoint.RightShoulder;
 
         /// <summary>The reference body clips are checked on: segment lengths (m) of a 1.75 m wrestler with average proportions.</summary>
         public readonly struct Body
@@ -185,8 +196,8 @@ namespace Wrestling.Data.Animation
             /// <summary>The held waist's place when seated on this body at <paramref name="anchor"/>.</summary>
             public Vector3 SeatFor(AnchorPoint anchor, float contact, float height)
             {
-                (float share, float sign, float blend, float depth) = Seat(anchor);
-                Vector3 normal = (Front * sign) + (Spine * blend);
+                (float share, float sign, float blend, float leftSign, float depth) = Seat(anchor);
+                Vector3 normal = (Front * sign) + (Spine * blend) + (Left * leftSign);
                 normal = normal.LengthSquared() > 1e-8f ? Vector3.Normalize(normal) : Vector3.UnitY;
                 return SpinePoint(share) + (normal * ((depth * height) + contact));
             }

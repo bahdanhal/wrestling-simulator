@@ -60,6 +60,13 @@ namespace Wrestling.Editor
             public int OverpoweredFrames;
             public int GripHands;
             public int GripHeld;
+
+            /// <summary>Gripping hands and those physically holding before a bout's first technique (no clip has shaped the bodies yet).</summary>
+            public int OpeningGripHands;
+            public int OpeningGripHeld;
+
+            /// <summary>Gripping hands and those physically holding, per clip shown (or "-" between clips).</summary>
+            public readonly Dictionary<string, (int Hands, int Held)> GripsByClip = new Dictionary<string, (int Hands, int Held)>(StringComparer.Ordinal);
             public int ShownHolds;
             public float ShownGapBefore;
             public float ShownGapAfter;
@@ -258,6 +265,9 @@ namespace Wrestling.Editor
             report.AppendLine(FormattableString.Invariant($"[lab] shown jerk (mm per frame², mean/p99): hips {Mean(all.HipJerk):F2}/{Percentile(all.HipJerk, 0.99f):F2}, hands {Mean(all.HandJerk):F2}/{Percentile(all.HandJerk, 0.99f):F2}"));
             report.AppendLine(FormattableString.Invariant($"[lab] load: opponent force on a body mean/p95 {Mean(all.OpponentLoad):F0}/{Percentile(all.OpponentLoad, 0.95f):F0} N; give: largest joint shift mean/p95/max {Mean(all.Give):F2}/{Percentile(all.Give, 0.95f):F2}/{(all.Give.Count == 0 ? 0f : all.Give.Max()):F2} cm, hips sink mean/max {Mean(all.Sink):F2}/{(all.Sink.Count == 0 ? 0f : all.Sink.Max()):F2} cm, lean mean/max {Mean(all.Lean):F1}/{(all.Lean.Count == 0 ? 0f : all.Lean.Max()):F1} deg"));
             report.AppendLine("[lab] mean joint error (deg): " + string.Join(", ", all.JointSums.OrderByDescending(j => j.Value).Select(j => FormattableString.Invariant($"{j.Key} {j.Value / active:F0}"))));
+            report.AppendLine(FormattableString.Invariant($"[lab] grips held before each bout's first technique: {100f * all.OpeningGripHeld / Mathf.Max(1, all.OpeningGripHands):F0}% over {all.OpeningGripHands} gripping-hand frames"));
+            report.AppendLine("[lab] grips held by clip (share of all gripping-hand frames, held %): " + string.Join(", ", all.GripsByClip.OrderByDescending(c => c.Value.Hands).Take(15)
+                .Select(c => FormattableString.Invariant($"{c.Key} {100f * c.Value.Hands / Mathf.Max(1, all.GripHands):F0}%/{100f * c.Value.Held / Mathf.Max(1, c.Value.Hands):F0}"))));
             report.AppendLine("[lab] balance limits hit (% of active frames): " + string.Join(", ", all.Limits.OrderByDescending(j => j.Value).Select(j => FormattableString.Invariant($"{j.Key} {100f * j.Value / active:F0}"))));
             return report.ToString();
         }
@@ -272,6 +282,7 @@ namespace Wrestling.Editor
             // The last two shown positions of each wrestler's hips and hands, for frame-to-frame jerk.
             var history = new Vector3[2, 3, 2];
             int tracked = 0;
+            bool opening = true;
             for (int frame = 0; frame < frames && !viewer.Session.Engine.IsFinished; frame++)
             {
                 watch.Restart();
@@ -282,6 +293,19 @@ namespace Wrestling.Editor
                 into.Overlap.Add(viewer.RedFigure.Physical.DeepestOverlap(viewer.BlueFigure.Physical) * 100f);
                 into.GripHands += viewer.HandGrips.Gripping;
                 into.GripHeld += viewer.HandGrips.ActiveHolding;
+                opening &= string.IsNullOrEmpty(viewer.CurrentClip);
+                if (opening)
+                {
+                    into.OpeningGripHands += viewer.HandGrips.Gripping;
+                    into.OpeningGripHeld += viewer.HandGrips.ActiveHolding;
+                }
+
+                if (viewer.HandGrips.Gripping > 0)
+                {
+                    string clip = string.IsNullOrEmpty(viewer.CurrentClip) ? "-" : viewer.CurrentClip;
+                    into.GripsByClip.TryGetValue(clip, out (int Hands, int Held) count);
+                    into.GripsByClip[clip] = (count.Hands + viewer.HandGrips.Gripping, count.Held + viewer.HandGrips.ActiveHolding);
+                }
                 foreach (Corner shown in new[] { Corner.Red, Corner.Blue })
                 {
                     // The hands as shown, after the post-physics pass, against what they hold.
@@ -442,6 +466,13 @@ namespace Wrestling.Editor
             into.OverpoweredFrames += from.OverpoweredFrames;
             into.GripHands += from.GripHands;
             into.GripHeld += from.GripHeld;
+            into.OpeningGripHands += from.OpeningGripHands;
+            into.OpeningGripHeld += from.OpeningGripHeld;
+            foreach (KeyValuePair<string, (int Hands, int Held)> clip in from.GripsByClip)
+            {
+                into.GripsByClip.TryGetValue(clip.Key, out (int Hands, int Held) count);
+                into.GripsByClip[clip.Key] = (count.Hands + clip.Value.Hands, count.Held + clip.Value.Held);
+            }
             into.ShownHolds += from.ShownHolds;
             into.ShownGapBefore += from.ShownGapBefore;
             into.ShownGapAfter += from.ShownGapAfter;

@@ -1363,16 +1363,16 @@ namespace Wrestling.Presentation
         /// </summary>
         public static Vector3 AnchorOn(in Pose pose, BodyProportions body, AnchorPoint point)
         {
-            (float share, float _, float _, float depth) = ClipKinematics.Seat(point);
+            (float share, float _, float _, float _, float depth) = ClipKinematics.Seat(point);
             return pose.SpinePoint(share) + (AnchorNormal(in pose, point) * (depth * body.Height));
         }
 
-        /// <summary>The outward surface normal at an anchor site: the back over the hips, lower back and shoulders (tipping up the spine at the shoulders), the front at the chest.</summary>
+        /// <summary>The outward surface normal at an anchor site: the back over the hips, lower back and shoulders (tipping up the spine at the shoulders), the front at the chest, up and out over one shoulder.</summary>
         public static Vector3 AnchorNormal(in Pose pose, AnchorPoint point)
         {
-            (float _, float frontSign, float spineBlend, float _) = ClipKinematics.Seat(point);
+            (float _, float frontSign, float spineBlend, float leftSign, float _) = ClipKinematics.Seat(point);
             Vector3 front = point == AnchorPoint.Hips ? pose.PelvisFront : pose.ChestNormal;
-            Vector3 normal = (front * frontSign) + (pose.Spine * spineBlend);
+            Vector3 normal = (front * frontSign) + (pose.Spine * spineBlend) + (pose.Left * leftSign);
             return normal.sqrMagnitude > 1e-8f ? normal.normalized : Vector3.up;
         }
 

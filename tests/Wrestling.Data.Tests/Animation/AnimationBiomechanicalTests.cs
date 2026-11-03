@@ -74,6 +74,35 @@ public class AnimationBiomechanicalTests
         Assert.Equal(0.24f, SeatRadius(AnchorPoint.LowerBack), 2);
         Assert.Equal(0.26f, SeatRadius(AnchorPoint.Chest), 2);
         Assert.Equal(0.30f, SeatRadius(AnchorPoint.Shoulders), 2);
+        Assert.Equal(0.35f, SeatRadius(AnchorPoint.LeftShoulder), 2);
+        Assert.Equal(0.35f, SeatRadius(AnchorPoint.RightShoulder), 2);
+    }
+
+    [Fact]
+    public void ASingleShoulderSeatPutsTheHeldHipsOutBeyondTheCarriersShoulder()
+    {
+        ClipKinematics.Body body = ClipKinematics.Body.Reference;
+        ClipKinematics.Trunk carrier = ClipKinematics.Place(Standing(0.8f, 1f), body, false);
+        foreach ((AnchorPoint point, float sign) in new[] { (AnchorPoint.LeftShoulder, 1f), (AnchorPoint.RightShoulder, -1f) })
+        {
+            System.Numerics.Vector3 seat = carrier.SeatFor(point, 0.11f, body.Height) - carrier.Neck;
+            float outward = System.Numerics.Vector3.Dot(seat, carrier.Left) * sign;
+            Assert.True(outward > body.ShoulderHalfWidth, $"{point}: {outward} m out");
+            Assert.True(System.Numerics.Vector3.Dot(seat, carrier.Spine) > 0f, $"{point}: above the shoulder line");
+        }
+    }
+
+    [Fact]
+    public void HeldTrunksMayPressTogetherButNotCross()
+    {
+        // A body lock: the held body seated chest to chest. Both leaning in at the stance's default
+        // (about 34°) the trunks cross; both upright they meet.
+        ActorKey Held(float pitch) => new() { X = 0.62f, Heading = 180f, Ground = GroundState.Standing, Level = 0.75f, Posture = 0.85f, RollSide = 1, Pitch = pitch, Anchor = AnchorPoint.Chest, AnchorWeight = 1f, Contact = 0.11f };
+        ActorKey Lifter(float pitch) => new() { X = 0.22f, Ground = GroundState.Standing, Level = 0.75f, Posture = 0.85f, RollSide = 1, Pitch = pitch };
+        MoveClip crossed = Make(ThrowSpec.NoThrow, Key(0f, Lifter(0f), Held(0f)), Key(1f, Lifter(0f), Held(0f)));
+        MoveClip upright = Make(ThrowSpec.NoThrow, Key(0f, Lifter(-34f), Held(-30f)), Key(1f, Lifter(-34f), Held(-30f)));
+        Assert.Contains(ClipFeasibility.Check(crossed, 20), e => e.Contains("held trunks overlap", StringComparison.Ordinal));
+        Assert.DoesNotContain(ClipFeasibility.Check(upright, 20), e => e.Contains("held trunks overlap", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -146,7 +175,7 @@ public class AnimationBiomechanicalTests
 
     private static float SeatRadius(AnchorPoint point)
     {
-        (float _, float _, float _, float depth) = ClipKinematics.Seat(point);
+        (float _, float _, float _, float _, float depth) = ClipKinematics.Seat(point);
         return (depth * 1.75f) + 0.11f;
     }
 

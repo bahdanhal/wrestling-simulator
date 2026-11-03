@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Numerics;
 using Wrestling.Core.Match;
 
 namespace Wrestling.Data.Animation
@@ -18,6 +19,10 @@ namespace Wrestling.Data.Animation
     /// <item>while a throw over the hips loads (and through the first half of its turn) the
     /// thrower's hips are well under the opponent's and the trunk is bent forward over them; a
     /// shoulder carry has the carrier's hips under the carried body's.</item>
+    /// <item>while one body is held on the other (before a throw turns), the two trunks touch
+    /// but do not pass through each other: chest to chest, chest to back or across the
+    /// shoulders. The viewer only pushes free bodies apart, so a held pose that crosses would
+    /// leave the physical bodies fighting the clip.</item>
     /// </list>
     /// </summary>
     public static class ClipFeasibility
@@ -29,6 +34,18 @@ namespace Wrestling.Data.Animation
         public const float MinimumLoadLean = 35f;
 
         public const float MaximumLoadLean = 55f;
+
+        /// <summary>
+        /// How far (m) two held trunks may press into each other: soft tissue compressed between
+        /// chests or chest and back, and the trunk's rounding where a capsule overstates it. The
+        /// neutral tie-up a hold starts from measures 0.07 m at the collar (the capsules ignore the
+        /// heads passing side by side), so the allowance covers it; trunks that cross measure
+        /// 0.11 m and more.
+        /// </summary>
+        public const float HeldCompression = 0.08f;
+
+        /// <summary>Samples per clip for the held-trunk clearance check (plus every key).</summary>
+        private const int ClearanceSamples = 50;
 
         /// <summary>Hip drops smaller than this (m) are posture changes, not falls.</summary>
         private const float SmallestDrop = 0.02f;
@@ -101,8 +118,114 @@ namespace Wrestling.Data.Animation
                 Fulcrum(clip, executor, opponent, errors);
             }
 
+            HeldClearance(clip, body, executorBottom, opponentBottom, errors);
             return errors;
         }
+
+        /// <summary>
+        /// Gap (m) between two trunks, each a capsule along its spine as deep as the body's
+        /// chest: negative when they overlap.
+        /// </summary>
+        public static float TrunkClearance(in ClipKinematics.Trunk a, in ClipKinematics.Trunk b, ClipKinematics.Body body) =>
+            SegmentDistance(a.Pelvis, a.Neck, b.Pelvis, b.Neck) - (2f * body.TorsoHalfDepth);
+
+        private static void HeldClearance(MoveClip clip, ClipKinematics.Body body, bool executorBottom, bool opponentBottom, List<string> errors)
+        {
+            var times = new List<float>();
+            for (int s = 0; s <= ClearanceSamples; s++)
+            {
+                times.Add(s / (float)ClearanceSamples);
+            }
+
+            foreach (ClipKey key in clip.Keys)
+            {
+                times.Add(key.T);
+            }
+
+            times.Sort();
+            float worst = float.MaxValue;
+            float worstAt = 0f;
+            foreach (float t in times)
+            {
+                if (clip.Throw.Kind == ThrowKind.Throw && t > clip.Throw.From)
+                {
+                    // Once the throw turns, the physical carry places the thrown body, not the keys.
+                    break;
+                }
+
+                (ActorKey e, ActorKey o) = clip.Sample(t);
+                if (!Held(e) && !Held(o))
+                {
+                    continue;
+                }
+
+                (ClipKinematics.Trunk te, ClipKinematics.Trunk to) = Place(new ClipKey { T = t, Executor = e, Opponent = o }, body, executorBottom, opponentBottom);
+                float clearance = TrunkClearance(in te, in to, body);
+                if (clearance < worst)
+                {
+                    worst = clearance;
+                    worstAt = t;
+                }
+            }
+
+            if (worst < -HeldCompression)
+            {
+                errors.Add($"{clip.Id}@{F(worstAt)}: the held trunks overlap by {F(-worst)} m; held bodies may press in by at most {F(HeldCompression)} m (they touch, they do not pass through each other).");
+            }
+        }
+
+        /// <summary>Distance between two segments (Ericson, Real-Time Collision Detection 5.1.9).</summary>
+        private static float SegmentDistance(Vector3 p1, Vector3 q1, Vector3 p2, Vector3 q2)
+        {
+            Vector3 d1 = q1 - p1;
+            Vector3 d2 = q2 - p2;
+            Vector3 r = p1 - p2;
+            float a = Vector3.Dot(d1, d1);
+            float e = Vector3.Dot(d2, d2);
+            float f = Vector3.Dot(d2, r);
+            float s;
+            float t;
+            if (a <= 1e-8f && e <= 1e-8f)
+            {
+                return r.Length();
+            }
+
+            if (a <= 1e-8f)
+            {
+                s = 0f;
+                t = Clamp01(f / e);
+            }
+            else
+            {
+                float c = Vector3.Dot(d1, r);
+                if (e <= 1e-8f)
+                {
+                    t = 0f;
+                    s = Clamp01(-c / a);
+                }
+                else
+                {
+                    float b = Vector3.Dot(d1, d2);
+                    float denominator = (a * e) - (b * b);
+                    s = denominator > 1e-8f ? Clamp01(((b * f) - (c * e)) / denominator) : 0f;
+                    t = ((b * s) + f) / e;
+                    if (t < 0f)
+                    {
+                        t = 0f;
+                        s = Clamp01(-c / a);
+                    }
+                    else if (t > 1f)
+                    {
+                        t = 1f;
+                        s = Clamp01((b - c) / a);
+                    }
+                }
+            }
+
+            return ((p1 + (d1 * s)) - (p2 + (d2 * t))).Length();
+        }
+
+        private static float Clamp01(float value) => value < 0f ? 0f : value > 1f ? 1f : value;
 
         /// <summary>
         /// Checks executor hip drops along the interpolated path, not just at authored keys.
@@ -245,7 +368,7 @@ namespace Wrestling.Data.Animation
                 return FulcrumLoad.OverHips;
             }
 
-            return site == AnchorPoint.Shoulders ? FulcrumLoad.Carried : FulcrumLoad.None;
+            return ClipKinematics.OnShoulders(site) ? FulcrumLoad.Carried : FulcrumLoad.None;
         }
 
         private static void Fulcrum(MoveClip clip, ClipKinematics.Trunk[] executor, ClipKinematics.Trunk[] opponent, List<string> errors)

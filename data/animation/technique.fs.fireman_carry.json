@@ -45,8 +45,8 @@
           "t": 0.6,
           "executor": {
             "x": 0.35,
-            "z": 0.0,
-            "heading": -20,
+            "z": -0.06,
+            "heading": -30,
             "level": 0.45,
             "posture": 0.4,
             "ground": "standing",
@@ -95,8 +95,8 @@
             "contact": 0.0
           },
           "opponent": {
-            "x": 0.5,
-            "z": 0.0,
+            "x": 0.82,
+            "z": -0.15,
             "heading": 180,
             "level": 0.7,
             "posture": 0.7,

@@ -350,3 +350,80 @@ A blocked counter-lift now fails before any arch plays.
 - The physical turn still trails its plan: −92° of −200° by the release at seed 87.
 - The thrower's tilt reaches about 60° of the keyed 120°.
 - Both bodies end tangled for a moment before the danger position takes over.
+
+## Follow-up: held bodies touch, they do not pass through each other
+
+**Problem.** The keyed trunks crossed. In every standing pose the trunk leans at least 24° (the
+stance default), and chest-to-chest clips pitched the held body further in. With the held waist
+seated about 0.26 m in front of the lifter's chest, the two trunks formed an X, with their
+centre lines meeting. Measured as capsules along each spine (as deep as the chest), 20 clips
+overlapped by 0.11–0.23 m while one body was held: every lift, suplex and hip throw, the
+fireman's carry, the two-on-one spin and the counter-throw landing. The viewer pushes only free
+bodies apart (`BodyContact.Separate`), so held poses left the physical bodies fighting the clip,
+which is what blocked the counter-lift draw-in.
+
+**Check.** `ClipFeasibility` now rejects a clip whose trunks overlap by more than 0.08 m while
+either body is held, sampled along the clip until a throw starts turning (from then on the
+physical carry places the thrown body). The allowance covers chests pressing together and the
+neutral tie-up a hold starts from, which measures 0.07 m at the collar because the capsules
+ignore the heads passing side by side. Trunks that cross measure 0.11 m and more. Tested in
+`AnimationBiomechanicalTests` (a crossed body lock is rejected; upright chest to chest passes).
+
+**Clip fixes (data, plus two seats).**
+- Body locks, front suplex, salto, lateral drop, counter-lift: a step-in key where both trunks
+  straighten before the hold takes weight, then upright chest to chest (lifter about vertical
+  or arched back, held body within about 15°). Each throw's first key copies the lift's end.
+  Hip heights were kept under the free-fall rule by raising the standing level where the
+  straighter trunk lowered the hips.
+- Hip throws (overhook hip toss, arm, underhook, headlock throw): the loaded opponent lies
+  along the thrower's back (pitch 30° → 15°) instead of cutting through it.
+- Two-on-one spin: the opponent is seated only once the thrower has turned in, keyed where the
+  seat puts them and pulled across by the arm, and folds over the hip at the end.
+- Fireman's carry: the attacker turns further in (−30°) and steps to the side, so the head goes
+  under the arm.
+- Counter-throw landing: the countering body starts rolled across the thrower's hip (bank −60°)
+  rather than head-down through it.
+- Double-leg lift: the shoulder seat centred the lifted body behind the neck (right for a
+  fireman's carry, wrong here). New seats `LeftShoulder` and `RightShoulder` put the carried
+  hips up and out over one shoulder (`ClipKinematics.Seat` gained a sideways component, used by
+  the checker and the viewer alike). The attacker's head now goes outside the hip in the shot
+  and through the lift.
+
+**Renders.**
+- Women's seed 78 front suplex, new above, old below
+  ([image](../images/realism-review/held-clearance/ww-seed78-front-suplex-new-vs-old.png)):
+  the lifter stands under the opponent, the lift is higher and the arch carries the opponent
+  over head first. Before, both leaned in and ended tangled.
+- Freestyle seed 4 double-leg lift, new above, old below
+  ([image](../images/realism-review/held-clearance/fs-seed4-double-leg-lift-new-vs-old.png)):
+  the attacker's head is beside the opponent, not in their face, and the attacker stays on
+  their feet. Before, the attacker was launched horizontally at the dump.
+- Greco seed 94 overhook hip toss, Freestyle seed 45 fireman's carry and Greco seed 87
+  counter-lift still complete as before
+  ([hip toss](../images/realism-review/held-clearance/gr-seed94-hip-toss-overhook.png),
+  [fireman's carry](../images/realism-review/held-clearance/fs-seed45-fireman-carry.png),
+  [counter-lift](../images/realism-review/held-clearance/gr-seed87-counter-lift.png)).
+
+**Physics lab (3 bouts × 60 s per style), and why it cannot judge this change.**
+
+| | old | old + 1 mm control | new |
+|---|---|---|---|
+| pelvis error mean | 6.2 cm | 6.7 cm | 6.8 cm |
+| lost frames | 6.1% | 6.4% | 6.6% |
+| standing collapses | 0.4% | 0.5% | 0.1% |
+| worst overlap | 9.6 cm | 7.8 cm | 7.8 cm |
+| grips held | 87% | 80% | 76% |
+| grips held before the first technique | 92% | 90% | 94% |
+
+The engine events are identical in all three (the same gripping-hand frames per clip), and 96%
+of gripping-hand frames fall between techniques, where no changed clip plays. The control moves
+one key of an unrelated clip (snap-down) by 1 mm: Greco-Roman grips held fall 95 → 78% and the
+pelvis error rises as much as with the new clips. Once anything differs, the bouts diverge
+physically, so these figures cannot resolve a change of this size. A real comparison needs many
+more bouts (or matched starting states per technique). The lab now prints held grips per clip
+and before each bout's first technique, which is how this was found.
+
+**Still open:**
+- The checker's trunk is one capsule as deep as the chest. It does not see heads, arms or
+  lateral width, and stops at the start of a throw's turn.
+- The lab's spread between near-identical runs is as large as the effects we try to measure.

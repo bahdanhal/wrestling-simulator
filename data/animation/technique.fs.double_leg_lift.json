@@ -80,8 +80,8 @@
           "t": 1,
           "executor": {
             "x": 0.28,
-            "z": 0.14,
-            "heading": -8,
+            "z": 0.24,
+            "heading": 0,
             "level": 0.35,
             "posture": 0.45,
             "ground": "standing",
@@ -131,8 +131,8 @@
           "t": 0,
           "executor": {
             "x": 0.28,
-            "z": 0.14,
-            "heading": -8,
+            "z": 0.24,
+            "heading": 0,
             "level": 0.35,
             "posture": 0.45,
             "ground": "standing",
@@ -166,7 +166,7 @@
           "t": 0.45,
           "executor": {
             "x": 0.33,
-            "z": 0.0,
+            "z": 0.1,
             "heading": 0.0,
             "level": 0.6,
             "posture": 0.6,
@@ -181,18 +181,18 @@
             "contact": 0.0
           },
           "opponent": {
-            "x": 0.75,
-            "z": 0.0,
+            "x": 0.98,
+            "z": -0.15,
             "heading": 180,
             "level": 0.75,
             "posture": 0.75,
             "ground": "standing",
             "roll": 0.0,
             "rollSide": 1,
-            "lift": 0.0,
+            "lift": 0.15,
             "pitch": -30,
             "bank": 0.0,
-            "anchor": "shoulders",
+            "anchor": "rightShoulder",
             "anchorWeight": 1.0,
             "contact": 0.11
           }
@@ -216,8 +216,8 @@
             "contact": 0.0
           },
           "opponent": {
-            "x": 0.7,
-            "z": 0.0,
+            "x": 0.92,
+            "z": -0.25,
             "heading": 180,
             "level": 0.75,
             "posture": 0.8,
@@ -227,7 +227,7 @@
             "lift": 0.0,
             "pitch": -80,
             "bank": 15,
-            "anchor": "shoulders",
+            "anchor": "rightShoulder",
             "anchorWeight": 0.8,
             "contact": 0.11
           }

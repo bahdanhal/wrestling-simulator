@@ -42,6 +42,41 @@
           }
         },
         {
+          "t": 0.12,
+          "executor": {
+            "x": 0.15,
+            "z": 0.0,
+            "heading": 0.0,
+            "level": 0.83,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": -28,
+            "bank": 0.0,
+            "anchor": "none",
+            "anchorWeight": 0.0,
+            "contact": 0.0
+          },
+          "opponent": {
+            "x": 0.64,
+            "z": 0.0,
+            "heading": 180,
+            "level": 0.75,
+            "posture": 0.85,
+            "ground": "standing",
+            "roll": 0.0,
+            "rollSide": 1,
+            "lift": 0.0,
+            "pitch": -28,
+            "bank": 0.0,
+            "anchor": "chest",
+            "anchorWeight": 0.0,
+            "contact": 0.11
+          }
+        },
+        {
           "t": 0.35,
           "executor": {
             "x": 0.25,
@@ -53,14 +88,14 @@
             "roll": 0.0,
             "rollSide": 1,
             "lift": 0.0,
-            "pitch": 0.0,
+            "pitch": -34,
             "bank": -15,
             "anchor": "none",
             "anchorWeight": 0.0,
             "contact": 0.0
           },
           "opponent": {
-            "x": 0.55,
+            "x": 0.62,
             "z": 0.0,
             "heading": 180,
             "level": 0.72,
@@ -69,7 +104,7 @@
             "roll": 0.0,
             "rollSide": 1,
             "lift": 0.0,
-            "pitch": 0.0,
+            "pitch": -28,
             "bank": -20,
             "anchor": "chest",
             "anchorWeight": 1.0,

@@ -19,7 +19,7 @@
             "rollSide": 1,
             "lift": 0.0,
             "pitch": 110,
-            "bank": 0.0,
+            "bank": -60,
             "anchor": "hips",
             "anchorWeight": 1.0,
             "contact": 0.11

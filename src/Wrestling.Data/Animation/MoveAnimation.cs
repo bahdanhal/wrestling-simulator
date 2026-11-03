@@ -33,6 +33,15 @@ namespace Wrestling.Data.Animation
 
         /// <summary>Chest to chest (body-lock throws, suplexes, lifts).</summary>
         Chest,
+
+        /// <summary>
+        /// Up on the carrier's left shoulder, the carrier's head outside the carried hips (a
+        /// double-leg lift: shoulder in the belly, head beside the hip).
+        /// </summary>
+        LeftShoulder,
+
+        /// <summary>Up on the carrier's right shoulder (see <see cref="LeftShoulder"/>).</summary>
+        RightShoulder,
     }
 
     /// <summary>
