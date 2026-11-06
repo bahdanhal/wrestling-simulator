@@ -5,6 +5,8 @@ A 3D wrestling game for iOS, Android, macOS and Windows covering Greco-Roman, Fr
 - Design: [docs/game-design.md](docs/game-design.md)
 - Project rules and decisions: [CLAUDE.md](CLAUDE.md)
 - Completion estimate and next milestone: [docs/progress.md](docs/progress.md)
+- Roadmap and planned development: [docs/roadmap.md](docs/roadmap.md)
+- License: [MIT](LICENSE), with [third-party notices](NOTICE.md)
 
 ## Repository layout
 
